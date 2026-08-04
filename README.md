@@ -85,6 +85,13 @@ Recomendado: hero vertical (~900×1200), instalaciones (~1200×900). Comprime en
 
 ## Nota técnica
 
+**No borres las declaraciones de `color-scheme`.** Están en dos lugares: la etiqueta
+`<meta name="color-scheme" content="only light">` del `<head>` y `color-scheme: only light`
+en el `:root` de `styles.css`. Sin ellas, Chrome y Edge invierten automáticamente la página
+para quien tenga Windows en modo oscuro: los fondos blancos se vuelven negros y el texto
+queda ilegible. El fondo también se declara en `html`, no solo en `body`, por la misma razón.
+
+
 Las animaciones de entrada usan la clase `.reveal`. El contenido es **visible por defecto**:
 solo se oculta para animarse si el script del `<head>` alcanzó a añadir la clase `js` al `<html>`,
 y hay un temporizador de respaldo de 2 segundos. No borres ese script del `<head>` — sin él,

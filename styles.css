@@ -4,6 +4,11 @@
    ========================================================= */
 
 :root{
+  /* Impide que el modo oscuro automático del navegador invierta la página.
+     'only light' es la señal explícita de exclusión en Chromium;
+     'light' a secas no siempre basta. */
+  color-scheme: only light;
+
   /* Marca */
   --navy:       #0B1B3C;   /* fondo del logo */
   --navy-deep:  #06112A;   /* footer */
@@ -37,7 +42,9 @@
 
 *,*::before,*::after{ box-sizing:border-box; }
 
-html{ scroll-behavior:smooth; scroll-padding-top:88px; -webkit-text-size-adjust:100%; }
+/* El fondo se fija también en html: si solo se declara en body, el lienzo
+   lo pinta el navegador y en modo oscuro sale negro. */
+html{ background:var(--paper); scroll-behavior:smooth; scroll-padding-top:88px; -webkit-text-size-adjust:100%; }
 
 body{
   margin:0;
@@ -213,24 +220,24 @@ em{
 .hero__badge span{ font-size:.74rem; color:var(--ink-mute); margin-top:5px; }
 
 /* Marcadores de foto — sustituye por <img> reales */
+/* Marcadores de foto: deben leerse como "aquí va una imagen", no como
+   bloques oscuros. Fondo claro y borde punteado hasta que pongas las fotos. */
 .photo{
   position:relative; overflow:hidden; border-radius:var(--radius-l);
-  background:linear-gradient(155deg, #16305F 0%, #0E2148 55%, #0B5FFF 190%);
-  border:1px solid rgba(255,255,255,.14);
+  background:var(--blue-soft);
+  border:1.5px dashed #AFC6EC;
   display:grid; place-items:center;
 }
 .photo::after{
   content:attr(data-placeholder);
-  position:absolute; bottom:12px; left:12px; right:12px;
-  font-size:.66rem; letter-spacing:.1em; text-transform:uppercase;
-  color:rgba(255,255,255,.55); text-align:center;
+  position:absolute; bottom:14px; left:12px; right:12px;
+  font-size:.68rem; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--blue-dark); opacity:.75; text-align:center;
 }
 .photo--hero{ aspect-ratio:4/5; }
-.brand__badge{ width:56%; height:auto; opacity:.9; }
+.brand__badge{ width:52%; height:auto; }
 .photo--tall{ aspect-ratio:3/4; grid-row:span 2; }
 .photo--short{ aspect-ratio:4/3; }
-/* En secciones claras, los marcadores conservan el marino del logo */
-.split__media .photo{ border-color:transparent; }
 
 /* ---------- Stats ---------- */
 .stats{ background:var(--paper); border-block:1px solid var(--line); }
