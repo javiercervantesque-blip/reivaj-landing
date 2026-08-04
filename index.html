@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>REIVAJ Gimnasia Artística | Clase de prueba gratis</title>
+<meta name="description" content="Enjoy Gymnastics. Gimnasia artística profesional para niñas, niños y jóvenes. Entrenadores certificados, grupos reducidos e instalaciones completas. Agenda tu clase de prueba sin costo en REIVAJ.">
+<meta name="theme-color" content="#0B1B3C">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="REIVAJ · Enjoy Gymnastics">
+<meta property="og:description" content="Agenda una clase de prueba sin costo. Disciplina, fuerza y confianza desde los 3 años.">
+<meta property="og:image" content="assets/logo.png">
+
+<!-- Marca que hay JS: sin esto, el contenido nunca se oculta para animar.
+     El temporizador garantiza que la página sea visible aunque script.js falle. -->
+<script>
+  document.documentElement.classList.add('js');
+  setTimeout(function () {
+    document.querySelectorAll('.reveal').forEach(function (el) { el.classList.add('is-in'); });
+  }, 2000);
+</script>
+
+<link rel="icon" href="assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,600;0,700;0,800;1,700;1,800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<a class="skip-link" href="#agendar">Saltar a agendar clase</a>
+
+<!-- =========================================================
+     MARCA REUTILIZABLE (símbolo del logo en SVG)
+     ========================================================= -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- Marca compacta: aro + arco azul (legible a 40 px) -->
+    <symbol id="reivaj-mark" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="50" fill="#0B1B3C"/>
+      <circle cx="50" cy="50" r="41" fill="none" stroke="#FFFFFF" stroke-width="1.8" opacity=".95"/>
+      <path d="M12 43A39 39 0 0 1 87 40" fill="none" stroke="#0B5FFF" stroke-width="4" stroke-linecap="round"/>
+      <path d="M35 64l7.2-28h6.4L41 64h-6z" fill="#FFFFFF"/>
+      <path d="M52 64l7.2-28h6.4L58 64h-6z" fill="#FFFFFF" opacity=".5"/>
+      <rect x="33" y="67" width="34" height="3.4" rx="1.7" fill="#FFFFFF" transform="skewX(-12) translate(15 0)"/>
+    </symbol>
+
+    <!-- Badge completo: incluye wordmark y tagline -->
+    <symbol id="reivaj-badge" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="50" fill="#0B1B3C"/>
+      <circle cx="50" cy="50" r="41" fill="none" stroke="#FFFFFF" stroke-width="1.1" opacity=".9"/>
+      <path d="M12 43A39 39 0 0 1 87 40" fill="none" stroke="#0B5FFF" stroke-width="2.6" stroke-linecap="round"/>
+      <text x="50" y="56" text-anchor="middle"
+            font-family="Archivo, Inter, sans-serif" font-style="italic" font-weight="800"
+            font-size="19" letter-spacing=".5" fill="#FFFFFF">REIVAJ</text>
+      <rect x="21" y="60" width="58" height="2.6" rx="1.3" fill="#FFFFFF" transform="skewX(-12) translate(12 0)"/>
+      <text x="50" y="73" text-anchor="middle"
+            font-family="Archivo, Inter, sans-serif" font-weight="600"
+            font-size="4.6" letter-spacing="2.2" fill="#FFFFFF" opacity=".92">ENJOY GYMNASTICS</text>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- ============ NAV ============ -->
+<header class="nav" id="nav">
+  <div class="wrap nav__inner">
+    <a class="brand" href="#inicio" aria-label="REIVAJ Gimnasia Artística, inicio">
+      <svg class="brand__mark" viewBox="0 0 100 100" aria-hidden="true"><use href="#reivaj-mark"/></svg>
+      <span class="brand__text">
+        <span class="brand__name">REIVAJ</span>
+        <span class="brand__tag">Enjoy Gymnastics</span>
+      </span>
+    </a>
+
+    <nav class="nav__links" id="navLinks" aria-label="Principal">
+      <a href="#programas">Programas</a>
+      <a href="#metodo">Método</a>
+      <a href="#instalaciones">Instalaciones</a>
+      <a href="#faq">Preguntas</a>
+      <a class="btn btn--sm btn--primary" href="#agendar">Clase gratis</a>
+    </nav>
+
+    <button class="nav__toggle" id="navToggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="navLinks">
+      <span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<main id="inicio">
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <div class="hero__arcs" aria-hidden="true">
+    <svg viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice">
+      <circle cx="920" cy="330" r="300" fill="none" stroke="#0B1B3C" stroke-width="1" opacity=".10"/>
+      <circle cx="920" cy="330" r="240" fill="none" stroke="#0B1B3C" stroke-width="1" opacity=".13"/>
+      <path d="M620 330a300 300 0 0 1 480-150" fill="none" stroke="#0B5FFF" stroke-width="4" stroke-linecap="round" opacity=".55"/>
+      <path d="M680 330a240 240 0 0 1 120-198" fill="none" stroke="#0B5FFF" stroke-width="3" stroke-linecap="round" opacity=".3"/>
+    </svg>
+  </div>
+
+  <div class="wrap hero__inner">
+    <div class="hero__copy reveal">
+      <p class="eyebrow">Escuela de gimnasia artística</p>
+      <h1>Fuerza, <em>disciplina</em><br>y confianza<br>desde el primer salto.</h1>
+      <p class="lead">
+        Entrenamiento profesional para niñas, niños y jóvenes desde los 3 años.
+        Grupos reducidos, entrenadores certificados y una progresión segura, paso a paso.
+      </p>
+      <div class="hero__actions">
+        <a class="btn btn--primary" href="#agendar">Agendar clase de prueba</a>
+        <a class="btn btn--outline-dark" href="#programas">Ver programas</a>
+      </div>
+      <ul class="hero__meta">
+        <li>Sin costo</li>
+        <li>Sin compromiso</li>
+        <li>Cupo limitado por grupo</li>
+      </ul>
+    </div>
+
+    <div class="hero__visual reveal">
+      <!-- Sustituye por una foto real: assets/hero.jpg (vertical, 900×1200 aprox.) -->
+      <div class="photo photo--hero" data-placeholder="Foto principal · assets/hero.jpg">
+        <svg class="brand__badge" viewBox="0 0 100 100" aria-hidden="true"><use href="#reivaj-badge"/></svg>
+      </div>
+      <div class="hero__badge">
+        <strong>6:1</strong>
+        <span>alumnos por entrenador</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ STATS ============ -->
+<section class="stats">
+  <div class="wrap stats__grid">
+    <div class="stat reveal"><strong data-count="12">12</strong><span>años formando gimnastas</span></div>
+    <div class="stat reveal"><strong data-count="400">400</strong><span>alumnos activos</span></div>
+    <div class="stat reveal"><strong data-count="8">8</strong><span>entrenadores certificados</span></div>
+    <div class="stat reveal"><strong data-count="5">5</strong><span>aparatos olímpicos</span></div>
+  </div>
+</section>
+
+<!-- ============ PROGRAMAS ============ -->
+<section class="section" id="programas">
+  <div class="wrap">
+    <header class="section__head reveal">
+      <p class="eyebrow">Programas</p>
+      <h2>Un grupo para cada etapa</h2>
+      <p class="section__lead">Cada alumno entra al grupo que corresponde a su edad y nivel. La clase de prueba nos permite ubicarlo correctamente.</p>
+    </header>
+
+    <div class="cards">
+      <article class="card reveal">
+        <span class="card__age">3 – 5 años</span>
+        <h3>Iniciación</h3>
+        <p>Psicomotricidad, equilibrio y coordinación a través del juego. Primer contacto con los aparatos en un entorno seguro.</p>
+        <ul class="card__list">
+          <li>2 sesiones por semana</li>
+          <li>50 minutos por clase</li>
+        </ul>
+      </article>
+
+      <article class="card reveal">
+        <span class="card__age">6 – 9 años</span>
+        <h3>Infantil</h3>
+        <p>Fundamentos técnicos de gimnasia artística: rodadas, paradas de manos, rueda y trabajo básico en cada aparato.</p>
+        <ul class="card__list">
+          <li>2 o 3 sesiones por semana</li>
+          <li>75 minutos por clase</li>
+        </ul>
+      </article>
+
+      <article class="card reveal">
+        <span class="card__age">10 – 15 años</span>
+        <h3>Juvenil</h3>
+        <p>Elementos acrobáticos avanzados, fuerza específica y rutinas completas. Preparación para evaluaciones por nivel.</p>
+        <ul class="card__list">
+          <li>3 sesiones por semana</li>
+          <li>90 minutos por clase</li>
+        </ul>
+      </article>
+
+      <article class="card card--dark reveal">
+        <span class="card__age">Por selección</span>
+        <h3>Equipo de competencia</h3>
+        <p>Entrenamiento de alto rendimiento con plan individual, preparación física y calendario de competencias.</p>
+        <ul class="card__list">
+          <li>4 a 6 sesiones por semana</li>
+          <li>Ingreso por evaluación</li>
+        </ul>
+      </article>
+
+      <article class="card reveal">
+        <span class="card__age">16+ años</span>
+        <h3>Adultos</h3>
+        <p>Movilidad, fuerza y habilidades gimnásticas para adultos. No se necesita experiencia previa.</p>
+        <ul class="card__list">
+          <li>Horarios noche y sábado</li>
+          <li>60 minutos por clase</li>
+        </ul>
+      </article>
+
+      <article class="card card--cta reveal">
+        <h3>¿No sabes cuál elegir?</h3>
+        <p>Agenda la clase de prueba. Evaluamos nivel y te recomendamos el grupo adecuado el mismo día.</p>
+        <a class="link-arrow" href="#agendar">Agendar sin costo <span aria-hidden="true">→</span></a>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MÉTODO ============ -->
+<section class="section section--alt" id="metodo">
+  <div class="wrap">
+    <header class="section__head reveal">
+      <p class="eyebrow">Método REIVAJ</p>
+      <h2>Progresión segura, resultados visibles</h2>
+      <p class="section__lead">Nadie avanza a un elemento nuevo sin dominar el anterior. Así reducimos el riesgo de lesión y sostenemos la motivación.</p>
+    </header>
+
+    <ol class="steps">
+      <li class="step reveal">
+        <span class="step__num">01</span>
+        <h3>Evaluación inicial</h3>
+        <p>Medimos flexibilidad, fuerza y coordinación para ubicar al alumno en el grupo correcto desde el primer día.</p>
+      </li>
+      <li class="step reveal">
+        <span class="step__num">02</span>
+        <h3>Fundamentos</h3>
+        <p>Postura, control corporal y técnica base. Es la etapa que sostiene todo lo que viene después.</p>
+      </li>
+      <li class="step reveal">
+        <span class="step__num">03</span>
+        <h3>Progresión por niveles</h3>
+        <p>Objetivos claros por nivel y evaluación cada trimestre. Los padres reciben un reporte de avance.</p>
+      </li>
+      <li class="step reveal">
+        <span class="step__num">04</span>
+        <h3>Alto rendimiento</h3>
+        <p>Para quien quiera competir: plan individual, preparación física y acompañamiento en cada competencia.</p>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ INSTALACIONES ============ -->
+<section class="section" id="instalaciones">
+  <div class="wrap split">
+    <div class="split__copy reveal">
+      <p class="eyebrow">Instalaciones</p>
+      <h2>Equipo profesional, seguridad primero</h2>
+      <p class="section__lead">Nuestro gimnasio está equipado con aparatos de especificación olímpica y zonas de amortiguación en cada área de trabajo.</p>
+      <ul class="checks">
+        <li>Piso de resorte de competencia</li>
+        <li>Barras asimétricas y barra fija</li>
+        <li>Viga de equilibrio a distintas alturas</li>
+        <li>Mesa de salto con colchones progresivos</li>
+        <li>Foso de espuma y cama elástica</li>
+        <li>Zona de acondicionamiento y flexibilidad</li>
+        <li>Área de espera con visibilidad para padres</li>
+      </ul>
+      <a class="btn btn--primary" href="#agendar">Conoce el gimnasio en tu clase gratis</a>
+    </div>
+
+    <div class="split__media reveal">
+      <!-- Sustituye por fotos reales del gimnasio -->
+      <div class="photo photo--tall" data-placeholder="assets/gym-1.jpg"></div>
+      <div class="photo photo--short" data-placeholder="assets/gym-2.jpg"></div>
+      <div class="photo photo--short" data-placeholder="assets/gym-3.jpg"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TESTIMONIOS ============ -->
+<section class="section section--alt">
+  <div class="wrap">
+    <header class="section__head reveal">
+      <p class="eyebrow">Familias REIVAJ</p>
+      <h2>Lo que dicen los papás</h2>
+      <p class="section__lead">Así se verá esta sección. Reemplaza cada tarjeta por una reseña real, con autorización de la familia.</p>
+    </header>
+    <div class="quotes">
+      <figure class="quote reveal">
+        <blockquote>Mi hija entró tímida a los 5 años. Hoy compite y es la niña más segura de su salón. El cambio no fue solo físico.</blockquote>
+        <figcaption><strong>Testimonio de ejemplo</strong><span>Mamá de alumna de 8 años</span></figcaption>
+      </figure>
+      <figure class="quote reveal">
+        <blockquote>Los entrenadores explican todo con paciencia y nunca fuerzan un elemento. Se nota que la seguridad es lo primero.</blockquote>
+        <figcaption><strong>Testimonio de ejemplo</strong><span>Papá de alumno de 11 años</span></figcaption>
+      </figure>
+      <figure class="quote reveal">
+        <blockquote>La clase de prueba nos convenció. Nos explicaron el plan completo sin presionarnos para inscribirnos ese día.</blockquote>
+        <figcaption><strong>Testimonio de ejemplo</strong><span>Mamá de alumna de 6 años</span></figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ============ AGENDAR ============ -->
+<section class="section booking" id="agendar">
+  <div class="wrap booking__inner">
+
+    <div class="booking__copy reveal">
+      <p class="eyebrow">Clase de prueba</p>
+      <h2>Agenda tu clase sin costo</h2>
+      <p class="section__lead">Una clase completa, con el grupo real y el entrenador que le corresponde. Sin costo y sin compromiso de inscripción.</p>
+
+      <ul class="includes">
+        <li><strong>Evaluación de nivel</strong> para ubicar al alumno en el grupo correcto.</li>
+        <li><strong>Clase completa</strong> con el grupo y horario que elijas.</li>
+        <li><strong>Recorrido por el gimnasio</strong> y explicación del método.</li>
+        <li><strong>Plan y costos por escrito</strong> al terminar, sin presión de venta.</li>
+      </ul>
+
+      <div class="booking__contact">
+        <p>¿Prefieres hablar con alguien?</p>
+        <a class="link-arrow" id="whatsappLink" href="https://wa.me/5210000000000" target="_blank" rel="noopener">Escríbenos por WhatsApp <span aria-hidden="true">→</span></a>
+      </div>
+    </div>
+
+    <div class="booking__form reveal">
+      <form id="trialForm" novalidate>
+        <div class="field">
+          <label for="nombre">Nombre de quien agenda <span aria-hidden="true">*</span></label>
+          <input type="text" id="nombre" name="nombre" autocomplete="name" required placeholder="María Cervantes">
+          <p class="error" data-error-for="nombre"></p>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="telefono">WhatsApp <span aria-hidden="true">*</span></label>
+            <input type="tel" id="telefono" name="telefono" inputmode="tel" autocomplete="tel" required placeholder="10 dígitos">
+            <p class="error" data-error-for="telefono"></p>
+          </div>
+          <div class="field">
+            <label for="email">Correo</label>
+            <input type="email" id="email" name="email" autocomplete="email" placeholder="tucorreo@ejemplo.com">
+            <p class="error" data-error-for="email"></p>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="alumno">Nombre del alumno <span aria-hidden="true">*</span></label>
+            <input type="text" id="alumno" name="alumno" required placeholder="Nombre del gimnasta">
+            <p class="error" data-error-for="alumno"></p>
+          </div>
+          <div class="field">
+            <label for="edad">Edad <span aria-hidden="true">*</span></label>
+            <input type="number" id="edad" name="edad" min="3" max="80" required placeholder="Años">
+            <p class="error" data-error-for="edad"></p>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="programa">Programa de interés</label>
+          <select id="programa" name="programa">
+            <option value="No estoy seguro">No estoy seguro, oriéntenme</option>
+            <option>Iniciación (3 – 5 años)</option>
+            <option>Infantil (6 – 9 años)</option>
+            <option>Juvenil (10 – 15 años)</option>
+            <option>Equipo de competencia</option>
+            <option>Adultos (16+)</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <span class="label">Horario preferido <span aria-hidden="true">*</span></span>
+          <div class="chips" role="radiogroup" aria-label="Horario preferido">
+            <label class="chip"><input type="radio" name="horario" value="Matutino (9:00 – 12:00)" required><span>Matutino</span></label>
+            <label class="chip"><input type="radio" name="horario" value="Vespertino (15:00 – 18:00)"><span>Vespertino</span></label>
+            <label class="chip"><input type="radio" name="horario" value="Noche (18:00 – 20:30)"><span>Noche</span></label>
+            <label class="chip"><input type="radio" name="horario" value="Sábado"><span>Sábado</span></label>
+          </div>
+          <p class="error" data-error-for="horario"></p>
+        </div>
+
+        <div class="field">
+          <label for="comentarios">¿Algo que debamos saber? <span class="opt">(opcional)</span></label>
+          <textarea id="comentarios" name="comentarios" rows="3" placeholder="Experiencia previa, lesiones, dudas..."></textarea>
+        </div>
+
+        <label class="consent">
+          <input type="checkbox" id="aviso" name="aviso" required>
+          <span>Acepto que REIVAJ me contacte por WhatsApp o teléfono para confirmar la cita.</span>
+        </label>
+        <p class="error" data-error-for="aviso"></p>
+
+        <button type="submit" class="btn btn--primary btn--block" id="submitBtn">Agendar clase de prueba</button>
+        <p class="form__note">Te confirmamos día y hora el mismo día hábil.</p>
+      </form>
+
+      <div class="success" id="formSuccess" hidden>
+        <div class="success__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h3>¡Solicitud enviada!</h3>
+        <p id="successMsg">Gracias. Te escribimos por WhatsApp para confirmar el día y la hora de tu clase de prueba.</p>
+        <button type="button" class="btn btn--outline-dark btn--sm" id="resetForm">Agendar otra clase</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section class="section section--alt" id="faq">
+  <div class="wrap faq__wrap">
+    <header class="section__head section__head--left reveal">
+      <p class="eyebrow">Preguntas frecuentes</p>
+      <h2>Lo que suelen preguntarnos</h2>
+    </header>
+
+    <div class="faq reveal">
+      <details>
+        <summary>¿La clase de prueba realmente no tiene costo?</summary>
+        <p>Correcto. Es una clase completa, sin costo y sin obligación de inscribirse. Solo pedimos que confirmes tu asistencia para reservar el lugar.</p>
+      </details>
+      <details>
+        <summary>¿Qué debe llevar mi hijo o hija?</summary>
+        <p>Ropa deportiva ajustada (sin botones ni cierres), cabello recogido y una botella de agua. Se entrena descalzo o con calcetines antiderrapantes.</p>
+      </details>
+      <details>
+        <summary>¿Se necesita experiencia previa?</summary>
+        <p>No. La mayoría de nuestros alumnos empieza desde cero. Los grupos se forman por edad y nivel, así que siempre entra con compañeros de su mismo punto de partida.</p>
+      </details>
+      <details>
+        <summary>¿Puedo quedarme a ver la clase?</summary>
+        <p>Sí. Contamos con un área de espera con visibilidad hacia el área de entrenamiento. Te pedimos observar desde ahí para no distraer al grupo.</p>
+      </details>
+      <details>
+        <summary>¿A partir de qué edad reciben alumnos?</summary>
+        <p>Desde los 3 años en el programa de Iniciación. También tenemos grupos de adultos desde los 16 años, sin experiencia previa.</p>
+      </details>
+      <details>
+        <summary>¿Cuánto cuesta la mensualidad?</summary>
+        <p>Depende del programa y del número de sesiones por semana. Te entregamos el plan y los costos por escrito al terminar la clase de prueba.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CTA FINAL ============ -->
+<section class="cta">
+  <div class="cta__arcs" aria-hidden="true">
+    <svg viewBox="0 0 1200 400" preserveAspectRatio="xMidYMid slice">
+      <circle cx="600" cy="200" r="330" fill="none" stroke="#FFFFFF" stroke-width="1" opacity=".10"/>
+      <circle cx="600" cy="200" r="260" fill="none" stroke="#FFFFFF" stroke-width="1" opacity=".14"/>
+      <path d="M270 200a330 330 0 0 1 500-280" fill="none" stroke="#0B5FFF" stroke-width="4" stroke-linecap="round" opacity=".85"/>
+    </svg>
+  </div>
+  <div class="wrap cta__inner reveal">
+    <svg class="cta__mark" viewBox="0 0 100 100" aria-hidden="true"><use href="#reivaj-mark"/></svg>
+    <h2>El primer paso es una clase.</h2>
+    <p>Sin costo, sin compromiso. Los cupos por grupo son limitados.</p>
+    <a class="btn btn--light" href="#agendar">Agendar mi clase de prueba</a>
+  </div>
+</section>
+
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer class="footer">
+  <div class="wrap footer__grid">
+    <div class="footer__brand">
+      <span class="brand brand--footer">
+        <svg class="brand__mark" viewBox="0 0 100 100" aria-hidden="true"><use href="#reivaj-mark"/></svg>
+        <span class="brand__text">
+          <span class="brand__name">REIVAJ</span>
+          <span class="brand__tag">Enjoy Gymnastics</span>
+        </span>
+      </span>
+      <p>Escuela de gimnasia artística. Formación técnica, disciplina y confianza para todas las edades.</p>
+    </div>
+
+    <div class="footer__col">
+      <h4>Contacto</h4>
+      <!-- TODO: sustituir por el teléfono, correo y WhatsApp reales -->
+      <p>Teléfono pendiente</p>
+      <p>Correo pendiente</p>
+      <p>WhatsApp pendiente</p>
+    </div>
+
+    <div class="footer__col">
+      <h4>Ubicación</h4>
+      <!-- TODO: sustituir por la dirección real y el enlace de Google Maps -->
+      <p>Dirección pendiente</p>
+    </div>
+
+    <div class="footer__col">
+      <h4>Horarios</h4>
+      <p>Lunes a viernes<br>9:00 – 20:30</p>
+      <p>Sábado<br>9:00 – 14:00</p>
+    </div>
+  </div>
+
+  <div class="wrap footer__bottom">
+    <p>© <span id="year">2026</span> REIVAJ Gimnasia Artística. Todos los derechos reservados.</p>
+    <nav aria-label="Legal">
+      <a href="#">Aviso de privacidad</a>
+      <a href="#">Términos</a>
+    </nav>
+  </div>
+</footer>
+
+<!-- CTA flotante móvil -->
+<a class="fab" href="#agendar" id="fab">Clase de prueba gratis</a>
+
+<script src="script.js"></script>
+</body>
+</html>
