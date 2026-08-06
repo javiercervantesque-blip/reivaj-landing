@@ -8,7 +8,7 @@
 const CONFIG = {
   // Número de WhatsApp del gimnasio en formato internacional, solo dígitos.
   // México: 52 + 1 + LADA + número  →  ej. "5215512345678"
-  whatsapp: '5210000000000',
+  whatsapp: '523334566544',
 
   // Endpoint opcional para recibir los datos por correo (Formspree, Getform, etc.).
   // Si lo dejas vacío, el formulario abre WhatsApp con el mensaje ya redactado.

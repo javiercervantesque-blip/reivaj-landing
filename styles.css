@@ -111,14 +111,24 @@ em{
 .brand{ display:inline-flex; align-items:center; gap:11px; text-decoration:none; }
 /* El logo no lleva fondo: hereda el color de su contenedor. Blanco sobre
    marino (nav, pie, cierre), marino sobre el papel hueso (hero). */
-.brand__mark{ width:40px; height:40px; flex:none; color:#fff; }
-.nav .brand__mark, .footer .brand__mark{ color:#fff; }
+.brand__mark{ width:40px; height:40px; flex:none; }
+/* El lockup completo hereda el color desde .brand, que lo propaga al aro
+   (currentColor en el SVG) y al wordmark enmascarado. */
+.nav .brand, .footer .brand{ color:#fff; }
 .cta__mark{ color:#fff; }
 .brand__badge{ color:var(--navy); }
 .brand__text{ display:flex; flex-direction:column; line-height:1; }
-.brand__name{
-  font-family:var(--ff-display); font-weight:800; font-style:italic;
-  font-size:1.22rem; letter-spacing:.02em; color:#fff;
+
+/* El wordmark real se usa como máscara: el canal alfa del PNG define la
+   forma y background-color la pinta. Así conserva las letterforms originales
+   y toma el color del contexto, sin necesitar un archivo por color.
+   El PNG mide 810x340 e incluye el tagline; con mask-size al ancho del
+   contenedor y alto recortado se muestra solo la palabra REIVAJ. */
+.brand__word{
+  display:block; width:108px; height:34px;
+  background-color:currentColor;
+  -webkit-mask:url("assets/logo-wordmark.png") left top / 108px auto no-repeat;
+          mask:url("assets/logo-wordmark.png") left top / 108px auto no-repeat;
 }
 .brand__tag{
   font-family:var(--ff-display); font-size:.55rem; font-weight:600;
@@ -251,7 +261,19 @@ em{
   color:var(--gold-dark); opacity:.75; text-align:center;
 }
 .photo--hero{ aspect-ratio:4/5; }
-.brand__badge{ width:52%; height:auto; }
+/* Lockup circular: aro vectorial con el wordmark real enmascarado dentro.
+   Aquí sí se muestra completo, con tagline, porque el tamaño lo permite. */
+.lockup{
+  position:relative; width:76%; aspect-ratio:1;
+  display:grid; place-items:center; color:var(--navy);
+}
+.lockup__ring{ position:absolute; inset:0; width:100%; height:100%; }
+.lockup__word{
+  width:58%; aspect-ratio:810/340;
+  background-color:currentColor;
+  -webkit-mask:url("assets/logo-wordmark.png") center/contain no-repeat;
+          mask:url("assets/logo-wordmark.png") center/contain no-repeat;
+}
 .photo--tall{ aspect-ratio:3/4; grid-row:span 2; }
 .photo--short{ aspect-ratio:4/3; }
 
