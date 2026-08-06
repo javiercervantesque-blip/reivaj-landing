@@ -109,7 +109,12 @@ em{
    El texto del badge SVG lleva atributos de presentación en el HTML:
    <use> clona a un shadow tree donde el CSS del documento no aplica. */
 .brand{ display:inline-flex; align-items:center; gap:11px; text-decoration:none; }
-.brand__mark{ width:40px; height:40px; flex:none; border-radius:50%; }
+/* El logo no lleva fondo: hereda el color de su contenedor. Blanco sobre
+   marino (nav, pie, cierre), marino sobre el papel hueso (hero). */
+.brand__mark{ width:40px; height:40px; flex:none; color:#fff; }
+.nav .brand__mark, .footer .brand__mark{ color:#fff; }
+.cta__mark{ color:#fff; }
+.brand__badge{ color:var(--navy); }
 .brand__text{ display:flex; flex-direction:column; line-height:1; }
 .brand__name{
   font-family:var(--ff-display); font-weight:800; font-style:italic;
