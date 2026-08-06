@@ -1,6 +1,8 @@
 /* =========================================================
    REIVAJ · Enjoy Gymnastics — Landing page
-   Paleta tomada del logo: azul marino, azul eléctrico y blanco.
+   Paleta: azul marino del logo, dorado como acento, papel hueso.
+   El hueso permite que tarjetas y formulario vayan en blanco puro,
+   invirtiendo la jerarquía: papel cálido, superficies elevadas claras.
    ========================================================= */
 
 :root{
@@ -10,21 +12,24 @@
   color-scheme: only light;
 
   /* Marca */
-  --navy:       #0B1B3C;   /* fondo del logo */
-  --navy-deep:  #06112A;   /* footer */
-  --navy-700:   #142A55;
-  --blue:       #0B5FFF;   /* arco del logo */
-  --blue-dark:  #0A4AD0;
-  --blue-light: #6EA0FF;   /* azul legible sobre marino */
-  --blue-soft:  #E8F0FF;
+  --navy:       #101E3C;   /* marino del logo */
+  --navy-deep:  #0A1530;   /* pie */
+  --navy-700:   #1C2F55;
+  --gold:       #C9A227;   /* acento: botones, arcos, detalles */
+  --gold-dark:  #8A6E12;   /* dorado legible en texto pequeño sobre hueso */
+  --gold-light: #E3C55C;   /* dorado sobre fondo marino */
+  --gold-soft:  #F3EBD5;   /* tinte para etiquetas y fondos suaves */
 
-  /* Texto y superficies */
-  --ink:        #0B1B3C;
-  --ink-soft:   #3F4B66;
-  --ink-mute:   #5C6885;
-  --line:       #DDE4F0;
-  --paper:      #FFFFFF;
-  --paper-2:    #F2F6FC;
+  /* Texto */
+  --ink:        #101E3C;
+  --ink-soft:   #3D4859;
+  --ink-mute:   #5A6478;
+  --line:       #E4DED2;
+
+  /* Superficies: el papel es hueso, lo elevado es blanco */
+  --paper:      #FAF7F1;   /* fondo de página */
+  --paper-2:    #F2ECE0;   /* secciones alternas, hueso más profundo */
+  --surface:    #FFFFFF;   /* tarjetas, formulario, testimonios */
 
   --radius:   10px;
   --radius-l: 18px;
@@ -36,8 +41,8 @@
   --ff-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
   --ease: cubic-bezier(.22,.61,.36,1);
-  --shadow-sm: 0 1px 2px rgba(11,27,60,.06), 0 4px 14px rgba(11,27,60,.05);
-  --shadow-md: 0 2px 8px rgba(11,27,60,.07), 0 20px 46px rgba(11,27,60,.10);
+  --shadow-sm: 0 1px 2px rgba(16,30,60,.06), 0 4px 14px rgba(16,30,60,.05);
+  --shadow-md: 0 2px 8px rgba(16,30,60,.07), 0 20px 46px rgba(16,30,60,.10);
 }
 
 *,*::before,*::after{ box-sizing:border-box; }
@@ -77,7 +82,7 @@ em{
   font-family:var(--ff-display);
   font-style:italic;
   font-weight:800;
-  color:var(--blue);
+  color:var(--gold);
 }
 
 .wrap{ width:100%; max-width:var(--wrap); margin-inline:auto; padding-inline:var(--pad); }
@@ -86,19 +91,19 @@ em{
 .eyebrow{
   font-family:var(--ff-display);
   font-size:.74rem; font-weight:700; letter-spacing:.2em;
-  text-transform:uppercase; color:var(--blue-dark); margin:0 0 1rem;
+  text-transform:uppercase; color:var(--gold-dark); margin:0 0 1rem;
 }
-.eyebrow--light{ color:var(--blue-light); }
+.eyebrow--light{ color:var(--gold-light); }
 
 .lead, .section__lead{ font-size:1.075rem; color:var(--ink-mute); max-width:56ch; }
 
 .skip-link{
   position:absolute; left:-9999px; top:0; z-index:200;
-  background:var(--blue); color:#fff; padding:12px 18px; border-radius:0 0 8px 0;
+  background:var(--gold); color:var(--navy); padding:12px 18px; border-radius:0 0 8px 0;
 }
 .skip-link:focus{ left:0; }
 
-:focus-visible{ outline:2px solid var(--blue); outline-offset:3px; border-radius:4px; }
+:focus-visible{ outline:2px solid var(--gold); outline-offset:3px; border-radius:4px; }
 
 /* ---------- Marca ----------
    El texto del badge SVG lleva atributos de presentación en el HTML:
@@ -113,7 +118,7 @@ em{
 .brand__tag{
   font-family:var(--ff-display); font-size:.55rem; font-weight:600;
   letter-spacing:.26em; text-transform:uppercase;
-  color:var(--blue-light); margin-top:6px;
+  color:var(--gold-light); margin-top:6px;
 }
 
 /* ---------- Botones ---------- */
@@ -125,8 +130,11 @@ em{
   text-decoration:none; cursor:pointer; white-space:nowrap;
   transition:transform .2s var(--ease), background .2s var(--ease), color .2s var(--ease), border-color .2s var(--ease), box-shadow .2s var(--ease);
 }
-.btn--primary{ background:var(--blue); color:#fff; }
-.btn--primary:hover{ background:var(--blue-dark); transform:translateY(-2px); box-shadow:0 10px 26px rgba(11,95,255,.32); }
+/* El dorado con texto blanco da 2.4:1 de contraste: ilegible. Por eso el botón
+   principal va en marino sobre hueso, y el dorado se reserva para superficies
+   donde puede llevar texto marino encima (6.4:1). */
+.btn--primary{ background:var(--navy); color:var(--paper); }
+.btn--primary:hover{ background:var(--navy-700); transform:translateY(-2px); box-shadow:0 10px 26px rgba(16,30,60,.30); }
 
 .btn--outline{ background:transparent; color:#fff; border-color:rgba(255,255,255,.35); }
 .btn--outline:hover{ border-color:#fff; background:rgba(255,255,255,.08); transform:translateY(-2px); }
@@ -143,7 +151,7 @@ em{
 
 .link-arrow{
   display:inline-flex; align-items:center; gap:.45rem;
-  font-family:var(--ff-display); font-weight:700; color:var(--blue-dark);
+  font-family:var(--ff-display); font-weight:700; color:var(--gold-dark);
   text-decoration:none; font-size:.95rem;
 }
 .link-arrow span{ transition:transform .2s var(--ease); }
@@ -166,7 +174,10 @@ em{
   color:rgba(255,255,255,.82); transition:color .2s var(--ease);
 }
 .nav__links a:hover{ color:#fff; }
-.nav__links .btn{ color:#fff; }
+/* En la barra marina, el botón va en dorado con texto marino: es el único
+   punto de la página donde el acento se usa como fondo sólido. */
+.nav__links .btn{ background:var(--gold); color:var(--navy); }
+.nav__links .btn:hover{ background:var(--gold-light); box-shadow:none; }
 
 .nav__toggle{
   display:none; width:44px; height:44px; border:1px solid rgba(255,255,255,.25);
@@ -180,12 +191,12 @@ em{
 /* ---------- Hero ---------- */
 .hero{
   position:relative; overflow:hidden;
-  background:linear-gradient(180deg, #F7FAFF 0%, var(--paper) 62%);
+  background:linear-gradient(180deg, #FDFBF5 0%, var(--paper) 62%);
   padding:clamp(56px, 9vw, 104px) 0 clamp(56px, 8vw, 96px);
 }
 .hero::before{
   content:""; position:absolute; inset:0;
-  background:radial-gradient(900px 520px at 78% 26%, rgba(11,95,255,.10), transparent 62%);
+  background:radial-gradient(900px 520px at 78% 26%, rgba(201,162,39,.13), transparent 62%);
 }
 .hero__arcs{ position:absolute; inset:0; }
 .hero__arcs svg{ width:100%; height:100%; }
@@ -204,7 +215,7 @@ em{
   font-size:.86rem; color:var(--ink-mute);
 }
 .hero__meta li{ display:flex; align-items:center; gap:8px; }
-.hero__meta li::before{ content:""; width:6px; height:6px; border-radius:50%; background:var(--blue); }
+.hero__meta li::before{ content:""; width:6px; height:6px; border-radius:50%; background:var(--gold); }
 
 .hero__visual{ position:relative; }
 .hero__badge{
@@ -224,15 +235,15 @@ em{
    bloques oscuros. Fondo claro y borde punteado hasta que pongas las fotos. */
 .photo{
   position:relative; overflow:hidden; border-radius:var(--radius-l);
-  background:var(--blue-soft);
-  border:1.5px dashed #AFC6EC;
+  background:var(--gold-soft);
+  border:1.5px dashed #D8CBA8;
   display:grid; place-items:center;
 }
 .photo::after{
   content:attr(data-placeholder);
   position:absolute; bottom:14px; left:12px; right:12px;
   font-size:.68rem; letter-spacing:.08em; text-transform:uppercase;
-  color:var(--blue-dark); opacity:.75; text-align:center;
+  color:var(--gold-dark); opacity:.75; text-align:center;
 }
 .photo--hero{ aspect-ratio:4/5; }
 .brand__badge{ width:52%; height:auto; }
@@ -240,7 +251,7 @@ em{
 .photo--short{ aspect-ratio:4/3; }
 
 /* ---------- Stats ---------- */
-.stats{ background:var(--paper); border-block:1px solid var(--line); }
+.stats{ background:var(--surface); border-block:1px solid var(--line); }
 .stats__grid{ display:grid; grid-template-columns:repeat(4,1fr); padding-block:clamp(32px,4vw,48px); }
 .stat{ text-align:center; padding-inline:12px; }
 .stat + .stat{ border-left:1px solid var(--line); }
@@ -266,16 +277,16 @@ em{
 /* ---------- Cards ---------- */
 .cards{ display:grid; grid-template-columns:repeat(auto-fit, minmax(285px,1fr)); gap:20px; }
 .card{
-  background:var(--paper); border:1px solid var(--line); border-radius:var(--radius-l);
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-l);
   padding:32px 28px 30px; display:flex; flex-direction:column;
   transition:transform .3s var(--ease), box-shadow .3s var(--ease), border-color .3s var(--ease);
 }
-.card:hover{ transform:translateY(-4px); box-shadow:var(--shadow-md); border-color:var(--blue); }
+.card:hover{ transform:translateY(-4px); box-shadow:var(--shadow-md); border-color:var(--gold); }
 .card__age{
   display:inline-block; align-self:flex-start;
   font-family:var(--ff-display);
   font-size:.7rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase;
-  color:var(--blue-dark); background:var(--blue-soft);
+  color:var(--gold-dark); background:var(--gold-soft);
   padding:7px 13px; border-radius:6px; margin-bottom:18px;
 }
 .card p{ font-size:.95rem; color:var(--ink-mute); }
@@ -285,19 +296,19 @@ em{
 }
 .card__list li{ display:flex; align-items:center; gap:9px; }
 .card__list li + li{ margin-top:6px; }
-.card__list li::before{ content:""; width:5px; height:5px; border-radius:50%; background:var(--blue); flex:none; }
+.card__list li::before{ content:""; width:5px; height:5px; border-radius:50%; background:var(--gold); flex:none; }
 
 .card--dark{ background:var(--navy); border-color:var(--navy); }
 .card--dark h3{ color:#fff; }
 .card--dark p{ color:rgba(255,255,255,.75); }
-.card--dark .card__age{ background:rgba(110,160,255,.18); color:var(--blue-light); }
+.card--dark .card__age{ background:rgba(227,197,92,.16); color:var(--gold-light); }
 .card--dark .card__list{ border-top-color:rgba(255,255,255,.16); color:rgba(255,255,255,.7); }
-.card--dark .card__list li::before{ background:var(--blue-light); }
-.card--dark:hover{ border-color:var(--blue); }
+.card--dark .card__list li::before{ background:var(--gold-light); }
+.card--dark:hover{ border-color:var(--gold); }
 
-.card--cta{ background:var(--blue-soft); border-color:transparent; justify-content:center; }
+.card--cta{ background:var(--gold-soft); border-color:transparent; justify-content:center; }
 .card--cta p{ color:var(--ink-soft); }
-.card--cta:hover{ border-color:var(--blue); }
+.card--cta:hover{ border-color:var(--gold); }
 
 /* ---------- Método ---------- */
 .steps{
@@ -305,11 +316,11 @@ em{
   display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:1px;
   background:var(--line); border:1px solid var(--line); border-radius:var(--radius-l); overflow:hidden;
 }
-.step{ background:var(--paper); padding:34px 28px 38px; transition:background .3s var(--ease); }
-.step:hover{ background:var(--blue-soft); }
+.step{ background:var(--surface); padding:34px 28px 38px; transition:background .3s var(--ease); }
+.step:hover{ background:var(--gold-soft); }
 .step__num{
   display:block; font-family:var(--ff-display); font-style:italic; font-weight:800;
-  font-size:1.7rem; color:var(--blue); margin-bottom:14px; letter-spacing:-.03em;
+  font-size:1.7rem; color:var(--gold); margin-bottom:14px; letter-spacing:-.03em;
 }
 .step h3{ font-size:1.08rem; }
 .step p{ font-size:.92rem; color:var(--ink-mute); margin:0; }
@@ -322,15 +333,15 @@ em{
 .checks li{ position:relative; padding-left:32px; margin-bottom:11px; font-size:.96rem; color:var(--ink-soft); }
 .checks li::before{
   content:""; position:absolute; left:0; top:.5em;
-  width:15px; height:8px; border-left:2.4px solid var(--blue); border-bottom:2.4px solid var(--blue);
+  width:15px; height:8px; border-left:2.4px solid var(--gold); border-bottom:2.4px solid var(--gold);
   transform:rotate(-45deg);
 }
 
 /* ---------- Testimonios ---------- */
 .quotes{ display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px; }
 .quote{
-  margin:0; background:var(--paper); border:1px solid var(--line);
-  border-top:3px solid var(--blue);
+  margin:0; background:var(--surface); border:1px solid var(--line);
+  border-top:3px solid var(--gold);
   border-radius:var(--radius-l); padding:30px 28px;
   display:flex; flex-direction:column; justify-content:space-between;
 }
@@ -343,6 +354,8 @@ em{
 
 /* ---------- Agendar ---------- */
 .booking{ background:var(--paper); }
+/* La sección de agendado va sobre hueso; el formulario, en blanco, para que
+   destaque como la superficie donde ocurre la acción principal. */
 .booking__inner{ display:grid; grid-template-columns:1fr 1.05fr; gap:clamp(36px,5vw,64px); align-items:start; }
 .booking__copy{ position:sticky; top:110px; }
 
@@ -351,20 +364,20 @@ em{
 .includes li strong{ color:var(--navy); font-weight:600; }
 .includes li::before{
   content:""; position:absolute; left:0; top:2px; width:21px; height:21px;
-  border-radius:50%; background:var(--blue-soft);
+  border-radius:50%; background:var(--gold-soft);
 }
 .includes li::after{
   content:""; position:absolute; left:6px; top:9px; width:9px; height:4px;
-  border-left:2px solid var(--blue); border-bottom:2px solid var(--blue);
+  border-left:2px solid var(--gold); border-bottom:2px solid var(--gold);
   transform:rotate(-45deg);
 }
 .booking__contact{ padding-top:22px; border-top:1px solid var(--line); }
 .booking__contact p{ font-size:.9rem; color:var(--ink-mute); margin-bottom:.4rem; }
 
 .booking__form{
-  background:var(--paper); border:1px solid var(--line); border-radius:var(--radius-l);
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-l);
   padding:clamp(26px,3.4vw,40px); box-shadow:var(--shadow-md);
-  border-top:4px solid var(--blue);
+  border-top:4px solid var(--gold);
 }
 
 .field{ margin-bottom:18px; }
@@ -372,7 +385,7 @@ em{
 .field label, .field .label{
   display:block; font-size:.83rem; font-weight:600; color:var(--navy); margin-bottom:7px;
 }
-.field label span[aria-hidden]{ color:var(--blue); }
+.field label span[aria-hidden]{ color:var(--gold); }
 .opt{ font-weight:400; color:var(--ink-mute); }
 
 .field input, .field select, .field textarea{
@@ -383,12 +396,12 @@ em{
 .field textarea{ resize:vertical; min-height:84px; }
 .field input::placeholder, .field textarea::placeholder{ color:#8A94AC; }
 .field input:focus, .field select:focus, .field textarea:focus{
-  outline:none; background:var(--paper); border-color:var(--blue);
-  box-shadow:0 0 0 3px rgba(11,95,255,.15);
+  outline:none; background:var(--surface); border-color:var(--gold);
+  box-shadow:0 0 0 3px rgba(201,162,39,.25);
 }
 .field select{
   appearance:none;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%230B1B3C' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23101E3C' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat:no-repeat; background-position:right 15px center; background-size:11px;
   padding-right:38px;
 }
@@ -407,22 +420,22 @@ em{
   font-size:.87rem; font-weight:600; cursor:pointer; background:var(--paper-2); color:var(--ink-soft);
   transition:all .2s var(--ease);
 }
-.chip span:hover{ border-color:var(--blue); color:var(--blue); }
-.chip input:checked + span{ background:var(--blue); border-color:var(--blue); color:#fff; }
+.chip span:hover{ border-color:var(--gold); color:var(--gold); }
+.chip input:checked + span{ background:var(--gold); border-color:var(--gold-dark); color:var(--navy); }
 .chip input:focus-visible + span{ outline:2px solid var(--navy); outline-offset:2px; }
 
 .consent{
   display:flex; gap:11px; align-items:flex-start;
   font-size:.84rem; color:var(--ink-mute); margin:6px 0 4px; cursor:pointer;
 }
-.consent input{ margin-top:3px; width:17px; height:17px; accent-color:var(--blue); flex:none; }
+.consent input{ margin-top:3px; width:17px; height:17px; accent-color:var(--gold); flex:none; }
 
 .form__note{ font-size:.79rem; color:var(--ink-mute); text-align:center; margin:14px 0 0; }
 
 .success{ text-align:center; padding:24px 8px; }
 .success__icon{
   width:58px; height:58px; margin:0 auto 20px; border-radius:50%;
-  background:var(--blue); color:#fff; display:grid; place-items:center;
+  background:var(--gold); color:var(--navy); display:grid; place-items:center;
 }
 .success__icon svg{ width:26px; height:26px; }
 .success h3{ font-size:1.45rem; }
@@ -437,10 +450,10 @@ em{
   font-family:var(--ff-display); font-weight:700; color:var(--navy); font-size:1.02rem; letter-spacing:-.02em;
 }
 .faq summary::-webkit-details-marker{ display:none; }
-.faq summary:hover{ color:var(--blue); }
+.faq summary:hover{ color:var(--gold); }
 .faq summary::after{
   content:""; position:absolute; right:8px; top:50%; width:11px; height:11px;
-  border-right:2.2px solid var(--blue); border-bottom:2.2px solid var(--blue);
+  border-right:2.2px solid var(--gold); border-bottom:2.2px solid var(--gold);
   transform:translateY(-70%) rotate(45deg); transition:transform .25s var(--ease);
 }
 .faq details[open] summary::after{ transform:translateY(-25%) rotate(225deg); }
@@ -454,7 +467,7 @@ em{
 }
 .cta::before{
   content:""; position:absolute; inset:0;
-  background:radial-gradient(760px 420px at 50% 0%, rgba(11,95,255,.28), transparent 65%);
+  background:radial-gradient(760px 420px at 50% 0%, rgba(201,162,39,.20), transparent 65%);
 }
 .cta__arcs{ position:absolute; inset:0; }
 .cta__arcs svg{ width:100%; height:100%; }
@@ -479,7 +492,7 @@ em{
 }
 .footer__col p{ margin:0 0 10px; line-height:1.55; }
 .footer a{ text-decoration:none; transition:color .2s var(--ease); }
-.footer a:hover{ color:var(--blue-light); }
+.footer a:hover{ color:var(--gold-light); }
 .footer__bottom{
   display:flex; flex-wrap:wrap; gap:14px; justify-content:space-between; align-items:center;
   padding-top:24px; font-size:.8rem; color:rgba(255,255,255,.55);
@@ -490,10 +503,10 @@ em{
 /* ---------- CTA flotante móvil ---------- */
 .fab{
   display:none; position:fixed; left:16px; right:16px; bottom:16px; z-index:90;
-  background:var(--blue); color:#fff; text-decoration:none;
+  background:var(--gold); color:var(--navy); text-decoration:none;
   font-family:var(--ff-display); font-weight:700;
   text-align:center; padding:16px; border-radius:var(--radius); font-size:.95rem;
-  box-shadow:0 10px 30px rgba(11,95,255,.45);
+  box-shadow:0 10px 30px rgba(16,30,60,.35);
   transform:translateY(140%); transition:transform .35s var(--ease);
 }
 .fab.is-visible{ transform:translateY(0); }
