@@ -1,103 +1,75 @@
-# REIVAJ · Enjoy Gymnastics — Landing page
+# REIVAJ · Enjoy Gymnastics — la página web
 
-Sitio estático de una sola página. No requiere instalación ni build: abre `index.html` en el navegador.
+Sitio estático (sin instalación ni build) publicado en Vercel desde este repo:
+`reivaj-landing.vercel.app`. Está conectado al programa del gimnasio por un
+buzón cifrado: lo que llenan los papás llega solo al programa, y nadie en el
+camino lo puede leer.
 
-```
-index.html    estructura y contenido (incluye el símbolo del logo en SVG)
-styles.css    diseño y paleta
-script.js     validación del formulario, animaciones, configuración
-```
+## Páginas
 
-## Identidad
+| Archivo | Qué es |
+|---|---|
+| `index.html` | Inicio: datos del gimnasio (horario, seguridad, cómo se inscribe, preguntas) y el formulario de **clase de prueba** (lunes a viernes, 4:00 pm; el papá escoge el día). No enlaza a la inscripción ni a la carta |
+| `inscripcion.html` | **Inscripción en línea** (no enlazada ni indexada: se entra solo con el link que manda el gimnasio) en seis pasos: alumno, tutores, emergencias y quién lo recoge, ficha médica, permisos y la **Carta de seguridad y cobertura firmada con el dedo**. La familia se lleva su copia |
+| `carta.html` | La carta sola, para las familias que ya están inscritas (se firma cada ciclo y al subir de nivel). No enlazada ni indexada |
+| `asistencia.html` | **La lista del celular del dueño.** Privada: solo abre con el link que da el programa (la llave va después del `#` y nunca sale del celular). No está enlazada ni se indexa |
+| `aviso-de-privacidad.html` | El Aviso de Privacidad 2027, tal cual el documento oficial |
 
-La paleta viene directo del logo:
+## Links para compartir
 
-| Variable | Color | Uso |
-|---|---|---|
-| `--navy` | `#0B1B3C` | fondo del logo → nav, títulos, CTA final, tarjeta destacada |
-| `--navy-deep` | `#06112A` | footer |
-| `--blue` | `#0B5FFF` | arco del logo → botones, acentos, links |
-| `--blue-light` | `#6EA0FF` | azul legible sobre fondo marino |
-| `--blue-soft` | `#E8F0FF` | fondos de etiquetas y destacados |
+Se comparten siempre por link (no QR). `vercel.json` tiene `cleanUrls`, así
+que no llevan `.html`:
 
-Están todas en el bloque `:root` de `styles.css`. Cambia una línea y se actualiza todo el sitio.
+| Link | A dónde lleva |
+|---|---|
+| `reivaj-landing.vercel.app/clase` | El formulario de clase de prueba (`clase.html` redirige a `/#agendar`) |
+| `reivaj-landing.vercel.app/inscripcion` | La inscripción en línea (solo por link personal) |
+| `reivaj-landing.vercel.app/carta` | La carta de seguridad para familias inscritas (solo por link personal) |
 
-Tipografía: **Archivo** en itálica bold para títulos, números y etiquetas (imita el wordmark
-inclinado del logo) e **Inter** para el texto corrido. El tagline *ENJOY GYMNASTICS* define el
-estilo de todas las etiquetas: mayúsculas con interletrado amplio.
+El de la clase de prueba lo manda el bot de WhatsApp. **El de la inscripción
+no está a la vista en la página y el bot no lo reparte:** lo manda el gimnasio,
+desde el programa, a quien ya vino a su clase y decidió quedarse (Prospectos →
+Ya vinieron → WhatsApp). El de la carta, desde la ficha del alumno
+(Expediente → Mandar el link por WhatsApp).
 
-## Qué debes editar antes de publicar
+## Piezas
 
-### 1. El logo real
-El símbolo que se ve ahora es una reconstrucción en SVG (aro + arco azul + wordmark). Funciona
-sin archivos externos, pero **no es el logo original**. Para usar el tuyo:
+| Archivo | Qué hace |
+|---|---|
+| `config.js` | **Lo único que se edita a mano:** WhatsApp, el link del buzón y la llave pública del programa (las dos últimas las da el programa en Configuración → Conexión con la página) |
+| `buzon.js` | Cierra cada envío en el navegador (RSA-OAEP 3072 + AES-256-GCM) y lo deja en el buzón. También abre y firma la lista del celular |
+| `carta-texto.js` | El texto de la carta v1.2. **No se edita a mano:** lo genera el programa (`herramientas/carta-a-landing.js`) y el programa compara la huella de lo firmado |
+| `firma.js` | La carta en pantalla, el lienzo de firma y la copia para la familia |
+| `comun.js` | Navegación, fechas de Guadalajara, validación |
+| `script.js`, `inscripcion.js`, `carta.js`, `asistencia.js` | Cada página |
+| `styles.css` | Diseño (paleta y tipografía de la marca) |
+| `vercel.json`, `robots.txt` | Cabeceras de seguridad: la página solo corre su propio código (los scripts escritos dentro del HTML van por su huella; si se cambian, hay que actualizarla — la prueba de la página en el programa lo avisa) y solo puede mandar datos al buzón. Que la lista, la inscripción y la carta no se indexen |
 
-1. Guarda el PNG del logo como `assets/logo.png` (recomendado 512×512, fondo transparente).
-2. Ya está enlazado como favicon y como imagen de Open Graph.
-3. Para reemplazarlo también en el hero, cambia este bloque de `index.html`:
+## El buzón
 
-```html
-<!-- de esto -->
-<svg class="brand__badge" viewBox="0 0 100 100"><use href="#reivaj-badge"/></svg>
-<!-- a esto -->
-<img class="brand__badge" src="assets/logo.png" alt="REIVAJ Enjoy Gymnastics">
-```
+Conectado desde el 28-sep-2026: una hoja de Google con su Apps Script; su
+link va en `buzon` de `config.js`. Solo guarda sobres cerrados.
+Si algún día se deja vacío, la clase de prueba sale por WhatsApp ya escrita, y
+la inscripción y la carta muestran un aviso para escribir por WhatsApp (no
+dejan llenar diez minutos para luego no poder enviar).
 
-Lo mismo aplica en el nav, el footer y el CTA final, donde se usa `<use href="#reivaj-mark"/>`.
+## Revisar antes de publicar
 
-### 2. WhatsApp (obligatorio)
-En `script.js`, arriba del todo:
+Desde la carpeta del programa: `npm run pagina`. Sirve esta carpeta tal cual
+en `http://localhost:5181` (`/clase`, `/inscripcion`, `/carta`), conectada al
+buzón de verdad: lo que se mande llega al programa real (se descarta ahí).
 
-```js
-const CONFIG = {
-  whatsapp: '5210000000000',  // ← tu número, solo dígitos, con lada de país
-  endpoint: ''
-};
-```
+## Probar sin internet
 
-Formato México: `52` + `1` + LADA + número. Ejemplo: `5215512345678`.
-
-Mientras `endpoint` esté vacío, el formulario abre WhatsApp con la solicitud ya redactada.
-Si prefieres recibirla por correo, crea un formulario en [Formspree](https://formspree.io) o
-[Getform](https://getform.io) y pega la URL en `endpoint`.
-
-### 3. Datos de contacto
-En `index.html`, al final (`<footer>`): teléfono, correo, dirección, link de Google Maps y horarios.
-Están marcados con ceros y "Ejemplo".
-
-### 4. Cifras reales
-En la sección `<!-- STATS -->` hay cuatro números de ejemplo (12 años, 400 alumnos,
-8 entrenadores, 5 aparatos). Cámbialos por los reales — o borra la sección si aún no aplican.
-
-### 5. Testimonios
-Los tres testimonios son de ejemplo. Sustitúyelos por reseñas reales con autorización de las familias.
-
-### 6. Fotos
-Los bloques en degradado marino son marcadores de posición. Reemplaza cada
-`<div class="photo" ...>` por una imagen:
-
-```html
-<img class="photo photo--hero" src="assets/hero.jpg" alt="Gimnasta en la viga de equilibrio">
-```
-
-Recomendado: hero vertical (~900×1200), instalaciones (~1200×900). Comprime en
-[squoosh.app](https://squoosh.app) para que carguen rápido.
+Desde la carpeta del programa: `node herramientas/banco.js --con-pagina`.
+Levanta esta página en `http://localhost:5180` con una `config.js` de prueba,
+el buzón simulado (el mismo código de Google) y el programa en
+`http://localhost:5178`, todo conectado. El `config.js` real no se toca.
 
 ## Nota técnica
 
-**No borres las declaraciones de `color-scheme`.** Están en dos lugares: la etiqueta
-`<meta name="color-scheme" content="only light">` del `<head>` y `color-scheme: only light`
-en el `:root` de `styles.css`. Sin ellas, Chrome y Edge invierten automáticamente la página
-para quien tenga Windows en modo oscuro: los fondos blancos se vuelven negros y el texto
-queda ilegible. El fondo también se declara en `html`, no solo en `body`, por la misma razón.
-
-
-Las animaciones de entrada usan la clase `.reveal`. El contenido es **visible por defecto**:
-solo se oculta para animarse si el script del `<head>` alcanzó a añadir la clase `js` al `<html>`,
-y hay un temporizador de respaldo de 2 segundos. No borres ese script del `<head>` — sin él,
-un fallo de JavaScript dejaría la página en blanco.
-
-## Publicar
-
-Arrastra la carpeta completa a [netlify.com/drop](https://app.netlify.com/drop) — queda en línea
-en segundos y con HTTPS. También funciona en Vercel, GitHub Pages o cualquier hosting normal.
+**No borres las declaraciones de `color-scheme`** (`<meta name="color-scheme"
+content="only light">` en cada página y `color-scheme: only light` en
+`styles.css`): sin ellas, Chrome y Edge invierten la página en modo oscuro.
+Las animaciones `.reveal` son visibles por defecto; solo se animan si el script
+del `<head>` alcanzó a poner la clase `js`.

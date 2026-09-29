@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Inscripción en línea | REIVAJ Gimnasia Artística</title>
+<meta name="description" content="Inscripción en línea a REIVAJ Gimnasia Artística: datos del alumno, contactos de emergencia, ficha médica y carta de seguridad firmada desde tu celular.">
+<meta name="theme-color" content="#101E3C">
+<meta name="color-scheme" content="only light">
+<link rel="icon" href="assets/icono-192.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,600;0,700;0,800;1,700;1,800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="reivaj-mark" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width="2.4"/>
+      <path d="M8.5 42A45 45 0 0 1 88 36" fill="none" stroke="#4DA6FF" stroke-width="4.6" stroke-linecap="round"/>
+    </symbol>
+  </defs>
+</svg>
+
+<header class="nav" id="nav">
+  <div class="wrap nav__inner">
+    <a class="brand" href="index.html" aria-label="REIVAJ Gimnasia Artística, inicio">
+      <svg class="brand__mark" viewBox="0 0 100 100" aria-hidden="true"><use href="#reivaj-mark"/></svg>
+      <span class="brand__text"><span class="brand__word"></span><span class="brand__tag">Enjoy Gymnastics</span></span>
+    </a>
+    <a class="nav__volver" href="index.html">← Volver al inicio</a>
+  </div>
+</header>
+
+<main class="pagina">
+  <div class="wrap">
+    <header class="pagina__cab">
+      <p class="eyebrow">Inscripción en línea</p>
+      <h1>Inscribe a tu hijo</h1>
+      <p class="lead">Seis pasos, unos diez minutos. Al final firmas la carta de seguridad con el dedo y te llevas tu copia. En recepción solo confirmamos grupo, horario y pago.</p>
+    </header>
+
+    <div class="nota nota--mal" id="sinConexion" hidden>
+      La inscripción en línea todavía no está conectada con el gimnasio.
+      Escríbenos por <a data-whatsapp="Hola, quiero inscribir a mi hijo en REIVAJ." href="https://wa.me/523334566544" target="_blank" rel="noopener">WhatsApp</a> y te ayudamos.
+    </div>
+
+    <form id="inscripcion" class="tarjeta tarjeta--oro" novalidate>
+      <ol class="pasos-barra" id="barra" aria-hidden="true"><li></li><li></li><li></li><li></li><li></li><li></li></ol>
+
+      <!-- ─── 1 · Alumno ─────────────────────────────────── -->
+      <fieldset class="paso" data-paso="1">
+        <p class="paso-titulo">Paso 1 de 6</p>
+        <h2>Datos del alumno</h2>
+        <div class="field-row--3">
+          <div class="field">
+            <label for="nombres">Nombre(s) <span aria-hidden="true">*</span></label>
+            <input id="nombres" name="nombres" autocomplete="off" required>
+            <p class="error" data-error-for="nombres"></p>
+          </div>
+          <div class="field">
+            <label for="apellidoPaterno">Apellido paterno <span aria-hidden="true">*</span></label>
+            <input id="apellidoPaterno" name="apellidoPaterno" autocomplete="off" required>
+            <p class="error" data-error-for="apellidoPaterno"></p>
+          </div>
+          <div class="field">
+            <label for="apellidoMaterno">Apellido materno</label>
+            <input id="apellidoMaterno" name="apellidoMaterno" autocomplete="off">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="nacimiento">Fecha de nacimiento <span aria-hidden="true">*</span></label>
+            <input type="date" id="nacimiento" name="nacimiento" required>
+            <p class="field__ayuda" id="edadTexto"></p>
+            <p class="error" data-error-for="nacimiento"></p>
+          </div>
+          <div class="field">
+            <span class="label">Es <span aria-hidden="true">*</span></span>
+            <div class="chips" role="radiogroup" aria-label="Niña o niño">
+              <label class="chip"><input type="radio" name="rama" value="femenil" required><span>Niña</span></label>
+              <label class="chip"><input type="radio" name="rama" value="varonil"><span>Niño</span></label>
+            </div>
+            <p class="error" data-error-for="rama"></p>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="curp">CURP <span class="opt">(si la tienes a la mano)</span></label>
+            <input id="curp" name="curp" maxlength="18" autocomplete="off" style="text-transform:uppercase">
+            <p class="error" data-error-for="curp"></p>
+          </div>
+          <div class="field">
+            <label for="escuela">Escuela, grado y turno <span class="opt">(opcional)</span></label>
+            <input id="escuela" name="escuela" autocomplete="off" placeholder="Ej. Primaria Juárez, 3º, matutino">
+          </div>
+        </div>
+        <div class="field">
+          <label for="domicilio">Domicilio: calle y número <span aria-hidden="true">*</span></label>
+          <input id="domicilio" name="domicilio" autocomplete="street-address" required>
+          <p class="error" data-error-for="domicilio"></p>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="colonia">Colonia <span aria-hidden="true">*</span></label>
+            <input id="colonia" name="colonia" required>
+            <p class="error" data-error-for="colonia"></p>
+          </div>
+          <div class="field">
+            <label for="cp">Código postal</label>
+            <input id="cp" name="cp" inputmode="numeric" maxlength="5" autocomplete="postal-code">
+          </div>
+        </div>
+        <div class="field">
+          <span class="label">¿Ha practicado gimnasia? <span aria-hidden="true">*</span></span>
+          <div class="chips" role="radiogroup" aria-label="¿Ha practicado gimnasia?">
+            <label class="chip"><input type="radio" name="experiencia" value="no" required><span>No</span></label>
+            <label class="chip"><input type="radio" name="experiencia" value="si"><span>Sí</span></label>
+          </div>
+          <p class="error" data-error-for="experiencia"></p>
+        </div>
+        <div class="field" id="experienciaDetalleCampo" hidden>
+          <label for="experienciaDetalle">¿Dónde y por cuánto tiempo?</label>
+          <input id="experienciaDetalle" name="experienciaDetalle">
+        </div>
+        <div class="field">
+          <label for="fuente">¿Cómo se enteró de REIVAJ?</label>
+          <select id="fuente" name="fuente"></select>
+        </div>
+      </fieldset>
+
+      <!-- ─── 2 · Tutores ────────────────────────────────── -->
+      <fieldset class="paso" data-paso="2" hidden>
+        <p class="paso-titulo">Paso 2 de 6</p>
+        <h2>Padre, madre o tutor</h2>
+        <p class="sub" style="color:var(--ink-mute)">El tutor 1 es el responsable del pago y el contacto principal: por su WhatsApp te avisamos de una urgencia.</p>
+        <div class="grupo">
+          <p class="grupo__titulo">Tutor 1</p>
+          <div class="field">
+            <label for="t1Nombre">Nombre completo <span aria-hidden="true">*</span></label>
+            <input id="t1Nombre" name="t1Nombre" autocomplete="name" required>
+            <p class="error" data-error-for="t1Nombre"></p>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="t1Parentesco">Parentesco <span aria-hidden="true">*</span></label>
+              <select id="t1Parentesco" name="t1Parentesco" required data-parentescos></select>
+              <p class="error" data-error-for="t1Parentesco"></p>
+            </div>
+            <div class="field">
+              <label for="t1Telefono">WhatsApp <span aria-hidden="true">*</span></label>
+              <input type="tel" id="t1Telefono" name="t1Telefono" inputmode="tel" autocomplete="tel" required placeholder="10 dígitos">
+              <p class="error" data-error-for="t1Telefono"></p>
+            </div>
+          </div>
+          <div class="field">
+            <label for="t1Correo">Correo <span class="opt">(opcional)</span></label>
+            <input type="email" id="t1Correo" name="t1Correo" autocomplete="email">
+            <p class="error" data-error-for="t1Correo"></p>
+          </div>
+        </div>
+        <div class="grupo">
+          <p class="grupo__titulo">Tutor 2 <span class="opt">(opcional)</span></p>
+          <div class="field">
+            <label for="t2Nombre">Nombre completo</label>
+            <input id="t2Nombre" name="t2Nombre" autocomplete="off">
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="t2Parentesco">Parentesco</label>
+              <select id="t2Parentesco" name="t2Parentesco" data-parentescos></select>
+            </div>
+            <div class="field">
+              <label for="t2Telefono">Teléfono</label>
+              <input type="tel" id="t2Telefono" name="t2Telefono" inputmode="tel" placeholder="10 dígitos">
+              <p class="error" data-error-for="t2Telefono"></p>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <span class="label">¿Existe resolución judicial sobre custodia, convivencia o restricción respecto del alumno? <span aria-hidden="true">*</span></span>
+          <div class="chips" role="radiogroup" aria-label="Resolución judicial">
+            <label class="chip"><input type="radio" name="custodia" value="no" required><span>No existe</span></label>
+            <label class="chip"><input type="radio" name="custodia" value="si"><span>Sí existe</span></label>
+          </div>
+          <p class="error" data-error-for="custodia"></p>
+        </div>
+        <div class="nota" id="custodiaNota" hidden>Trae copia de la resolución a la Dirección cuando vengas a recepción. Es obligatoria para que podamos cumplirla.</div>
+      </fieldset>
+
+      <!-- ─── 3 · Emergencias y quién lo recoge ─────────────── -->
+      <fieldset class="paso" data-paso="3" hidden>
+        <p class="paso-titulo">Paso 3 de 6</p>
+        <h2>Emergencias y quién lo recoge</h2>
+        <div class="grupo">
+          <p class="grupo__titulo">Contacto de emergencia 1</p>
+          <div class="field-row--3">
+            <div class="field"><label for="e1Nombre">Nombre <span aria-hidden="true">*</span></label><input id="e1Nombre" name="e1Nombre" required><p class="error" data-error-for="e1Nombre"></p></div>
+            <div class="field"><label for="e1Parentesco">Parentesco <span aria-hidden="true">*</span></label><input id="e1Parentesco" name="e1Parentesco" required><p class="error" data-error-for="e1Parentesco"></p></div>
+            <div class="field"><label for="e1Telefono">Teléfono <span aria-hidden="true">*</span></label><input type="tel" id="e1Telefono" name="e1Telefono" inputmode="tel" required placeholder="10 dígitos"><p class="error" data-error-for="e1Telefono"></p></div>
+          </div>
+        </div>
+        <div class="grupo">
+          <p class="grupo__titulo">Contacto de emergencia 2</p>
+          <div class="field-row--3">
+            <div class="field"><label for="e2Nombre">Nombre</label><input id="e2Nombre" name="e2Nombre"></div>
+            <div class="field"><label for="e2Parentesco">Parentesco</label><input id="e2Parentesco" name="e2Parentesco"></div>
+            <div class="field"><label for="e2Telefono">Teléfono</label><input type="tel" id="e2Telefono" name="e2Telefono" inputmode="tel" placeholder="10 dígitos"><p class="error" data-error-for="e2Telefono"></p></div>
+          </div>
+        </div>
+        <h3>¿Quién puede recogerlo?</h3>
+        <p class="sub" style="color:var(--ink-mute);font-size:.92rem">Solo las personas de esta lista pueden llevárselo. Sin registro previo no se entrega, sin excepción. Incluye a los tutores si ellos lo recogen.</p>
+        <div id="autorizados"></div>
+        <button type="button" class="btn-mas" id="masAutorizado">+ Agregar otra persona</button>
+        <p class="error" data-error-for="autorizados"></p>
+      </fieldset>
+
+      <!-- ─── 4 · Salud ──────────────────────────────────── -->
+      <fieldset class="paso" data-paso="4" hidden>
+        <p class="paso-titulo">Paso 4 de 6</p>
+        <h2>Ficha médica</h2>
+        <p class="sub" style="color:var(--ink-mute)">Declarar una condición no impide entrenar: permite entrenar bien. Esta información solo la ven la Dirección y su entrenador. No preguntamos peso ni medidas.</p>
+        <div class="field-row">
+          <div class="field">
+            <label for="sangre">Tipo de sangre <span aria-hidden="true">*</span></label>
+            <select id="sangre" name="sangre" required>
+              <option value="">Elige</option><option>O+</option><option>O-</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>No lo sé</option>
+            </select>
+            <p class="error" data-error-for="sangre"></p>
+          </div>
+          <div class="field">
+            <label for="servicio">Servicio médico <span aria-hidden="true">*</span></label>
+            <select id="servicio" name="servicio" required>
+              <option value="">Elige</option><option>IMSS</option><option>ISSSTE</option><option>Seguro de gastos médicos</option><option>Particular</option><option>Ninguno</option>
+            </select>
+            <p class="error" data-error-for="servicio"></p>
+          </div>
+        </div>
+        <div class="field">
+          <label for="afiliacion">N.º de afiliación o póliza, y hospital de preferencia <span class="opt">(si aplica)</span></label>
+          <input id="afiliacion" name="afiliacion">
+        </div>
+        <div class="field">
+          <label for="alergias">Alergias (a qué) <span aria-hidden="true">*</span></label>
+          <input id="alergias" name="alergias" required placeholder="Si no se conocen, escribe: ninguna">
+          <p class="error" data-error-for="alergias"></p>
+        </div>
+        <div class="field">
+          <label for="padecimientos">Padecimientos o lesiones previas <span aria-hidden="true">*</span></label>
+          <input id="padecimientos" name="padecimientos" required placeholder="Asma, convulsiones, fracturas, cirugías… o: ninguno">
+          <p class="error" data-error-for="padecimientos"></p>
+        </div>
+        <div class="field">
+          <label for="medicamentos">Medicamentos que toma <span aria-hidden="true">*</span></label>
+          <input id="medicamentos" name="medicamentos" required placeholder="Nombre y horario, o: ninguno">
+          <p class="error" data-error-for="medicamentos"></p>
+        </div>
+        <div class="field">
+          <label for="mas">¿Hay algo más que debamos saber para cuidarlo mejor? <span class="opt">(opcional)</span></label>
+          <textarea id="mas" name="mas" rows="3" placeholder="Miedos, cómo reacciona al dolor o a la frustración, algo que ayude al entrenador a entenderlo."></textarea>
+        </div>
+        <label class="consent">
+          <input type="checkbox" name="consentimientoSalud" required>
+          <span><b>Otorgo mi consentimiento expreso</b> para que REIVAJ trate los datos de salud de mi hijo o hija con las finalidades necesarias del <a href="aviso-de-privacidad.html" target="_blank">Aviso de Privacidad</a>: seguridad durante el entrenamiento, atención de urgencias, adecuación de la carga de trabajo, afiliación federativa y trámite de seguro.</span>
+        </label>
+        <p class="error" data-error-for="consentimientoSalud"></p>
+      </fieldset>
+
+      <!-- ─── 5 · Permisos ───────────────────────────────── -->
+      <fieldset class="paso" data-paso="5" hidden>
+        <p class="paso-titulo">Paso 5 de 6</p>
+        <h2>Permisos</h2>
+        <p class="sub" style="color:var(--ink-mute)">Tú decides cada uno. Negar un permiso no afecta la inscripción ni el trato. Se pueden cambiar por escrito cuando quieras.</p>
+        <h3>Uso de imagen</h3>
+        <div id="permisosImagen"></div>
+        <h3>Contacto físico técnico</h3>
+        <div class="permiso">
+          <p>La gimnasia requiere contacto físico para el ayudaje, la corrección postural y la prevención de caídas. En REIVAJ ese contacto se hace siempre a la vista de terceros y nunca en privado; se limita a las zonas técnicamente necesarias —espalda, cintura, caderas, brazos y piernas—; se anuncia al alumno cuando la situación lo permite; nunca involucra zonas íntimas, y se detiene de inmediato si el alumno manifiesta incomodidad, comunicándolo al tutor.</p>
+          <div class="chips" role="radiogroup" aria-label="Contacto físico técnico">
+            <label class="chip"><input type="radio" name="contactoFisico" value="si" required><span>Lo autorizo</span></label>
+            <label class="chip"><input type="radio" name="contactoFisico" value="no"><span>No lo autorizo</span></label>
+          </div>
+          <p class="error" data-error-for="contactoFisico"></p>
+          <p class="field__ayuda" id="contactoNota" hidden>Sin este permiso, la Dirección valorará contigo si puede entrenar en condiciones seguras.</p>
+        </div>
+        <h3>Avisos del gimnasio <span class="opt">(opcional)</span></h3>
+        <label class="consent"><input type="checkbox" name="promociones"><span>Recibir avisos de eventos, muestras, cursos de verano y promociones.</span></label>
+        <label class="consent"><input type="checkbox" name="encuestas"><span>Recibir encuestas de satisfacción y mejora del servicio.</span></label>
+        <label class="consent"><input type="checkbox" name="testimonios"><span>Que nos contacten para testimonios o reseñas sobre el gimnasio.</span></label>
+      </fieldset>
+
+      <!-- ─── 6 · Carta de seguridad ─────────────────────── -->
+      <fieldset class="paso" data-paso="6" hidden>
+        <p class="paso-titulo">Paso 6 de 6</p>
+        <div id="carta"></div>
+        <div class="grupo" style="margin-top:18px">
+          <p class="grupo__titulo">Firma</p>
+          <div class="field-row">
+            <div class="field">
+              <label for="firmante">Nombre completo de quien firma <span aria-hidden="true">*</span></label>
+              <input id="firmante" name="firmante" required>
+              <p class="error" data-error-for="firmante"></p>
+            </div>
+            <div class="field">
+              <label for="firmanteParentesco">Parentesco <span aria-hidden="true">*</span></label>
+              <select id="firmanteParentesco" name="firmanteParentesco" required data-parentescos></select>
+              <p class="error" data-error-for="firmanteParentesco"></p>
+            </div>
+          </div>
+          <div class="field" id="firmaCampo">
+            <div id="firma" class="firma"></div>
+            <p class="error" data-error-for="firma"></p>
+          </div>
+          <label class="consent">
+            <input type="checkbox" name="leida" required>
+            <span>Leí completa la carta y el <a href="aviso-de-privacidad.html" target="_blank">Aviso de Privacidad</a>.</span>
+          </label>
+          <p class="error" data-error-for="leida"></p>
+          <label class="consent">
+            <input type="checkbox" name="firmaElectronica" required>
+            <span id="textoEnLinea"></span>
+          </label>
+          <p class="error" data-error-for="firmaElectronica"></p>
+        </div>
+        <div class="trampa" aria-hidden="true"><label>Sitio web <input type="text" name="sitio" tabindex="-1" autocomplete="off"></label></div>
+      </fieldset>
+
+      <div class="navegacion">
+        <button type="button" class="btn btn--outline-dark" id="atras" hidden>Atrás</button>
+        <span></span>
+        <button type="button" class="btn btn--primary" id="siguiente">Siguiente</button>
+        <button type="submit" class="btn btn--primary" id="enviar" hidden>Enviar inscripción</button>
+      </div>
+      <p class="form__note" id="nota"></p>
+    </form>
+
+    <section class="tarjeta tarjeta--oro" id="listo" hidden>
+      <div class="success">
+        <div class="success__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <h3>Inscripción recibida</h3>
+        <p id="listoTexto"></p>
+        <p><button type="button" class="btn btn--primary" id="guardarCopia">Guardar mi copia de la carta</button></p>
+        <p class="field__ayuda">Se abre para imprimir: elige «Guardar como PDF» si no tienes impresora.</p>
+        <p><a class="link-arrow" href="index.html">Volver al inicio <span aria-hidden="true">→</span></a></p>
+      </div>
+    </section>
+
+    <div class="copia" id="copia"></div>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="wrap footer__bottom">
+    <p>REIVAJ Gimnasia Artística · Juan de Dios Robledo 831, Col. Talpita, Guadalajara · 33 3456 6544</p>
+    <nav aria-label="Más"><a href="aviso-de-privacidad.html">Aviso de privacidad</a></nav>
+  </div>
+</footer>
+
+<script src="config.js"></script>
+<script src="comun.js"></script>
+<script src="buzon.js"></script>
+<script src="carta-texto.js"></script>
+<script src="firma.js"></script>
+<script src="inscripcion.js"></script>
+</body>
+</html>

@@ -1,251 +1,171 @@
 /* =========================================================
-   REIVAJ · Gimnasia Artística — interacciones
+   REIVAJ · Gimnasia Artística — página principal
    ========================================================= */
+(function () {
+  'use strict';
+  var R = window.Reivaj;
+  R.iniciarPagina();
+  var cargada = Date.now();
 
-/* ---------------------------------------------------------
-   CONFIGURACIÓN — edita estos valores
-   --------------------------------------------------------- */
-const CONFIG = {
-  // Número de WhatsApp del gimnasio en formato internacional, solo dígitos.
-  // México: 52 + 1 + LADA + número  →  ej. "5215512345678"
-  whatsapp: '523334566544',
+  /* CTA flotante: aparece después del inicio y se esconde en el formulario */
+  var fab = document.getElementById('fab');
+  var agendar = document.getElementById('agendar');
+  var alMover = function () {
+    var y = window.scrollY;
+    fab.classList.toggle('is-visible', y > 520 && agendar.getBoundingClientRect().top > window.innerHeight * 0.6);
+  };
+  window.addEventListener('scroll', alMover, { passive: true });
+  alMover();
 
-  // Endpoint opcional para recibir los datos por correo (Formspree, Getform, etc.).
-  // Si lo dejas vacío, el formulario abre WhatsApp con el mensaje ya redactado.
-  endpoint: ''
-};
-
-/* ---------------------------------------------------------
-   Navegación
-   --------------------------------------------------------- */
-const nav = document.getElementById('nav');
-const navToggle = document.getElementById('navToggle');
-const navLinks = document.getElementById('navLinks');
-
-navToggle.addEventListener('click', () => {
-  const open = navLinks.classList.toggle('is-open');
-  navToggle.setAttribute('aria-expanded', String(open));
-  navToggle.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú');
-});
-
-navLinks.addEventListener('click', (e) => {
-  if (e.target.tagName === 'A') {
-    navLinks.classList.remove('is-open');
-    navToggle.setAttribute('aria-expanded', 'false');
-  }
-});
-
-/* Sombra del nav + CTA flotante */
-const fab = document.getElementById('fab');
-const onScroll = () => {
-  const y = window.scrollY;
-  nav.classList.toggle('is-scrolled', y > 8);
-
-  const booking = document.getElementById('agendar');
-  const bookingTop = booking.getBoundingClientRect().top;
-  // El FAB aparece tras el hero y se esconde al llegar al formulario
-  fab.classList.toggle('is-visible', y > 520 && bookingTop > window.innerHeight * 0.6);
-};
-window.addEventListener('scroll', onScroll, { passive: true });
-onScroll();
-
-/* ---------------------------------------------------------
-   Animaciones de entrada
-   --------------------------------------------------------- */
-const revealAll = () =>
-  document.querySelectorAll('.reveal').forEach((el) => el.classList.add('is-in'));
-
-if ('IntersectionObserver' in window) {
-  const revealObserver = new IntersectionObserver((entries) => {
-    entries.forEach((entry, i) => {
-      if (!entry.isIntersecting) return;
-      entry.target.style.transitionDelay = `${Math.min(i * 70, 280)}ms`;
-      entry.target.classList.add('is-in');
-      revealObserver.unobserve(entry.target);
-    });
-  }, { threshold: 0.12, rootMargin: '0px 0px -60px' });
-
-  document.querySelectorAll('.reveal').forEach((el) => revealObserver.observe(el));
-
-  // Red de seguridad: si algo impide que el observer dispare, muestra todo.
-  setTimeout(revealAll, 1500);
-} else {
-  revealAll();
-}
-
-/* Contadores */
-const countObserver = new IntersectionObserver((entries) => {
-  entries.forEach((entry) => {
-    if (!entry.isIntersecting) return;
-    const el = entry.target;
-    const target = Number(el.dataset.count);
-    const duration = 1100;
-    const start = performance.now();
-
-    const tick = (now) => {
-      const p = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - p, 3);
-      el.textContent = Math.round(target * eased).toLocaleString('es-MX');
-      if (p < 1) requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
-    countObserver.unobserve(el);
-  });
-}, { threshold: 0.6 });
-
-if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-  document.querySelectorAll('[data-count]').forEach((el) => countObserver.observe(el));
-}
-
-/* ---------------------------------------------------------
-   Formulario de clase de prueba
-   --------------------------------------------------------- */
-const form = document.getElementById('trialForm');
-const successBox = document.getElementById('formSuccess');
-const successMsg = document.getElementById('successMsg');
-const submitBtn = document.getElementById('submitBtn');
-
-const RULES = {
-  nombre:   (v) => v.trim().length >= 3 || 'Escribe el nombre completo.',
-  telefono: (v) => (v.replace(/\D/g, '').length >= 10) || 'Escribe un número de 10 dígitos.',
-  email:    (v) => v === '' || /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v) || 'Revisa el formato del correo.',
-  alumno:   (v) => v.trim().length >= 2 || 'Escribe el nombre del alumno.',
-  edad:     (v) => (Number(v) >= 3 && Number(v) <= 80) || 'Ingresa una edad entre 3 y 80.',
-  horario:  (v) => v !== '' || 'Selecciona un horario.',
-  aviso:    (v) => v === true || 'Necesitamos tu autorización para contactarte.'
-};
-
-const getValue = (name) => {
-  const el = form.elements[name];
-  if (!el) return '';
-  if (el instanceof RadioNodeList) return el.value;
-  if (el.type === 'checkbox') return el.checked;
-  return el.value;
-};
-
-const showError = (name, message) => {
-  const msgEl = form.querySelector(`[data-error-for="${name}"]`);
-  const input = form.elements[name];
-  const field = input instanceof RadioNodeList
-    ? form.querySelector('.chips').closest('.field')
-    : input.closest('.field');
-
-  if (msgEl) {
-    msgEl.textContent = message || '';
-    msgEl.classList.toggle('is-visible', Boolean(message));
-  }
-  if (field) field.classList.toggle('has-error', Boolean(message));
-};
-
-const validate = () => {
-  let firstInvalid = null;
-  Object.entries(RULES).forEach(([name, rule]) => {
-    const result = rule(getValue(name));
-    const message = result === true ? '' : result;
-    showError(name, message);
-    if (message && !firstInvalid) firstInvalid = name;
-  });
-  return firstInvalid;
-};
-
-/* Limpia el error al corregir */
-form.addEventListener('input', (e) => {
-  const name = e.target.name;
-  if (RULES[name]) {
-    const result = RULES[name](getValue(name));
-    if (result === true) showError(name, '');
-  }
-});
-form.addEventListener('change', (e) => {
-  const name = e.target.name;
-  if (RULES[name]) {
-    const result = RULES[name](getValue(name));
-    if (result === true) showError(name, '');
-  }
-});
-
-const buildMessage = (data) => (
-  `Hola REIVAJ, quiero agendar una clase de prueba.\n\n` +
-  `Contacto: ${data.nombre}\n` +
-  `WhatsApp: ${data.telefono}\n` +
-  (data.email ? `Correo: ${data.email}\n` : '') +
-  `Alumno: ${data.alumno} (${data.edad} años)\n` +
-  `Programa: ${data.programa}\n` +
-  `Horario preferido: ${data.horario}\n` +
-  (data.comentarios ? `Notas: ${data.comentarios}\n` : '')
-);
-
-form.addEventListener('submit', async (e) => {
-  e.preventDefault();
-
-  const invalid = validate();
-  if (invalid) {
-    const el = form.elements[invalid];
-    const node = el instanceof RadioNodeList ? el[0] : el;
-    node.focus({ preventScroll: true });
-    node.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    return;
-  }
-
-  const data = Object.fromEntries(new FormData(form).entries());
-  submitBtn.disabled = true;
-  submitBtn.textContent = 'Enviando...';
-
-  try {
-    if (CONFIG.endpoint) {
-      const res = await fetch(CONFIG.endpoint, {
-        method: 'POST',
-        headers: { Accept: 'application/json' },
-        body: new FormData(form)
+  /* Contadores */
+  if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    var contar = new IntersectionObserver(function (entradas) {
+      entradas.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        var n = Number(e.target.dataset.count), t0 = performance.now();
+        var paso = function (t) {
+          var p = Math.min((t - t0) / 900, 1);
+          e.target.textContent = Math.round(n * (1 - Math.pow(1 - p, 3)));
+          if (p < 1) requestAnimationFrame(paso);
+        };
+        requestAnimationFrame(paso);
+        contar.unobserve(e.target);
       });
-      if (!res.ok) throw new Error('Respuesta no válida del servidor');
-      successMsg.textContent = 'Gracias. Te contactamos por WhatsApp para confirmar el día y la hora de tu clase de prueba.';
-    } else {
-      const url = `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(buildMessage(data))}`;
-      window.open(url, '_blank', 'noopener');
-      successMsg.textContent = 'Abrimos WhatsApp con tu solicitud lista. Envía el mensaje para confirmar tu lugar.';
-    }
-
-    form.hidden = true;
-    successBox.hidden = false;
-    successBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  } catch (err) {
-    submitBtn.textContent = 'Reintentar envío';
-    submitBtn.disabled = false;
-    const note = form.querySelector('.form__note');
-    note.textContent = 'No pudimos enviar la solicitud. Inténtalo de nuevo o escríbenos por WhatsApp.';
-    note.style.color = 'var(--accent-dark)';
+    }, { threshold: 0.6 });
+    document.querySelectorAll('[data-count]').forEach(function (x) { contar.observe(x); });
   }
-});
 
-document.getElementById('resetForm').addEventListener('click', () => {
-  form.reset();
-  form.querySelectorAll('.has-error').forEach((f) => f.classList.remove('has-error'));
-  form.querySelectorAll('.error').forEach((f) => f.classList.remove('is-visible'));
-  submitBtn.disabled = false;
-  submitBtn.textContent = 'Agendar clase de prueba';
-  const note = form.querySelector('.form__note');
-  note.textContent = 'Te confirmamos día y hora el mismo día hábil.';
-  note.style.color = '';
-  successBox.hidden = true;
-  form.hidden = false;
-  form.elements.nombre.focus();
-});
-
-/* ---------------------------------------------------------
-   Detalles
-   --------------------------------------------------------- */
-document.getElementById('whatsappLink').href =
-  `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent('Hola, quiero información sobre la clase de prueba en REIVAJ.')}`;
-
-document.getElementById('year').textContent = new Date().getFullYear();
-
-/* Cierra un FAQ abierto al abrir otro */
-document.querySelectorAll('.faq details').forEach((d) => {
-  d.addEventListener('toggle', () => {
-    if (!d.open) return;
-    document.querySelectorAll('.faq details').forEach((other) => {
-      if (other !== d) other.open = false;
+  /* Un FAQ abierto a la vez */
+  document.querySelectorAll('.faq details').forEach(function (d) {
+    d.addEventListener('toggle', function () {
+      if (!d.open) return;
+      document.querySelectorAll('.faq details').forEach(function (o) { if (o !== d) o.open = false; });
     });
   });
-});
+
+  /* ---------------------------------------------------------
+     Clase de prueba
+     --------------------------------------------------------- */
+  var form = document.getElementById('trialForm');
+  var exito = document.getElementById('formSuccess');
+  var mensajeExito = document.getElementById('successMsg');
+  var boton = document.getElementById('submitBtn');
+  var pruebas = (window.CONFIG && window.CONFIG.pruebas) || {};
+
+  var selectFuente = form.elements.fuente;
+  R.FUENTES.forEach(function (f) { selectFuente.appendChild(R.el('option', { value: f[0], texto: f[1] })); });
+
+  function pintarDias() {
+    var cont = document.getElementById('dias');
+    var elegido = R.valor(form, 'dia');
+    cont.innerHTML = '';
+    R.diasDePrueba(pruebas).forEach(function (f) {
+      var c = R.fechaChip(f);
+      var input = R.el('input', { type: 'radio', name: 'dia', value: f, required: true });
+      if (f === elegido) input.checked = true;
+      cont.appendChild(R.el('label', { clase: 'chip chip--dia' }, [input,
+        R.el('span', {}, [R.el('small', { texto: c.dia }), R.el('b', { texto: String(c.num) }), R.el('small', { texto: c.mes })])]));
+    });
+    document.getElementById('dia-ayuda').textContent = 'La clase es de ' + R.horaBonita(pruebas.hora || '16:00') + ' a ' + R.horaBonita(pruebas.horaFin || '17:00') + '.';
+  }
+  pintarDias();
+  // Si el programa del gimnasio está conectado, manda la agenda real
+  // (días sin clase, hora de la prueba).
+  if (window.Buzon && window.CONFIG && window.CONFIG.buzon) {
+    window.Buzon.agenda().then(function (r) {
+      if (r && r.ok && r.agenda && r.agenda.pruebas) { pruebas = r.agenda.pruebas; pintarDias(); }
+    });
+  }
+
+  var REGLAS = {
+    tutor: function (v) { return v.length >= 3 || 'Escribe tu nombre.'; },
+    telefono: function (v) { return Boolean(R.telefono10(v)) || 'Escribe un WhatsApp de 10 dígitos.'; },
+    alumno: function (v) { return v.length >= 3 || 'Escribe su nombre y apellido.'; },
+    edad: function (v) { var n = Number(v); return (n >= 4 && n <= 18) || (n > 0 && n < 4 ? 'Recibimos niñas y niños desde los 4 años.' : 'Escribe su edad (de 4 a 18 años).'); },
+    dia: function (v) { return Boolean(v) || 'Escoge el día.'; },
+    aviso: function (v) { return v === true || 'Necesitamos tu permiso para escribirte.'; }
+  };
+
+  function revisar() {
+    var primero = null;
+    Object.keys(REGLAS).forEach(function (k) {
+      var r = REGLAS[k](R.valor(form, k));
+      R.mostrarError(form, k, r === true ? '' : r);
+      if (r !== true && !primero) primero = k;
+    });
+    return primero;
+  }
+  ['input', 'change'].forEach(function (ev) {
+    form.addEventListener(ev, function (e) {
+      var k = e.target.name;
+      if (REGLAS[k] && REGLAS[k](R.valor(form, k)) === true) R.mostrarError(form, k, '');
+    });
+  });
+
+  function textoWhatsApp(d) {
+    return 'Hola REIVAJ, quiero agendar una clase de prueba.\n\n' +
+      'Alumno: ' + d.alumno + ' (' + d.edad + ' años)\n' +
+      'Día: ' + R.fechaLarga(d.dia) + '\n' +
+      'Me llamo ' + d.tutor + (d.comentarios ? '\nNota: ' + d.comentarios : '');
+  }
+
+  var botonWa = document.getElementById('successWa');
+  function terminar(texto, enlaceWa) {
+    mensajeExito.textContent = texto;
+    botonWa.hidden = !enlaceWa;
+    if (enlaceWa) botonWa.href = enlaceWa;
+    form.hidden = true;
+    exito.hidden = false;
+    exito.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var malo = revisar();
+    if (malo) { R.llevarA(form, malo); return; }
+    var d = {
+      alumno: R.valor(form, 'alumno'), edad: R.valor(form, 'edad'), tutor: R.valor(form, 'tutor'),
+      telefono: R.telefono10(R.valor(form, 'telefono')), dia: R.valor(form, 'dia'),
+      fuente: R.valor(form, 'fuente'), comentarios: R.valor(form, 'comentarios'), origen: 'landing'
+    };
+    var cfg = window.CONFIG || {};
+    if (!cfg.buzon || !cfg.llavePublica || !window.Buzon || !window.Buzon.disponible()) {
+      // La página todavía no está conectada al programa del gimnasio: la
+      // solicitud sale por WhatsApp, ya escrita (en el mismo clic, para que
+      // el navegador no bloquee la ventana).
+      window.open(R.enlaceWhatsApp(textoWhatsApp(d)), '_blank', 'noopener');
+      terminar('Abrimos WhatsApp con tu solicitud escrita. Envía el mensaje y te confirmamos.');
+      return;
+    }
+    boton.disabled = true;
+    boton.textContent = 'Enviando…';
+    var r = await window.Buzon.enviar('prueba', { enviado: new Date().toISOString(), datos: d }, { hp: R.valor(form, 'sitio'), t: Date.now() - cargada })
+      .catch(function () { return { ok: false }; });
+    boton.disabled = false;
+    boton.textContent = 'Agendar clase de prueba';
+    if (r.ok) {
+      terminar('Listo. Te escribimos por WhatsApp para confirmar la clase del ' + R.fechaLarga(d.dia) + ' a las ' + R.horaBonita(pruebas.hora || '16:00') + '.');
+      return;
+    }
+    if (r.red || !r.error) {
+      terminar('No pudimos enviarla por aquí. Mándala por WhatsApp: ya va escrita.', R.enlaceWhatsApp(textoWhatsApp(d)));
+      return;
+    }
+    var nota = form.querySelector('.form__note');
+    nota.textContent = r.error;
+    nota.classList.add('form__note--mal');
+  });
+
+  document.getElementById('resetForm').addEventListener('click', function () {
+    form.reset();
+    form.querySelectorAll('.has-error').forEach(function (f) { f.classList.remove('has-error'); });
+    form.querySelectorAll('.error').forEach(function (f) { f.classList.remove('is-visible'); });
+    var nota = form.querySelector('.form__note');
+    nota.textContent = 'Te confirmamos por WhatsApp el mismo día hábil.';
+    nota.classList.remove('form__note--mal');
+    pintarDias();
+    exito.hidden = true;
+    form.hidden = false;
+    form.elements.tutor.focus();
+  });
+})();

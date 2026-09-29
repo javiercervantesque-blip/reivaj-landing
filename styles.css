@@ -590,3 +590,201 @@ em{
   .reveal, .js .reveal{ opacity:1; transform:none; }
   .fab{ transform:none; }
 }
+
+/* =========================================================
+   Añadidos de septiembre 2026: datos reales, inscripción en
+   línea, carta firmada y la lista del celular.
+   ========================================================= */
+[hidden]{ display:none !important; }
+
+/* El marco del logo en el inicio (ya no es un marcador de foto) */
+.photo--marca{
+  border:0;
+  background:radial-gradient(120% 90% at 30% 20%, #FFFFFF 0%, var(--gold-soft) 58%, #EADFC0 100%);
+  box-shadow:var(--shadow-md);
+}
+
+/* Horario de clases */
+.horario{
+  max-width:720px; margin:0 auto clamp(34px,4vw,48px);
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-l);
+  overflow:hidden; box-shadow:var(--shadow-sm);
+}
+.horario__fila{ display:grid; grid-template-columns:1.3fr repeat(5,1fr); align-items:center; text-align:center; }
+.horario__fila + .horario__fila{ border-top:1px solid var(--line); }
+.horario__fila > *{ padding:14px 6px; }
+.horario__fila span[role="cell"]{ color:var(--gold); font-size:.8rem; }
+.horario__fila strong{
+  font-family:var(--ff-display); font-style:italic; font-weight:800; color:var(--navy);
+  font-size:1.05rem; letter-spacing:-.02em;
+}
+.horario__fila--cab{ background:var(--navy); color:#fff; }
+.horario__fila--cab span{
+  font-family:var(--ff-display); font-size:.72rem; font-weight:700; letter-spacing:.16em; text-transform:uppercase;
+  color:rgba(255,255,255,.8);
+}
+.cards--tres{ grid-template-columns:repeat(auto-fit, minmax(260px,1fr)); }
+
+.checks--dos{
+  display:grid; grid-template-columns:1fr 1fr; gap:6px 36px;
+  max-width:900px; margin:clamp(34px,4vw,48px) auto 0;
+}
+.steps--tres{ grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); }
+.inscripcion__acciones{
+  display:flex; flex-wrap:wrap; gap:18px 30px; align-items:center; justify-content:center;
+  margin-top:clamp(28px,3.4vw,40px);
+}
+.inscripcion__acciones .link-arrow{ white-space:normal; }
+
+/* Días de la clase de prueba */
+.chips--dias{ display:grid; grid-template-columns:repeat(auto-fill, minmax(62px,1fr)); gap:8px; }
+.chip--dia span{ padding:8px 4px; text-align:center; line-height:1.15; }
+.chip--dia small{ display:block; font-size:.66rem; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-mute); }
+.chip--dia b{ display:block; font-family:var(--ff-display); font-size:1.25rem; font-weight:800; color:var(--navy); }
+.chip--dia input:checked + span small, .chip--dia input:checked + span b{ color:var(--navy); }
+.field__ayuda{ font-size:.8rem; color:var(--ink-mute); margin:8px 0 0; }
+.form__note--mal{ color:#C42B2B; font-weight:600; }
+.trampa{ position:absolute !important; left:-10000px; width:1px; height:1px; overflow:hidden; }
+.consent a{ color:var(--gold-dark); }
+
+.footer__lema{
+  font-family:var(--ff-display); font-size:.7rem; font-weight:700; letter-spacing:.22em;
+  text-transform:uppercase; color:var(--gold-light);
+}
+.footer__bottom nav{ flex-wrap:wrap; }
+
+@media (max-width:760px){
+  .checks--dos{ grid-template-columns:1fr; }
+  .horario__fila > *{ padding:12px 2px; }
+  .horario__fila strong{ font-size:.92rem; }
+}
+
+/* =========================================================
+   Páginas de trámite: inscripción, carta y aviso
+   ========================================================= */
+.pagina{ padding:clamp(34px,5vw,64px) 0 clamp(60px,8vw,100px); }
+.pagina .wrap{ max-width:820px; }
+.pagina__cab{ margin-bottom:clamp(24px,3vw,36px); }
+.pagina__cab h1{ font-size:clamp(2rem,4.4vw,3rem); }
+.pagina__cab .lead{ margin-bottom:0; }
+.nav__volver{ color:rgba(255,255,255,.82); text-decoration:none; font-size:.93rem; font-weight:500; }
+.nav__volver:hover{ color:#fff; }
+
+.tarjeta{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-l);
+  padding:clamp(22px,3vw,34px); box-shadow:var(--shadow-sm); margin-bottom:18px;
+}
+.tarjeta--oro{ border-top:4px solid var(--gold); box-shadow:var(--shadow-md); }
+.tarjeta h2{ font-size:clamp(1.35rem,2.4vw,1.7rem); margin-bottom:.35em; }
+.tarjeta h3{ margin-top:1.4em; }
+.tarjeta > p.sub{ color:var(--ink-mute); font-size:.93rem; margin-top:-.2em; }
+
+/* Barra de pasos */
+.pasos-barra{ list-style:none; margin:0 0 18px; padding:0; display:flex; gap:6px; }
+.pasos-barra li{ flex:1; height:6px; border-radius:3px; background:var(--line); transition:background .3s var(--ease); }
+.pasos-barra li.hecho{ background:var(--gold); }
+.pasos-barra li.actual{ background:var(--navy); }
+.paso-titulo{ font-family:var(--ff-display); font-size:.74rem; font-weight:700; letter-spacing:.2em; text-transform:uppercase; color:var(--gold-dark); margin:0 0 .6rem; }
+
+.paso{ border:0; padding:0; margin:0; min-width:0; }
+.navegacion{ display:flex; gap:12px; justify-content:space-between; align-items:center; margin-top:24px; flex-wrap:wrap; }
+.navegacion .btn{ min-width:150px; }
+
+.grupo{ border:1px solid var(--line); border-radius:var(--radius); padding:16px 16px 2px; margin-bottom:16px; background:var(--paper); }
+.grupo__titulo{ font-family:var(--ff-display); font-weight:700; color:var(--navy); font-size:.95rem; margin:0 0 12px; display:flex; justify-content:space-between; align-items:center; gap:10px; }
+.grupo__titulo button{ font:inherit; font-size:.8rem; font-weight:600; color:var(--gold-dark); background:none; border:0; cursor:pointer; padding:4px; }
+.field-row--3{ display:grid; grid-template-columns:1.4fr 1fr 1fr; gap:16px; }
+.btn-mas{
+  font:inherit; font-size:.88rem; font-weight:600; color:var(--navy); cursor:pointer;
+  background:transparent; border:1.5px dashed var(--line); border-radius:var(--radius);
+  padding:11px 16px; width:100%; margin-bottom:16px;
+}
+.btn-mas:hover{ border-color:var(--gold); color:var(--gold-dark); }
+
+.opciones{ display:grid; gap:8px; }
+.opcion{
+  display:flex; gap:11px; align-items:flex-start; cursor:pointer;
+  border:1.5px solid var(--line); border-radius:var(--radius); padding:12px 14px;
+  background:var(--paper-2); font-size:.92rem; color:var(--ink-soft);
+}
+.opcion input{ margin-top:3px; width:17px; height:17px; accent-color:var(--gold); flex:none; }
+.opcion:has(input:checked){ border-color:var(--gold); background:var(--gold-soft); color:var(--ink); }
+.permiso{ border-bottom:1px solid var(--line); padding:14px 0; }
+.permiso:last-child{ border-bottom:0; }
+.permiso p{ margin:0 0 10px; font-size:.92rem; color:var(--ink-soft); }
+.permiso .chips{ gap:8px; }
+
+.nota{
+  font-size:.86rem; line-height:1.5; border-radius:var(--radius); padding:12px 14px; margin:0 0 16px;
+  background:var(--gold-soft); color:var(--ink-soft); border:1px solid #E6D6A8;
+}
+.nota--mal{ background:#FFF1F1; border-color:#F2BDBD; color:#9B1C1C; }
+.nota--ok{ background:#EAF6EF; border-color:#B9DEC8; color:#1E6B45; }
+
+/* La carta */
+.carta{ font-size:.95rem; line-height:1.6; color:var(--ink-soft); }
+.carta__aviso{ font-family:var(--ff-display); font-size:.72rem; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:#B3261E; margin:0 0 .4rem; }
+.carta h2{ margin-bottom:.6em; }
+.carta h3{ display:flex; gap:10px; align-items:center; font-size:1.05rem; margin:1.5em 0 .6em; }
+.carta h3 .n{
+  display:inline-grid; place-items:center; width:26px; height:26px; flex:none; border-radius:50%;
+  background:var(--navy); color:#fff; font-size:.8rem; font-style:normal;
+}
+.carta ul{ padding-left:1.2em; margin:0 0 .8em; }
+.carta li{ margin-bottom:4px; }
+.carta__recuadro{ border-left:4px solid #B3261E; background:#FFF6F5; padding:12px 14px; border-radius:0 var(--radius) var(--radius) 0; margin:0 0 12px; }
+.carta__recuadro strong{ display:block; color:#8E1D17; margin-bottom:4px; }
+.carta__cuadro{ width:100%; border-collapse:collapse; margin:0 0 12px; font-size:.88rem; }
+.carta__cuadro th, .carta__cuadro td{ text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+.carta__cuadro th{ width:34%; color:var(--navy); font-weight:600; background:var(--paper-2); }
+.carta__cuadro td.vacio{ color:var(--ink-mute); }
+.carta__datos{ display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:6px 18px; font-size:.88rem; margin:0 0 6px; }
+.carta__datos div{ border-bottom:1px solid var(--line); padding:6px 0; }
+.carta__datos span{ display:block; font-size:.72rem; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-mute); }
+.carta__datos b{ color:var(--ink); font-weight:600; }
+.carta__lo-llena{ font-size:.8rem; color:var(--ink-mute); font-style:italic; }
+
+/* Firma con el dedo */
+.firma{ margin-top:10px; }
+.firma__lienzo{
+  position:relative; border:1.5px solid var(--line); border-radius:var(--radius);
+  background:#fff; touch-action:none; overflow:hidden;
+}
+.firma__lienzo canvas{ display:block; width:100%; height:190px; cursor:crosshair; touch-action:none; }
+.firma__linea{ position:absolute; left:6%; right:6%; bottom:44px; border-bottom:1.5px solid #C9C2B1; pointer-events:none; }
+.firma__guia{ position:absolute; left:0; right:0; bottom:16px; text-align:center; font-size:.75rem; color:var(--ink-mute); pointer-events:none; }
+.firma__lienzo.firmado .firma__guia{ display:none; }
+.firma__acciones{ display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:8px; font-size:.8rem; color:var(--ink-mute); }
+.firma__acciones button{ font:inherit; font-weight:600; color:var(--gold-dark); background:none; border:0; cursor:pointer; padding:4px 0; }
+.has-error .firma__lienzo{ border-color:#D93A3A; }
+
+.resumen{ display:grid; gap:4px; font-size:.9rem; }
+.resumen div{ display:flex; gap:12px; justify-content:space-between; border-bottom:1px solid var(--line); padding:7px 0; }
+.resumen span{ color:var(--ink-mute); }
+.resumen b{ color:var(--ink); font-weight:600; text-align:right; }
+
+/* La copia que se guarda la familia */
+.copia{ display:none; }
+.firma-img{ display:block; height:80px; max-width:100%; }
+.copia__pie{ font-size:8.5pt; color:#444; border-top:1px solid #999; margin-top:8mm; padding-top:3mm; }
+@media print{
+  body *{ visibility:hidden; }
+  .copia, .copia *{ visibility:visible; }
+  .copia{ display:block; position:absolute; left:0; top:0; width:100%; padding:0 6mm; font-size:10.5pt; color:#000; }
+  .copia .carta h3 .n{ background:#000; }
+  .copia .firma-img{ height:26mm; }
+  @page{ size:letter; margin:12mm; }
+}
+
+/* Aviso de privacidad */
+.legal h2{ font-size:1.3rem; margin-top:1.6em; }
+.legal h3{ font-size:1.05rem; margin-top:1.3em; }
+.legal p, .legal li{ font-size:.95rem; }
+.legal table{ width:100%; border-collapse:collapse; font-size:.88rem; margin:0 0 1em; }
+.legal th, .legal td{ border:1px solid var(--line); padding:8px 10px; text-align:left; vertical-align:top; }
+.legal th{ background:var(--paper-2); color:var(--navy); }
+
+@media (max-width:760px){
+  .field-row--3{ grid-template-columns:1fr; gap:0; }
+  .navegacion .btn{ flex:1; min-width:0; }
+}
