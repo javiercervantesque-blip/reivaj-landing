@@ -17,7 +17,9 @@
   var firma = null;
   var seguroNodo = null;
   var $ = function (id) { return document.getElementById(id); };
-  var v = function (n) { return R.valor(form, n); };
+  // Alergias, padecimientos, medicamentos y servicio médico no son obligatorios: vacío = ninguno.
+  var NINGUNO = { alergias: 'Ninguna', padecimientos: 'Ninguno', medicamentos: 'Ninguno', servicio: 'Ninguno' };
+  var v = function (n) { var x = R.valor(form, n); return x === '' && NINGUNO[n] ? NINGUNO[n] : x; };
 
   // ─── Catálogos ──────────────────────────────────────────────────────
   var PARENTESCOS = ['Madre', 'Padre', 'Abuela', 'Abuelo', 'Tía', 'Tío', 'Hermana', 'Hermano', 'Tutor legal', 'Otro'];
@@ -27,12 +29,13 @@
   });
   R.FUENTES.forEach(function (f) { form.elements.fuente.appendChild(R.el('option', { value: f[0], texto: f[1] })); });
 
+  // La grabación técnica en clase, la foto de credencial y el contacto físico
+  // técnico son parte del servicio: se informan en el paso 5, no se preguntan.
   var IMAGEN = [
-    ['imagenInterna', 'Grabación técnica en clase.', 'Video y fotografía del alumno para análisis y corrección técnica, de uso interno del cuerpo técnico.'],
-    ['imagenFamilia', 'Envío a la familia.', 'Que ese material se le envíe por el WhatsApp oficial del gimnasio.'],
-    ['imagenDifusion', 'Imagen no identificable en difusión.', 'Manos, pies, silueta a contraluz o plano de detalle sin rostro reconocible, en materiales de REIVAJ.'],
-    ['resultados', 'Resultados deportivos.', 'Publicación del nombre del alumno y su resultado en competencia, sin fotografía de rostro.'],
-    ['imagenExpediente', 'Material interno del expediente.', 'Fotografía del alumno en su credencial y expediente, de uso exclusivamente administrativo.']
+    ['imagenRostro', 'Fotos y videos con rostro en redes y publicidad.', 'Que el alumno aparezca con el rostro reconocible en las redes sociales, la página y la publicidad de REIVAJ. Nunca se publica su nombre completo ni datos personales junto a su imagen, ni se cede a terceros o a otras marcas.'],
+    ['imagenDifusion', 'Imagen sin rostro en redes y publicidad.', 'Manos, pies, silueta a contraluz o plano de detalle sin rostro reconocible, en materiales de REIVAJ.'],
+    ['imagenFamilia', 'Envío a la familia.', 'Que las fotos y videos de clase se le envíen por el WhatsApp oficial del gimnasio.'],
+    ['resultados', 'Resultados deportivos.', 'Publicación del nombre del alumno y su resultado en competencia.']
   ];
   var contImagen = $('permisosImagen');
   IMAGEN.forEach(function (p) {
@@ -59,7 +62,6 @@
     var n = e.target.name;
     if (n === 'experiencia') $('experienciaDetalleCampo').hidden = v('experiencia') !== 'si';
     if (n === 'custodia') $('custodiaNota').hidden = v('custodia') !== 'si';
-    if (n === 'contactoFisico') $('contactoNota').hidden = v('contactoFisico') !== 'no';
     if (n === 'nacimiento') mostrarEdad();
     guardarBorrador();
   });
@@ -114,9 +116,11 @@
 
   // ─── Reglas por paso ────────────────────────────────────────────────
   var eligio = function (v) { return Boolean(v) || 'Elija una opción.'; };
-  var texto = function (min, msg) { return function (v) { return String(v).length >= min || msg; }; };
-  var tel = function (msg) { return function (v) { return Boolean(R.telefono10(v)) || msg; }; };
-  var telOpcional = function (v) { return !v || Boolean(R.telefono10(v)) || 'El teléfono debe tener 10 dígitos.'; };
+  // Texto con letras de verdad (no «..» ni «123»).
+  var texto = function (min, msg) { return function (v) { return (String(v).length >= min && R.conLetras(v, Math.min(min, 3))) || msg; }; };
+  var TEL_MAL = 'Revise el número: 10 dígitos, con lada (ej. 33 1234 5678).';
+  var tel = function (msg) { return function (v) { return R.telefonoValido(v) ? true : (R.telefono10(v) ? TEL_MAL : msg); }; };
+  var telOpcional = function (v) { return !v || Boolean(R.telefonoValido(v)) || TEL_MAL; };
   var REGLAS = {
     1: {
       nombres: texto(2, 'Escriba su nombre.'),
@@ -126,6 +130,7 @@
       curp: function (x) { return !x || /^[A-Z]{4}\d{6}[HMX][A-Z]{5}[A-Z0-9]\d$/.test(String(x).toUpperCase()) || 'La CURP tiene 18 letras y números. Revísela o déjela vacía.'; },
       domicilio: texto(5, 'Escriba calle y número.'),
       colonia: texto(3, 'Escriba la colonia.'),
+      horas: eligio,
       experiencia: eligio
     },
     2: {
@@ -144,20 +149,16 @@
       autorizados: function () {
         var a = autorizados();
         if (!a.length) return 'Agregue al menos a una persona.';
-        if (a.some(function (x) { return x.nombre.length < 3 || !R.telefono10(x.telefono); })) return 'Cada persona necesita nombre y un teléfono de 10 dígitos.';
+        if (a.some(function (x) { return x.nombre.length < 3 || !R.conLetras(x.nombre, 3) || !R.telefonoValido(x.telefono); })) return 'Cada persona necesita nombre y un teléfono válido de 10 dígitos.';
         return true;
       }
     },
     4: {
       sangre: function (x) { return Boolean(x) || 'Elija una opción (puede ser «No lo sé»).'; },
-      servicio: function (x) { return Boolean(x) || 'Elija una opción (puede ser «Ninguno»).'; },
-      alergias: texto(2, 'Escriba cuáles, o «ninguna».'),
-      padecimientos: texto(2, 'Escriba cuáles, o «ninguno».'),
-      medicamentos: texto(2, 'Escriba cuáles, o «ninguno».'),
       consentimientoSalud: function (x) { return x === true || 'Sin este consentimiento no podemos inscribirlo: la ley lo pide para los datos de salud.'; }
     },
     5: (function () {
-      var o = { contactoFisico: eligio };
+      var o = {};
       IMAGEN.forEach(function (p) { o[p[0]] = function (x) { return Boolean(x) || 'Elija «Autorizo» o «No autorizo».'; }; });
       return o;
     })(),
@@ -252,7 +253,7 @@
   // ─── Enviar ─────────────────────────────────────────────────────────
   function armarDatos(huella, cuando) {
     var sn = function (n) { return v(n) === 'si'; };
-    var permisos = { contactoFisico: sn('contactoFisico'), promociones: v('promociones') === true, encuestas: v('encuestas') === true, testimonios: v('testimonios') === true };
+    var permisos = { imagenInterna: true, imagenExpediente: true, contactoFisico: true, promociones: v('promociones') === true, encuestas: v('encuestas') === true, testimonios: v('testimonios') === true };
     IMAGEN.forEach(function (p) { permisos[p[0]] = sn(p[0]); });
     return {
       alumno: {
@@ -272,6 +273,7 @@
       consentimientoSalud: v('consentimientoSalud') === true,
       permisos: permisos,
       fuente: v('fuente'),
+      plan: { horas: Number(v('horas')) || null },
       carta: {
         documento: window.CARTA_SEGURIDAD.documento, version: window.CARTA_SEGURIDAD.version, huella: huella,
         seguro: v('seguro'), firmante: v('firmante'), parentesco: v('firmanteParentesco'),
@@ -308,16 +310,24 @@
       $('nota').classList.add('form__note--mal');
       return;
     }
-    CF.armarCopia($('copia'), datosCarta(), {
+    copia = { datos: datosCarta(), extra: {
       seguro: r.datos.carta.seguro, ficha: fichaCarta(), firma: r.datos.carta.firma, firmante: r.datos.carta.firmante,
       parentesco: r.datos.carta.parentesco, huella: r.datos.carta.huella, folio: r.id || '',
       cuando: cuando.toLocaleString('es-MX', { timeZone: 'America/Mexico_City', dateStyle: 'long', timeStyle: 'short' })
-    });
+    } };
+    CF.armarCopia($('copia'), copia.datos, copia.extra);
     $('listoTexto').textContent = 'Recibimos la inscripción de ' + v('nombres') + '. En recepción confirmamos grupo, horario y forma de pago.';
     form.hidden = true;
     $('listo').hidden = false;
     borrarBorrador();
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+  var copia = null;
+  $('descargarPdf').addEventListener('click', function () {
+    var b = this;
+    if (!copia || b.disabled) return;
+    b.disabled = true;
+    window.CartaPDF.descargar(copia.datos, copia.extra).then(function () { b.disabled = false; });
   });
   $('guardarCopia').addEventListener('click', function () { window.print(); });
 
@@ -350,7 +360,6 @@
     (o.autorizados || []).forEach(filaAutorizado);
     $('experienciaDetalleCampo').hidden = v('experiencia') !== 'si';
     $('custodiaNota').hidden = v('custodia') !== 'si';
-    $('contactoNota').hidden = v('contactoFisico') !== 'no';
     mostrarEdad();
     return Math.min(Math.max(1, o.paso || 1), TOTAL);
   }

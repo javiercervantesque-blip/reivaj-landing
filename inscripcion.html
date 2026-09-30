@@ -31,7 +31,7 @@
     <header class="pagina__cab">
       <p class="eyebrow">Inscripción en línea</p>
       <h1>Inscripción del alumno</h1>
-      <p class="lead">Seis pasos, alrededor de diez minutos. Al final firma la Carta de seguridad con el dedo y recibe su copia. En recepción solo confirmamos grupo, horario y forma de pago.</p>
+      <p class="lead">Seis pasos, alrededor de diez minutos. Al final firma la Carta de seguridad con el dedo y recibe su copia. En recepción confirmamos grupo, horario y forma de pago, y le pedimos una identificación oficial de quien firmó.</p>
     </header>
 
     <div class="nota nota--mal" id="sinConexion" hidden>
@@ -104,6 +104,15 @@
             <label for="cp">Código postal</label>
             <input id="cp" name="cp" inputmode="numeric" maxlength="5" autocomplete="postal-code">
           </div>
+        </div>
+        <div class="field">
+          <span class="label">¿Cuántas horas a la semana? <span aria-hidden="true">*</span></span>
+          <div class="chips" role="radiogroup" aria-label="¿Cuántas horas a la semana?">
+            <label class="chip"><input type="radio" name="horas" value="2" required><span>2 horas · $750 al mes</span></label>
+            <label class="chip"><input type="radio" name="horas" value="3"><span>3 horas · $850 al mes</span></label>
+          </div>
+          <p class="field__ayuda">Los días y la hora de su grupo se los confirmamos en recepción.</p>
+          <p class="error" data-error-for="horas"></p>
         </div>
         <div class="field">
           <span class="label">¿Ha practicado gimnasia? <span aria-hidden="true">*</span></span>
@@ -223,9 +232,9 @@
             <p class="error" data-error-for="sangre"></p>
           </div>
           <div class="field">
-            <label for="servicio">Servicio médico <span aria-hidden="true">*</span></label>
-            <select id="servicio" name="servicio" required>
-              <option value="">Elija</option><option>IMSS</option><option>ISSSTE</option><option>Seguro de gastos médicos</option><option>Particular</option><option>Ninguno</option>
+            <label for="servicio">Servicio médico</label>
+            <select id="servicio" name="servicio">
+              <option value="">Si no tiene, déjelo así</option><option>IMSS</option><option>ISSSTE</option><option>Seguro de gastos médicos</option><option>Particular</option><option>Ninguno</option>
             </select>
             <p class="error" data-error-for="servicio"></p>
           </div>
@@ -235,18 +244,19 @@
           <input id="afiliacion" name="afiliacion">
         </div>
         <div class="field">
-          <label for="alergias">Alergias (a qué) <span aria-hidden="true">*</span></label>
-          <input id="alergias" name="alergias" required placeholder="Si no se conocen, escriba: ninguna">
+          <label for="alergias">Alergias (a qué)</label>
+          <input id="alergias" name="alergias" placeholder="Si no tiene, déjelo en blanco">
           <p class="error" data-error-for="alergias"></p>
         </div>
         <div class="field">
-          <label for="padecimientos">Padecimientos o lesiones previas <span aria-hidden="true">*</span></label>
-          <input id="padecimientos" name="padecimientos" required placeholder="Asma, convulsiones, fracturas, cirugías… o: ninguno">
+          <label for="padecimientos">Padecimientos o lesiones previas</label>
+          <input id="padecimientos" name="padecimientos" placeholder="Asma, convulsiones, fracturas, cirugías… Si no tiene, déjelo en blanco">
           <p class="error" data-error-for="padecimientos"></p>
         </div>
         <div class="field">
-          <label for="medicamentos">Medicamentos que toma <span aria-hidden="true">*</span></label>
-          <input id="medicamentos" name="medicamentos" required placeholder="Nombre y horario, o: ninguno">
+          <label for="medicamentos">Medicamentos que toma</label>
+          <input id="medicamentos" name="medicamentos" placeholder="Nombre y horario. Si no toma, déjelo en blanco">
+          <p class="field__ayuda">El personal de REIVAJ no administra medicamentos. Si debe tomar algo durante la clase, lo trae el alumno con la indicación por escrito.</p>
           <p class="error" data-error-for="medicamentos"></p>
         </div>
         <div class="field">
@@ -264,18 +274,17 @@
       <fieldset class="paso" data-paso="5" hidden>
         <p class="paso-titulo">Paso 5 de 6</p>
         <h2>Permisos</h2>
-        <p class="sub" style="color:var(--ink-mute)">Usted decide cada uno. Negar un permiso no afecta la inscripción ni el trato, y puede modificarlos por escrito cuando lo desee.</p>
         <h3>Uso de imagen</h3>
+        <p class="sub" style="color:var(--ink-mute)">Usted decide cada uno. Negar un permiso no afecta la inscripción ni el trato, y puede modificarlos por escrito cuando lo desee.</p>
         <div id="permisosImagen"></div>
-        <h3>Contacto físico técnico</h3>
+        <p class="field__ayuda">Si su hijo o hija no quiere aparecer en una foto o video, se respeta aunque usted lo haya autorizado.</p>
+        <p class="field__ayuda">Puede retirar cualquiera de estos permisos cuando quiera, por escrito en recepción o al WhatsApp oficial 33 3456 6544. Desde ese momento no se usa más su imagen, y retiramos lo ya publicado a más tardar en cinco días hábiles.</p>
+        <p class="field__ayuda">En competencias y eventos oficiales, el organizador toma y publica sus propias fotos; REIVAJ no las controla. Si no desea que su hijo aparezca, le ayudamos a pedirlo al organizador.</p>
+        <h3>Así trabajamos</h3>
         <div class="permiso">
-          <p>La gimnasia requiere contacto físico para el ayudaje, la corrección postural y la prevención de caídas. En REIVAJ ese contacto se hace siempre a la vista de terceros y nunca en privado; se limita a las zonas técnicamente necesarias —espalda, cintura, caderas, brazos y piernas—; se anuncia al alumno cuando la situación lo permite; nunca involucra zonas íntimas, y se detiene de inmediato si el alumno manifiesta incomodidad, comunicándolo al tutor.</p>
-          <div class="chips" role="radiogroup" aria-label="Contacto físico técnico">
-            <label class="chip"><input type="radio" name="contactoFisico" value="si" required><span>Lo autorizo</span></label>
-            <label class="chip"><input type="radio" name="contactoFisico" value="no"><span>No lo autorizo</span></label>
-          </div>
-          <p class="error" data-error-for="contactoFisico"></p>
-          <p class="field__ayuda" id="contactoNota" hidden>Sin este permiso, la Dirección valorará con usted si puede entrenar en condiciones seguras.</p>
+          <p><b>Uso interno.</b> Tomamos video y fotografía del alumno en clase para analizar y corregir su técnica, y su fotografía para la credencial y el expediente. Ese material es de uso interno del gimnasio y no se publica sin su permiso.</p>
+          <p><b>Contacto físico técnico.</b> La gimnasia requiere contacto físico para el ayudaje, la corrección postural y la prevención de caídas. En REIVAJ ese contacto se hace siempre a la vista de terceros y nunca en privado; se limita a las zonas técnicamente necesarias —espalda, cintura, caderas, brazos y piernas—; se anuncia al alumno cuando la situación lo permite; nunca involucra zonas íntimas, y se detiene de inmediato si el alumno manifiesta incomodidad, comunicándolo al tutor.</p>
+          <p><b>Si algo le preocupa.</b> Cualquier situación de riesgo o de trato inadecuado hacia un alumno puede reportarla directamente a la Dirección, en persona o al WhatsApp oficial 33 3456 6544. Se atiende el mismo día y sin represalias para quien reporta.</p>
         </div>
         <h3>Avisos del gimnasio <span class="opt">(opcional)</span></h3>
         <label class="consent"><input type="checkbox" name="promociones"><span>Recibir avisos de eventos, muestras, cursos de verano y promociones.</span></label>
@@ -333,8 +342,8 @@
         <div class="success__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         <h3>Inscripción recibida</h3>
         <p id="listoTexto"></p>
-        <p><button type="button" class="btn btn--primary" id="guardarCopia">Guardar mi copia de la carta</button></p>
-        <p class="field__ayuda">Se abre para imprimir: elija «Guardar como PDF» si no tiene impresora.</p>
+        <p><button type="button" class="btn btn--primary" id="descargarPdf">Descargar mi carta en PDF</button></p>
+        <p><button type="button" class="btn btn--outline-dark" id="guardarCopia">Imprimirla</button></p>
         <p><a class="link-arrow" href="index.html">Volver al inicio <span aria-hidden="true">→</span></a></p>
       </div>
     </section>
@@ -355,6 +364,7 @@
 <script src="buzon.js"></script>
 <script src="carta-texto.js"></script>
 <script src="firma.js"></script>
+<script src="pdf-carta.js"></script>
 <script src="inscripcion.js"></script>
 </body>
 </html>

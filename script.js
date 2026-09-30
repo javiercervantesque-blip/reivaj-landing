@@ -123,9 +123,9 @@
   }
 
   var REGLAS = {
-    tutor: function (v) { return v.length >= 3 || 'Escriba su nombre.'; },
-    telefono: function (v) { return Boolean(R.telefono10(v)) || 'Escriba un WhatsApp de 10 dígitos.'; },
-    alumno: function (v) { return v.length >= 3 || 'Escriba el nombre y apellido del alumno.'; },
+    tutor: function (v) { return (v.length >= 3 && R.conLetras(v, 3)) || 'Escriba su nombre.'; },
+    telefono: function (v) { return R.telefonoValido(v) ? true : R.telefono10(v) ? 'Revise el número: 10 dígitos, con lada (ej. 33 1234 5678).' : 'Escriba un WhatsApp de 10 dígitos.'; },
+    alumno: function (v) { return (v.length >= 3 && R.conLetras(v, 3)) || 'Escriba el nombre y apellido del alumno.'; },
     edad: function (v) { var n = Number(v); return (n >= 4 && n <= 18) || (n > 0 && n < 4 ? 'Recibimos a niñas y niños a partir de los 4 años.' : 'Escriba la edad (de 4 a 18 años).'); },
     rama: function (v) { return Boolean(v) || 'Indique si es niña o niño.'; },
     dia: function (v) { return Boolean(v) || sinFechas || 'Elija el día de la clase.'; },

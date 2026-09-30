@@ -56,6 +56,16 @@
     if (d.length === 13 && d.indexOf('521') === 0) d = d.slice(3);
     return d.length === 10 ? d : '';
   }
+  // Un teléfono que puede ser de verdad: 10 dígitos, sin empezar en 0 o 1 (en
+  // México ninguna lada empieza así) y sin ser el mismo dígito repetido o una
+  // escalera (5555555555, 1234567890). Devuelve los 10 dígitos o ''.
+  function telefonoValido(t) {
+    var d = telefono10(t);
+    if (!d || /^[01]/.test(d) || /^(\d)\1{9}$/.test(d) || '01234567890'.indexOf(d) >= 0 || '9876543210'.indexOf(d) >= 0) return '';
+    return d;
+  }
+  // Al menos n letras (no solo espacios, puntos o números).
+  function conLetras(t, n) { return (String(t || '').match(/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/g) || []).length >= (n || 2); }
   function enlaceWhatsApp(texto) {
     var cfg = global.CONFIG || {};
     return 'https://wa.me/' + (cfg.whatsapp || '') + (texto ? '?text=' + encodeURIComponent(texto) : '');
@@ -159,7 +169,7 @@
 
   global.Reivaj = {
     ahoraGdl: ahoraGdl, sumarDias: sumarDias, diaSemana: diaSemana, fechaLarga: fechaLarga, fechaChip: fechaChip,
-    horaBonita: horaBonita, diasDePrueba: diasDePrueba, soloDigitos: soloDigitos, telefono10: telefono10,
+    horaBonita: horaBonita, diasDePrueba: diasDePrueba, soloDigitos: soloDigitos, telefono10: telefono10, telefonoValido: telefonoValido, conLetras: conLetras,
     enlaceWhatsApp: enlaceWhatsApp, conNegritas: conNegritas, el: el, iniciarPagina: iniciarPagina,
     mostrarError: mostrarError, valor: valor, llevarA: llevarA, FUENTES: FUENTES
   };

@@ -8,7 +8,9 @@
   var cargada = Date.now();
   var form = document.getElementById('formCarta');
   var $ = function (id) { return document.getElementById(id); };
-  var v = function (n) { return R.valor(form, n); };
+  // Alergias, padecimientos, medicamentos y servicio médico no son obligatorios: vacío = ninguno.
+  var NINGUNO = { alergias: 'Ninguna', padecimientos: 'Ninguno', medicamentos: 'Ninguno', servicio: 'Ninguno' };
+  var v = function (n) { var x = R.valor(form, n); return x === '' && NINGUNO[n] ? NINGUNO[n] : x; };
   var firma = null;
 
   var PARENTESCOS = ['Madre', 'Padre', 'Abuela', 'Abuelo', 'Tía', 'Tío', 'Hermana', 'Hermano', 'Tutor legal', 'Otro'];
@@ -24,11 +26,11 @@
   var C = window.CARTA_SEGURIDAD;
   var CAMPOS = C.secciones.filter(function (s) { return s.campos; })[0].campos;
   var NOMBRES = ['alergias', 'padecimientos', 'medicamentos', 'servicio', 'afiliacion'];
-  var AYUDA = ['Si no se conocen, escriba: ninguna', 'O: ninguno', 'O: ninguno', 'IMSS, ISSSTE, seguro, hospital… o: ninguno', 'Si aplica'];
+  var AYUDA = ['Si no tiene, déjelo en blanco', 'Si no tiene, déjelo en blanco', 'Si no toma, déjelo en blanco', 'IMSS, ISSSTE, seguro, hospital… Si no tiene, déjelo en blanco', 'Si aplica'];
   var seccion4 = R.el('div', { clase: 'grupo' }, CAMPOS.map(function (t, i) {
     return R.el('div', { clase: 'field' }, [
       R.el('label', { for: NOMBRES[i], texto: t }),
-      R.el('input', { id: NOMBRES[i], name: NOMBRES[i], placeholder: AYUDA[i], required: i < 4 }),
+      R.el('input', { id: NOMBRES[i], name: NOMBRES[i], placeholder: AYUDA[i] }),
       R.el('p', { clase: 'error', 'data-error-for': NOMBRES[i] })
     ]);
   }));
@@ -84,10 +86,6 @@
     e2Telefono: function (x) { return !x || Boolean(R.telefono10(x)) || 'El teléfono debe tener 10 dígitos.'; },
     sangre: function (x) { return Boolean(x) || 'Elija una opción (puede ser «No lo sé»).'; },
     seguro: function (x) { return Boolean(x) || 'Indique si contrata el seguro.'; },
-    alergias: texto(2, 'Escriba cuáles, o «ninguna».'),
-    padecimientos: texto(2, 'Escriba cuáles, o «ninguno».'),
-    medicamentos: texto(2, 'Escriba cuáles, o «ninguno».'),
-    servicio: texto(2, 'Escriba cuál, o «ninguno».'),
     consentimientoSalud: function (x) { return x === true || 'Sin este consentimiento no podemos guardar sus datos de salud.'; },
     firma: function () { return firma.valida() || 'Firme en el recuadro con el dedo.'; },
     leida: function (x) { return x === true || 'Confirme que leyó la carta.'; },
@@ -147,15 +145,23 @@
       $('nota').classList.add('form__note--mal');
       return;
     }
-    CF.armarCopia($('copia'), datosCarta(), {
+    copia = { datos: datosCarta(), extra: {
       seguro: r.datos.carta.seguro, ficha: ficha, firma: r.datos.carta.firma, firmante: r.datos.carta.firmante,
       parentesco: r.datos.carta.parentesco, huella: r.datos.carta.huella, folio: r.id || '',
       cuando: cuando.toLocaleString('es-MX', { timeZone: 'America/Mexico_City', dateStyle: 'long', timeStyle: 'short' })
-    });
+    } };
+    CF.armarCopia($('copia'), copia.datos, copia.extra);
     $('listoTexto').textContent = 'Recibimos la carta de ' + v('alumno') + '. Queda en su expediente.';
     form.hidden = true;
     $('listo').hidden = false;
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+  var copia = null;
+  $('descargarPdf').addEventListener('click', function () {
+    var b = this;
+    if (!copia || b.disabled) return;
+    b.disabled = true;
+    window.CartaPDF.descargar(copia.datos, copia.extra).then(function () { b.disabled = false; });
   });
   $('guardarCopia').addEventListener('click', function () { window.print(); });
   // El botón viene apagado en el HTML: así, si alguien da Enter antes de que

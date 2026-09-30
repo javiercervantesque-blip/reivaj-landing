@@ -518,6 +518,7 @@
       cont.appendChild(fila);
       ponerNota(cont, a);
     });
+    pintarNuevos(cont, filtro);
     pintarOtros(enHora, filtro);
     pintarFuera();
     pintarNoEncontrados();
@@ -536,6 +537,25 @@
     else if (!$('mensaje').classList.contains('ok')) mensaje('');
   }
 
+  // Los nuevos que todavía no tienen grupo salen al final de cada hora, para
+  // cualquier maestra de su rama: la que lo palomee es con quien tomó clase.
+  function nuevos() { return activas().filter(function (a) { return a.nv; }).sort(porNombre); }
+  function pintarNuevos(cont, filtro) {
+    var lista = nuevos().filter(function (a) { return coincide(a.n, filtro); });
+    if (!lista.length) return;
+    separador(cont, 'Nuevos · todavía sin grupo');
+    lista.forEach(function (a) {
+      var fila = document.createElement('div');
+      fila.className = 'alumno nuevo' + (estado.extras[a.i] ? ' vino' : '');
+      fila.innerHTML = '<div class="casilla">' + (estado.extras[a.i] ? '✓' : '') + '</div><div class="nombre"><span></span><small class="suya">Nuevo: si vino contigo, palómealo</small></div><button class="nota-btn" type="button" title="Nota" aria-label="Nota">✎</button>';
+      fila.querySelector('.nombre span').textContent = a.n;
+      fila.onclick = function (ev) { if (ev.target.classList.contains('nota-btn')) return; estado.extras[a.i] = !estado.extras[a.i]; pintarAlumnos(); };
+      fila.querySelector('.nota-btn').onclick = function () { editarNota(a); };
+      cont.appendChild(fila);
+      ponerNota(cont, a);
+    });
+  }
+
   // Al buscar, también salen los que no son de esta hora, con su horario
   // al lado; «+ Vino» los pasa a «Fuera de su horario».
   function pintarOtros(enHora, filtro) {
@@ -543,7 +563,7 @@
     cont.innerHTML = '';
     if (filtro.length < 2) return;
     var hallados = activas().filter(function (a) {
-      return !enHora[a.i] && !estado.extras[a.i] && coincide(a.n, filtro);
+      return !enHora[a.i] && !a.nv && !estado.extras[a.i] && coincide(a.n, filtro);
     }).sort(porNombre);
     separador(cont, esMaestra() ? 'Tus alumnas de otro horario' : 'De otro horario');
     if (!hallados.length) {
@@ -585,7 +605,7 @@
   function pintarFuera() {
     var cont = $('fuera');
     cont.innerHTML = '';
-    var fuera = idsDe(estado.extras).map(alumnoPorId).filter(Boolean).sort(porNombre);
+    var fuera = idsDe(estado.extras).map(alumnoPorId).filter(function (a) { return a && !a.nv; }).sort(porNombre);
     if (!fuera.length) return;
     separador(cont, 'Fuera de su horario · ' + fuera.length);
     fuera.forEach(function (a) {
