@@ -9,3 +9,6 @@ desktop.ini
 
 # Vercel
 .vercel/
+
+# Pruebas en la compu (datos inventados): no van al repositorio público
+pruebas-locales/

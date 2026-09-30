@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>REIVAJ Gimnasia | Gimnasia artística en Guadalajara desde los 4 años</title>
+<meta name="description" content="Escuela de gimnasia artística femenil y varonil en la colonia Talpita, Guadalajara. Niñas y niños desde los 4 años, sin experiencia previa. Agende una clase de prueba sin costo.">
+<meta name="theme-color" content="#101E3C">
+<!-- Impide que el modo oscuro automático del navegador invierta la página.
+     Va aquí y no solo en el CSS para que el navegador lo sepa antes de cargar styles.css. -->
+<meta name="color-scheme" content="only light">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.gimnasiareivaj.com/">
+<meta property="og:locale" content="es_MX">
+<meta property="og:title" content="REIVAJ Gimnasia · Gimnasia artística en Guadalajara">
+<meta property="og:description" content="Niñas y niños desde los 4 años, sin experiencia previa. Agende una clase de prueba sin costo en la colonia Talpita.">
+<meta property="og:image" content="https://www.gimnasiareivaj.com/assets/icono.png">
+
+<!-- Marca que hay JS: sin esto, el contenido nunca se oculta para animar.
+     El temporizador garantiza que la página sea visible aunque script.js falle. -->
+<script>
+  document.documentElement.classList.add('js');
+  setTimeout(function () {
+    document.querySelectorAll('.reveal').forEach(function (el) { el.classList.add('is-in'); });
+  }, 2000);
+</script>
+
+<link rel="icon" href="assets/icono-192.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,600;0,700;0,800;1,700;1,800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<a class="skip-link" href="#agendar">Ir a agendar clase de prueba</a>
+
+<!-- ============ NAV ============ -->
+<header class="nav" id="nav">
+  <div class="wrap nav__inner">
+    <a class="brand" href="#inicio" aria-label="REIVAJ Gimnasia, inicio">
+      <svg class="brand__logo" aria-hidden="true"><use href="assets/logo-reivaj.svg#reivaj-wordmark"/></svg>
+    </a>
+
+    <nav class="nav__links" id="navLinks" aria-label="Principal">
+      <a href="#horarios">Horarios</a>
+      <a href="#costos">Costos</a>
+      <a href="#seguridad">Seguridad</a>
+      <a href="#faq">Preguntas</a>
+      <a class="btn btn--sm btn--primary" href="#agendar">Clase de prueba</a>
+    </nav>
+
+    <button class="nav__toggle" id="navToggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="navLinks">
+      <span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<main id="inicio">
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <div class="hero__arcs" aria-hidden="true">
+    <svg viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice">
+      <circle cx="920" cy="330" r="300" fill="none" stroke="#101E3C" stroke-width="1" opacity=".10"/>
+      <circle cx="920" cy="330" r="240" fill="none" stroke="#101E3C" stroke-width="1" opacity=".13"/>
+      <path d="M620 330a300 300 0 0 1 480-150" fill="none" stroke="#C9A227" stroke-width="4" stroke-linecap="round" opacity=".8"/>
+      <path d="M680 330a240 240 0 0 1 120-198" fill="none" stroke="#C9A227" stroke-width="3" stroke-linecap="round" opacity=".4"/>
+    </svg>
+  </div>
+
+  <div class="wrap hero__inner">
+    <div class="hero__copy reveal">
+      <p class="eyebrow">Gimnasia artística · Talpita, Guadalajara</p>
+      <h1>Gimnasia artística<br><em>de alto nivel,</em><br>desde los 4 años.</h1>
+      <p class="lead">
+        Escuela de gimnasia artística femenil y varonil. Su hija o su hijo empieza desde cero, entrena con niños de su edad y avanza por nivel, bajo la dirección técnica de un gimnasta finalista olímpico y panamericano.
+      </p>
+      <div class="hero__actions">
+        <a class="btn btn--primary" href="#agendar">Agendar clase de prueba</a>
+        <a class="link-arrow" href="#horarios">Ver horarios y costos <span aria-hidden="true">→</span></a>
+      </div>
+      <ul class="hero__meta">
+        <li>Primera clase sin costo</li>
+        <li>Sin experiencia previa</li>
+        <li>Estacionamiento propio</li>
+      </ul>
+    </div>
+
+    <div class="hero__visual reveal">
+      <div class="photo photo--hero photo--marca">
+        <div class="lockup" role="img" aria-label="REIVAJ Gimnasia">
+          <svg class="lockup__logo" aria-hidden="true"><use href="assets/logo-reivaj.svg#reivaj-logo"/></svg>
+        </div>
+      </div>
+      <div class="hero__badge">
+        <strong>Sin costo</strong>
+        <span>su clase de prueba, de lunes a viernes</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DATOS ============ -->
+<section class="stats">
+  <div class="wrap stats__grid">
+    <div class="stat reveal"><strong data-count="4">4</strong><span>años, la edad para empezar</span></div>
+    <div class="stat reveal"><strong data-count="2">2</strong><span>ramas: femenil y varonil</span></div>
+    <div class="stat reveal"><strong data-count="5">5</strong><span>días de entrenamiento a la semana</span></div>
+    <div class="stat reveal"><strong data-count="4">4</strong><span>grupos, por edad y rama</span></div>
+  </div>
+</section>
+
+<!-- ============ HORARIOS ============ -->
+<section class="section" id="horarios">
+  <div class="wrap">
+    <header class="section__head reveal">
+      <p class="eyebrow">Horarios</p>
+      <h2>Un grupo para cada edad</h2>
+      <p class="section__lead">Entrenamos de lunes a viernes, por la tarde. Los grupos se forman por edad y rama, y dentro de cada grupo cada alumno avanza a su nivel. Cada sesión dura una hora.</p>
+    </header>
+
+    <div class="horario reveal" role="table" aria-label="Horario de grupos">
+      <div class="horario__fila horario__fila--cab" role="row">
+        <span role="columnheader">Hora</span><span role="columnheader">Lun</span><span role="columnheader">Mar</span><span role="columnheader">Mié</span><span role="columnheader">Jue</span><span role="columnheader">Vie</span>
+      </div>
+      <div class="horario__fila" role="row"><strong role="rowheader">4:00 pm</strong><span role="cell">Niñas</span><span role="cell">Niñas</span><span role="cell">Niñas</span><span role="cell">Niñas</span><span role="cell">Niñas</span></div>
+      <div class="horario__fila" role="row"><strong role="rowheader">5:00 pm</strong><span role="cell">Niños</span><span role="cell">Niños</span><span role="cell">Niños</span><span role="cell">Niños</span><span role="cell">Niños</span></div>
+      <div class="horario__fila" role="row"><strong role="rowheader">6:00 pm</strong><span role="cell">Niños</span><span role="cell">Niños</span><span role="cell">Niños</span><span role="cell">Niños</span><span role="cell">Niños</span></div>
+      <div class="horario__fila" role="row"><strong role="rowheader">7:00 pm</strong><span role="cell">Niñas 8+</span><span role="cell" class="vacio">—</span><span role="cell">Niñas 8+</span><span role="cell" class="vacio">—</span><span role="cell">Niñas 8+</span></div>
+    </div>
+
+    <ul class="checks checks--dos grupos reveal">
+      <li><strong>Niñas desde 4 años:</strong> lunes a viernes, de 4:00 a 5:00 pm.</li>
+      <li><strong>Niños de 4 a 15 años:</strong> lunes a viernes, a elegir de 5:00 a 6:00 pm o de 6:00 a 7:00 pm.</li>
+      <li><strong>Niñas de 8 años en adelante:</strong> lunes, miércoles y viernes, de 7:00 a 8:00 pm, o el grupo de 4:00 pm.</li>
+      <li><strong>Mayores de 15 años:</strong> escríbanos y revisamos su caso de forma personal.</li>
+    </ul>
+    <p class="nota-centro reveal">Los grupos tienen cupo limitado. Le confirmamos la disponibilidad por WhatsApp. Sábados y domingos no hay clases.</p>
+
+    <div class="cards cards--tres">
+      <article class="card reveal">
+        <span class="card__age">Desde 4 años</span>
+        <h3>Escuela</h3>
+        <p>Para niñas y niños que empiezan de cero o que ya tienen bases. Cada alumno avanza elemento por elemento, a su propio ritmo y sin compararse con nadie.</p>
+      </article>
+
+      <article class="card card--dark reveal">
+        <span class="card__age">Opcional</span>
+        <h3>Competencia</h3>
+        <p>Solo si el alumno quiere competir y el entrenador lo considera listo. La mayoría de nuestros alumnos entrena sin competir, y está bien así.</p>
+      </article>
+
+      <article class="card card--cta reveal">
+        <h3>Véalo entrenar</h3>
+        <p>Contamos con un área de padres desde donde puede seguir la clase completa. El área de entrenamiento es exclusiva para alumnos y entrenadores.</p>
+        <a class="link-arrow" href="#agendar">Agendar clase de prueba <span aria-hidden="true">→</span></a>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ COSTOS ============ -->
+<section class="section section--alt" id="costos">
+  <div class="wrap">
+    <header class="section__head reveal">
+      <p class="eyebrow">Costos</p>
+      <h2>Costos claros desde el primer día</h2>
+      <p class="section__lead">La mensualidad depende de las horas que entrene a la semana. Sin cuotas escondidas: lo que no es obligatorio, se lo avisamos con anticipación y usted decide.</p>
+    </header>
+
+    <div class="cards cards--tres precios">
+      <article class="card reveal">
+        <span class="card__age">2 horas por semana</span>
+        <p class="precio"><strong>$750</strong> al mes</p>
+        <p>Mensualidad para dos sesiones de una hora a la semana.</p>
+      </article>
+
+      <article class="card reveal">
+        <span class="card__age">3 horas por semana</span>
+        <p class="precio"><strong>$850</strong> al mes</p>
+        <p>Mensualidad para tres sesiones de una hora a la semana.</p>
+      </article>
+
+      <article class="card card--dark reveal">
+        <span class="card__age">Nuevo ingreso</span>
+        <p class="precio"><strong>$0</strong> inscripción</p>
+        <p>La inscripción no tiene costo para alumnos que entran por primera vez.</p>
+      </article>
+    </div>
+
+    <ul class="checks checks--dos reveal">
+      <li><strong>Uniforme:</strong> $850.</li>
+      <li><strong>Formas de pago:</strong> efectivo en el gimnasio o transferencia bancaria.</li>
+      <li><strong>Más de 3 horas por semana:</strong> le compartimos el costo por WhatsApp.</li>
+      <li><strong>Competencias, carnet y registro deportivo:</strong> son opcionales, se cobran aparte y se avisan con anticipación.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ SEGURIDAD ============ -->
+<section class="section" id="seguridad">
+  <div class="wrap">
+    <header class="section__head reveal">
+      <p class="eyebrow">Seguridad</p>
+      <h2>Así cuidamos a su hijo</h2>
+      <p class="section__lead">La gimnasia artística se practica en altura, de cabeza y sobre superficies estrechas. Por eso cada clase sigue un protocolo, y antes de inscribir le entregamos por escrito nuestra Carta de seguridad.</p>
+    </header>
+
+    <ol class="steps">
+      <li class="step reveal">
+        <span class="step__num">01</span>
+        <h3>Aparatos revisados</h3>
+        <p>Todos los días, antes del primer grupo, se revisan aparatos, anclajes y colchonetas.</p>
+      </li>
+      <li class="step reveal">
+        <span class="step__num">02</span>
+        <h3>Calentamiento dirigido</h3>
+        <p>Ninguna clase empieza sin un calentamiento completo, supervisado por el entrenador.</p>
+      </li>
+      <li class="step reveal">
+        <span class="step__num">03</span>
+        <h3>Progresiones</h3>
+        <p>Cada elemento se enseña por etapas. Nadie hace algo para lo que todavía no está preparado.</p>
+      </li>
+      <li class="step reveal">
+        <span class="step__num">04</span>
+        <h3>El entrenador sujeta</h3>
+        <p>En cada elemento nuevo hay ayuda directa del entrenador y protección con colchoneta, foso o pista.</p>
+      </li>
+      <li class="step reveal">
+        <span class="step__num">05</span>
+        <h3>Primeros auxilios</h3>
+        <p>Botiquín revisado cada mes y personal con certificación vigente en primeros auxilios.</p>
+      </li>
+      <li class="step reveal">
+        <span class="step__num">06</span>
+        <h3>Protocolo ante lesiones</h3>
+        <p>Procedimiento por escrito, aviso inmediato a la familia y registro firmado de lo ocurrido.</p>
+      </li>
+    </ol>
+
+    <ul class="checks checks--dos reveal">
+      <li>No se pesa a los alumnos ni se hacen comentarios sobre su cuerpo.</li>
+      <li>Todo contacto para asistir un elemento ocurre a la vista, nunca en privado.</li>
+      <li>Cada alumno avanza a su nivel; no se compara a los niños entre ellos.</li>
+      <li>Puede seguir la clase desde el área de padres.</li>
+      <li>Seguro de accidentes opcional con Seguros SURA: usted decide si lo contrata.</li>
+      <li>Firmar la Carta de seguridad no implica renunciar a ninguno de sus derechos.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ INSCRIPCIÓN ============ -->
+<section class="section section--alt" id="inscripcion">
+  <div class="wrap">
+    <header class="section__head reveal">
+      <p class="eyebrow">Inscripción</p>
+      <h2>Tres pasos para empezar</h2>
+      <p class="section__lead">Primero conoce el gimnasio en su clase de prueba. Si deciden continuar, la inscripción se hace desde su celular en unos diez minutos.</p>
+    </header>
+
+    <ol class="steps steps--tres">
+      <li class="step reveal">
+        <span class="step__num">01</span>
+        <h3>Clase de prueba</h3>
+        <p>Una sesión completa, sin costo, con un grupo real. Al terminar, el entrenador le indica en qué nivel comienza.</p>
+      </li>
+      <li class="step reveal">
+        <span class="step__num">02</span>
+        <h3>Registro en línea</h3>
+        <p>Le enviamos por WhatsApp su enlace personal de inscripción: datos del alumno, contactos de emergencia, ficha médica y firma de la Carta de seguridad.</p>
+      </li>
+      <li class="step reveal">
+        <span class="step__num">03</span>
+        <h3>Confirmación</h3>
+        <p>En recepción confirmamos grupo, horario y forma de pago. A partir de ahí, a entrenar.</p>
+      </li>
+    </ol>
+
+  </div>
+</section>
+
+<!-- ============ AGENDAR ============ -->
+<section class="section booking" id="agendar">
+  <div class="wrap booking__inner">
+
+    <div class="booking__copy reveal">
+      <p class="eyebrow">Clase de prueba</p>
+      <h2>Agende su clase de prueba sin costo</h2>
+      <p class="section__lead">Una sesión, de lunes a viernes: niñas a las 4:00 pm; niños a las 4:00 o a las 6:00 pm. Usted elige el día y le confirmamos por WhatsApp.</p>
+
+      <ul class="includes">
+        <li><strong>Una clase completa</strong> con un grupo real, no una demostración.</li>
+        <li><strong>Evaluación del entrenador:</strong> al terminar le decimos en qué nivel comienza.</li>
+        <li><strong>Qué debe llevar:</strong> ropa deportiva ajustada, sin cierres ni botones; cabello recogido; sin aretes, cadenas, pulseras ni reloj, y agua. Se entrena descalzo o con calcetín antiderrapante.</li>
+        <li><strong>Sin compromiso:</strong> usted decide después si lo inscribe.</li>
+      </ul>
+
+      <div class="booking__contact">
+        <p>¿Prefiere hablar con nosotros?</p>
+        <a class="link-arrow" data-whatsapp="Hola, me gustaría recibir información sobre la clase de prueba en REIVAJ Gimnasia." href="https://wa.me/523334566544" target="_blank" rel="noopener">Escríbanos por WhatsApp <span aria-hidden="true">→</span></a>
+      </div>
+    </div>
+
+    <div class="booking__form reveal">
+      <form id="trialForm" method="post" novalidate>
+        <div class="field">
+          <label for="tutor">Nombre de la madre, padre o tutor <span aria-hidden="true">*</span></label>
+          <input type="text" id="tutor" name="tutor" autocomplete="name" required placeholder="Nombre y apellido">
+          <p class="error" data-error-for="tutor"></p>
+        </div>
+
+        <div class="field">
+          <label for="telefono">WhatsApp <span aria-hidden="true">*</span></label>
+          <input type="tel" id="telefono" name="telefono" inputmode="tel" autocomplete="tel" required placeholder="10 dígitos">
+          <p class="error" data-error-for="telefono"></p>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="alumno">Nombre del alumno o alumna <span aria-hidden="true">*</span></label>
+            <input type="text" id="alumno" name="alumno" required placeholder="Nombre y apellido">
+            <p class="error" data-error-for="alumno"></p>
+          </div>
+          <div class="field">
+            <label for="edad">Edad <span aria-hidden="true">*</span></label>
+            <input type="number" id="edad" name="edad" min="4" max="18" inputmode="numeric" required placeholder="Años">
+            <p class="error" data-error-for="edad"></p>
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="label" id="rama-etiqueta">¿Es niña o niño? <span aria-hidden="true">*</span></span>
+          <div class="chips" role="radiogroup" aria-labelledby="rama-etiqueta">
+            <label class="chip"><input type="radio" name="rama" value="f" required><span>Niña</span></label>
+            <label class="chip"><input type="radio" name="rama" value="m"><span>Niño</span></label>
+          </div>
+          <p class="error" data-error-for="rama"></p>
+        </div>
+
+        <div class="field">
+          <span class="label" id="dia-etiqueta">¿Qué día le gustaría venir? <span aria-hidden="true">*</span></span>
+          <div class="chips chips--dias" id="dias" role="radiogroup" aria-labelledby="dia-etiqueta"></div>
+          <p class="error" data-error-for="dia"></p>
+        </div>
+
+        <div class="field" id="campoHora" hidden>
+          <span class="label" id="hora-etiqueta">¿A qué hora? <span aria-hidden="true">*</span></span>
+          <div class="chips" id="horas" role="radiogroup" aria-labelledby="hora-etiqueta"></div>
+          <p class="error" data-error-for="hora"></p>
+        </div>
+        <p class="field__ayuda" id="dia-ayuda">La clase de prueba dura una hora.</p>
+
+        <div class="field">
+          <label for="fuente">¿Cómo se enteró de nosotros?</label>
+          <select id="fuente" name="fuente"></select>
+        </div>
+
+        <div class="field">
+          <label for="comentarios">Comentarios <span class="opt">(opcional)</span></label>
+          <textarea id="comentarios" name="comentarios" rows="3" placeholder="Experiencia previa, alguna lesión o cualquier duda"></textarea>
+        </div>
+
+        <!-- Trampa para robots: una persona no ve este campo. -->
+        <div class="trampa" aria-hidden="true"><label>Sitio web <input type="text" name="sitio" tabindex="-1" autocomplete="off"></label></div>
+
+        <label class="consent">
+          <input type="checkbox" id="aviso" name="aviso" required>
+          <span>Autorizo a REIVAJ Gimnasia a contactarme por WhatsApp para confirmar la clase y acepto el <a href="aviso-de-privacidad.html" target="_blank">aviso de privacidad</a>.</span>
+        </label>
+        <p class="error" data-error-for="aviso"></p>
+
+        <button type="submit" class="btn btn--primary btn--block" id="submitBtn" disabled>Agendar clase de prueba</button>
+        <p class="form__note">Le confirmamos por WhatsApp el mismo día hábil.</p>
+      </form>
+
+      <div class="success" id="formSuccess" hidden>
+        <div class="success__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h3>Solicitud recibida</h3>
+        <p id="successMsg">Le escribiremos por WhatsApp para confirmar el día de su clase de prueba.</p>
+        <p><a class="btn btn--primary btn--sm" id="successWa" href="#" target="_blank" rel="noopener" hidden>Enviar por WhatsApp</a></p>
+        <button type="button" class="btn btn--outline-dark btn--sm" id="resetForm">Agendar a otro alumno</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section class="section section--alt" id="faq">
+  <div class="wrap faq__wrap">
+    <header class="section__head section__head--left reveal">
+      <p class="eyebrow">Preguntas frecuentes</p>
+      <h2>Resolvemos sus dudas</h2>
+      <p class="section__lead">Si su pregunta no está aquí, escríbanos por <a class="link-arrow" data-whatsapp="Hola, tengo una pregunta sobre REIVAJ Gimnasia." href="https://wa.me/523334566544" target="_blank" rel="noopener">WhatsApp</a> y con gusto le respondemos.</p>
+    </header>
+
+    <div class="faq reveal">
+      <details>
+        <summary>¿Es peligroso?</summary>
+        <p>La gimnasia artística tiene riesgo, como todo deporte que se practica en altura. Por eso se trabaja con progresiones, colchones y la ayuda directa del entrenador: nadie realiza un elemento para el que no esté preparado. Antes de inscribir le entregamos por escrito nuestra Carta de seguridad.</p>
+      </details>
+      <details>
+        <summary>¿Necesita experiencia previa?</summary>
+        <p>No. La mayoría de nuestros alumnos empezó desde cero. Entra a un grupo de su edad y avanza a su propio nivel.</p>
+      </details>
+      <details>
+        <summary>¿Desde qué edad reciben alumnos?</summary>
+        <p>A niñas y niños a partir de los 4 años. Los niños tienen grupo hasta los 15 años; si su hijo es mayor, escríbanos y revisamos su caso de forma personal.</p>
+      </details>
+      <details>
+        <summary>¿Sirve para un niño muy inquieto, muy tímido o sin condición física?</summary>
+        <p>Sí. Cada alumno trabaja a su nivel y no se compara a los niños entre ellos. Muchos llegan justo por eso.</p>
+      </details>
+      <details>
+        <summary>¿La clase de prueba tiene costo?</summary>
+        <p>No. Es una sesión completa, gratuita y sin compromiso de inscripción. Solo le pedimos agendarla para reservar su lugar en el grupo.</p>
+      </details>
+      <details>
+        <summary>¿Cuánto cuesta la mensualidad?</summary>
+        <p>$750 al mes por 2 horas a la semana y $850 al mes por 3 horas. La inscripción no tiene costo para alumnos de nuevo ingreso. El uniforme cuesta $850.</p>
+      </details>
+      <details>
+        <summary>¿Qué formas de pago aceptan?</summary>
+        <p>Efectivo en el gimnasio o transferencia bancaria.</p>
+      </details>
+      <details>
+        <summary>¿Qué debe llevar a la clase?</summary>
+        <p>Ropa deportiva ajustada, sin cierres ni botones, y el cabello recogido. Sin aretes, cadenas, pulseras ni reloj. Se entrena descalzo o con calcetín antiderrapante. No olvide su botella de agua.</p>
+      </details>
+      <details>
+        <summary>¿Puedo quedarme a ver la clase?</summary>
+        <p>Sí. Contamos con un área de padres desde donde puede seguir toda la clase. El área de entrenamiento es exclusiva para alumnos y entrenadores.</p>
+      </details>
+      <details>
+        <summary>¿Qué pasa si falta a una clase?</summary>
+        <p>Las clases se reponen únicamente con justificante médico.</p>
+      </details>
+      <details>
+        <summary>¿Y si se enferma o se lesiona durante un mes completo?</summary>
+        <p>Con justificante médico, le congelamos la mensualidad de ese mes.</p>
+      </details>
+      <details>
+        <summary>¿Tiene que competir?</summary>
+        <p>No. Compite solo si él lo desea y si el entrenador lo considera listo. La mayoría de nuestros alumnos entrena sin competir. Las competencias son opcionales, se cobran aparte y se avisan con anticipación.</p>
+      </details>
+      <details>
+        <summary>¿Cómo se da de baja?</summary>
+        <p>La baja se pide por escrito a la Dirección, con al menos 15 días naturales antes del cierre del mes. Si no recibimos el aviso, la mensualidad sigue vigente.</p>
+      </details>
+      <details>
+        <summary>¿Cuentan con seguro?</summary>
+        <p>La afiliación y el carnet no cubren gastos médicos. Por eso ofrecemos, de forma opcional, un seguro de accidentes con Seguros SURA; usted decide si lo contrata al inscribir.</p>
+      </details>
+      <details>
+        <summary>¿Dónde están y hay estacionamiento?</summary>
+        <p>En Juan de Dios Robledo 831, colonia Talpita, Guadalajara: sobre la calle 56, entre Santo Tomás y Puerto Melaque. Contamos con estacionamiento propio.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CTA FINAL ============ -->
+<section class="cta">
+  <div class="cta__arcs" aria-hidden="true">
+    <svg viewBox="0 0 1200 400" preserveAspectRatio="xMidYMid slice">
+      <circle cx="600" cy="200" r="330" fill="none" stroke="#FFFFFF" stroke-width="1" opacity=".10"/>
+      <circle cx="600" cy="200" r="260" fill="none" stroke="#FFFFFF" stroke-width="1" opacity=".14"/>
+      <path d="M270 200a330 330 0 0 1 500-280" fill="none" stroke="#C9A227" stroke-width="4" stroke-linecap="round" opacity=".9"/>
+    </svg>
+  </div>
+  <div class="wrap cta__inner reveal">
+    <svg class="cta__mark" aria-hidden="true"><use href="assets/logo-reivaj.svg#reivaj-logo"/></svg>
+    <h2>Todo empieza con una clase.</h2>
+    <p>Sin costo y sin compromiso, de lunes a viernes.</p>
+    <a class="btn btn--light" href="#agendar">Agendar clase de prueba</a>
+  </div>
+</section>
+
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer class="footer">
+  <div class="wrap footer__grid">
+    <div class="footer__brand">
+      <span class="brand brand--footer">
+        <svg class="brand__logo" aria-hidden="true"><use href="assets/logo-reivaj.svg#reivaj-wordmark"/></svg>
+      </span>
+      <p>Escuela de gimnasia artística femenil y varonil. Niñas y niños desde los 4 años.</p>
+      <p class="footer__lema">Disciplina · Fuerza · Pasión</p>
+    </div>
+
+    <div class="footer__col">
+      <h4>Contacto</h4>
+      <p><a href="tel:+523334566544">33 3456 6544</a></p>
+      <p><a data-whatsapp="" href="https://wa.me/523334566544" target="_blank" rel="noopener">WhatsApp</a></p>
+      <p><a href="mailto:reivajgimnasia@gmail.com">reivajgimnasia@gmail.com</a></p>
+    </div>
+
+    <div class="footer__col">
+      <h4>Ubicación</h4>
+      <p>Juan de Dios Robledo 831<br>Col. Talpita, Guadalajara, Jal.</p>
+      <p>Calle 56, entre Santo Tomás y Puerto Melaque. Estacionamiento propio.</p>
+      <p><a href="https://www.google.com/maps/search/?api=1&amp;query=Juan+de+Dios+Robledo+831%2C+Talpita%2C+Guadalajara%2C+Jalisco" target="_blank" rel="noopener">Ver en Google Maps</a></p>
+    </div>
+
+    <div class="footer__col">
+      <h4>Horario</h4>
+      <p>Lunes a viernes<br>4:00 a 8:00 pm</p>
+      <p>Sábado y domingo<br>sin clases</p>
+    </div>
+  </div>
+
+  <div class="wrap footer__bottom">
+    <p>© <span id="year">2026</span> REIVAJ Gimnasia.</p>
+    <nav aria-label="Más">
+      <a href="aviso-de-privacidad.html">Aviso de privacidad</a>
+    </nav>
+  </div>
+</footer>
+
+<!-- WhatsApp flotante: siempre a la mano -->
+<a class="wa-flotante" data-whatsapp="Hola, me gustaría hablar con alguien de REIVAJ Gimnasia." href="https://wa.me/523334566544" target="_blank" rel="noopener" aria-label="¿Desea hablar con alguien? Escríbanos por WhatsApp">
+  <svg viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M16.04 3C8.86 3 3.03 8.82 3.03 16c0 2.3.6 4.53 1.74 6.5L3 29l6.68-1.75A12.95 12.95 0 0 0 16.04 29C23.2 29 29 23.18 29 16S23.2 3 16.04 3Zm0 23.64c-1.97 0-3.9-.53-5.58-1.53l-.4-.24-3.96 1.04 1.06-3.86-.26-.4A10.6 10.6 0 0 1 5.4 16c0-5.87 4.77-10.64 10.64-10.64 5.86 0 10.6 4.77 10.6 10.64 0 5.86-4.74 10.64-10.6 10.64Zm5.83-7.97c-.32-.16-1.89-.93-2.18-1.04-.3-.1-.5-.16-.72.16-.21.32-.82 1.04-1.01 1.25-.19.21-.37.24-.69.08-.32-.16-1.35-.5-2.57-1.59-.95-.85-1.59-1.9-1.78-2.22-.19-.32-.02-.5.14-.66.15-.14.32-.37.48-.56.16-.19.21-.32.32-.53.1-.21.05-.4-.03-.56-.08-.16-.72-1.73-.98-2.37-.26-.62-.52-.54-.72-.55h-.61c-.21 0-.56.08-.85.4-.29.32-1.12 1.09-1.12 2.66s1.14 3.08 1.3 3.3c.16.21 2.25 3.43 5.44 4.8.76.33 1.35.53 1.82.68.76.24 1.46.2 2.01.12.61-.09 1.89-.77 2.15-1.52.27-.74.27-1.38.19-1.52-.08-.13-.29-.21-.61-.37Z"/></svg>
+  <span>¿Desea hablar con alguien?</span>
+</a>
+
+<!-- CTA flotante móvil -->
+<a class="fab" href="#agendar" id="fab">Clase de prueba gratis</a>
+
+<script src="config.js"></script>
+<script src="comun.js"></script>
+<script src="buzon.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

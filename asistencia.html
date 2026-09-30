@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lista · REIVAJ</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#101E3C">
+<meta name="color-scheme" content="only light">
+<!-- Instalable en la pantalla de inicio. El manifest no fija la dirección de
+     arranque: así el acceso directo guarda el link completo, con su llave. -->
+<link rel="manifest" href="asistencia.webmanifest">
+<link rel="icon" href="assets/icono-192.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="REIVAJ">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@1,700;1,800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="asistencia.css">
+</head>
+<body>
+<header class="cabeza">
+  <div class="cabeza-txt"><h1 id="titulo">Lista de asistencia</h1><small id="subtitulo">Una hora, un envío.</small></div>
+  <button type="button" id="actualizar" class="oculto">Actualizar</button>
+</header>
+
+<main>
+  <section id="vista-sin-llave" class="tarjeta oculto">
+    <p><b>Esta lista se abre con el link personal que te mandó el gimnasio.</b></p>
+    <p>Ábrelo en este celular una vez. Después la encuentras aquí mismo o en tu pantalla de inicio.</p>
+  </section>
+
+  <section id="vista-quitado" class="tarjeta oculto">
+    <p><b>Este link ya no funciona. Pídele uno nuevo al gimnasio.</b></p>
+  </section>
+
+  <div id="mensaje" class="aviso oculto" role="status"></div>
+  <div id="pendientes" class="aviso pendientes oculto"></div>
+  <div id="instalar" class="aviso instalar oculto"></div>
+
+  <!-- El panel del dueño: cada pestaña pinta su parte -->
+  <section id="panel-hoy" class="panel oculto"></section>
+  <section id="panel-semana" class="panel oculto"></section>
+  <section id="panel-alumnas" class="panel oculto">
+    <div class="tarjeta buscador">
+      <input id="buscar-alumna" type="search" placeholder="Buscar alumna por nombre" autocomplete="off" aria-label="Buscar alumna">
+    </div>
+    <div id="alumnas-lista"></div>
+    <div id="alumna-ficha"></div>
+  </section>
+  <section id="panel-maestras" class="panel oculto"></section>
+
+  <!-- Pasar lista (maestras y dueño) -->
+  <section id="vista-lista" class="oculto">
+    <div class="tarjeta">
+      <label for="fecha">Fecha de la clase</label>
+      <input id="fecha" type="date">
+      <div class="espacio"></div>
+      <label>¿Qué hora estás pasando?</label>
+      <div class="horas" id="horas"></div>
+    </div>
+    <div class="tarjeta oculto" id="bloque-alumnos">
+      <h2 id="titulo-hora">Palomea a quien esté</h2>
+      <div id="grupos-hora"></div>
+      <input class="buscar" id="buscar" type="search" placeholder="Buscar, también de otra hora" autocomplete="off">
+      <div id="alumnos"></div>
+      <div id="otros"></div>
+      <div id="fuera"></div>
+      <div id="bloque-noenc" class="oculto">
+        <h3 class="sep">Anotar a alguien que no está en tu lista</h3>
+        <div class="fila-anotar">
+          <input id="noenc-nombre" type="text" placeholder="Nombre y apellido" autocomplete="off" enterkeyhint="done">
+          <button type="button" class="agregar" id="noenc-agregar">Anotar</button>
+        </div>
+        <div id="noenc-lista"></div>
+      </div>
+    </div>
+    <div class="tarjeta oculto" id="bloque-extra">
+      <h2>¿Vino alguien a clase de prueba?</h2>
+      <div class="agendadas" id="agendadas"></div>
+      <div id="pruebas"></div>
+      <button class="sec" id="mas-prueba" type="button">+ Anotar una clase de prueba</button>
+      <div class="espacio grande"></div>
+      <label for="nota-dia">¿Pasó algo? (opcional)</label>
+      <textarea id="nota-dia" placeholder="Ej. Se fue temprano, le dolía la rodilla."></textarea>
+    </div>
+  </section>
+</main>
+
+<div class="fijo oculto" id="barra">
+  <div class="fila"><span class="cuenta" id="cuenta">0 aquí</span><button class="principal" id="enviar" type="button">Enviar esta hora</button></div>
+</div>
+
+<nav class="pestanas oculto" id="pestanas" aria-label="Secciones">
+  <button type="button" data-panel="hoy"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><circle cx="12" cy="15" r="1.8" class="lleno"/></svg>Hoy</button>
+  <button type="button" data-panel="semana"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="2.5"/><path d="M3.5 9.5h17M3.5 15h17M9.5 3.5v17M15 3.5v17"/></svg>Semana</button>
+  <button type="button" data-panel="alumnas"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M5 20.5c.8-3.8 3.6-5.8 7-5.8s6.2 2 7 5.8"/></svg>Alumnas</button>
+  <button type="button" data-panel="maestras"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8.5" r="3"/><path d="M3.5 19.5c.6-3 2.8-4.7 5.5-4.7s4.9 1.7 5.5 4.7"/><circle cx="16.6" cy="7.4" r="2.5"/><path d="M15.8 13.1c2.6-.2 4.5 1.4 5 4.4"/></svg>Maestras</button>
+  <button type="button" data-panel="lista"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.8 7.2l2 2 3.6-3.6M3.8 15.2l2 2 3.6-3.6M12.8 7.5h7.4M12.8 15.5h7.4"/></svg>Pasar lista</button>
+</nav>
+
+<!-- Panel del dueño: poner a una alumna en el grupo de una maestra -->
+<div id="hoja-fondo" class="hoja-fondo oculto"></div>
+<section id="hoja" class="hoja oculto" role="dialog" aria-modal="true" aria-labelledby="hoja-titulo"></section>
+
+<script src="config.js"></script>
+<script src="buzon.js"></script>
+<script src="panel.js"></script>
+<script src="asistencia.js"></script>
+</body>
+</html>

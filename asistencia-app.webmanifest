@@ -1,0 +1,17 @@
+{
+  "name": "REIVAJ",
+  "short_name": "REIVAJ",
+  "description": "Asistencia de REIVAJ Gimnasia: pasar lista y ver las listas.",
+  "id": "asistencia",
+  "start_url": "asistencia",
+  "scope": "asistencia",
+  "lang": "es-MX",
+  "dir": "ltr",
+  "display": "standalone",
+  "background_color": "#FAF7F1",
+  "theme_color": "#101E3C",
+  "icons": [
+    { "src": "assets/icono-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icono.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
