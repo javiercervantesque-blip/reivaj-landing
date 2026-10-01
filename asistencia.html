@@ -56,43 +56,55 @@
 
   <!-- Pasar lista (maestras y dueño) -->
   <section id="vista-lista" class="oculto">
+    <!-- 1. El día y la hora -->
     <div class="tarjeta">
-      <label for="fecha">Fecha de la clase</label>
-      <input id="fecha" type="date">
-      <div class="espacio"></div>
-      <label>¿Qué hora estás pasando?</label>
+      <div class="dia" id="dia">
+        <button type="button" class="flecha" id="dia-antes" aria-label="Día de clase anterior">‹</button>
+        <div class="dia-txt" aria-live="polite"><b id="dia-titulo">Hoy</b><small id="dia-fecha"></small></div>
+        <button type="button" class="flecha" id="dia-despues" aria-label="Día de clase siguiente">›</button>
+      </div>
+      <div class="otro-dia" id="otro-dia">
+        <button type="button" id="volver-hoy" class="oculto">Volver a hoy</button>
+        <label for="fecha">Otra fecha</label>
+        <input id="fecha" type="date" autocomplete="off">
+      </div>
+      <h2 class="paso">¿Qué hora vas a pasar?</h2>
       <div class="horas" id="horas"></div>
     </div>
+
+    <!-- 2. Quién vino -->
     <div class="tarjeta oculto" id="bloque-alumnos">
-      <h2 id="titulo-hora">Palomea a quien esté</h2>
-      <div id="grupos-hora"></div>
-      <input class="buscar" id="buscar" type="search" placeholder="Buscar, también de otra hora" autocomplete="off">
-      <div id="alumnos"></div>
-      <div id="otros"></div>
-      <div id="fuera"></div>
-      <div id="bloque-noenc" class="oculto">
-        <h3 class="sep">Anotar a alguien que no está en tu lista</h3>
-        <div class="fila-anotar">
-          <input id="noenc-nombre" type="text" placeholder="Nombre y apellido" autocomplete="off" enterkeyhint="done">
-          <button type="button" class="agregar" id="noenc-agregar">Anotar</button>
-        </div>
-        <div id="noenc-lista"></div>
+      <div class="lista-cab">
+        <h2 id="titulo-hora" class="paso">Toca a quien vino</h2>
+        <button type="button" class="sec todos" id="todos">✓ Vinieron todos</button>
       </div>
+      <p class="ayuda" id="ayuda">Toca el nombre de cada quien que vino. Quien se quede sin ✓ cuenta como falta.</p>
+      <div id="grupos-hora"></div>
+      <div id="alumnos"></div>
+      <div id="fuera"></div>
+      <div id="noenc-lista"></div>
+      <h3 class="sep" id="titulo-buscar">¿Vino alguien que no está en la lista?</h3>
+      <input class="buscar" id="buscar" aria-labelledby="titulo-buscar" type="search" placeholder="Escribe su nombre" autocomplete="off" enterkeyhint="search">
+      <div id="otros"></div>
     </div>
+
+    <!-- 3. Clase de prueba y avisos -->
     <div class="tarjeta oculto" id="bloque-extra">
       <h2>¿Vino alguien a clase de prueba?</h2>
+      <p class="ayuda oculto" id="ayuda-agendadas">Tenían clase de prueba este día. Toca a quien sí vino:</p>
       <div class="agendadas" id="agendadas"></div>
       <div id="pruebas"></div>
       <button class="sec" id="mas-prueba" type="button">+ Anotar una clase de prueba</button>
       <div class="espacio grande"></div>
       <label for="nota-dia">¿Pasó algo? (opcional)</label>
-      <textarea id="nota-dia" placeholder="Ej. Se fue temprano, le dolía la rodilla."></textarea>
+      <textarea id="nota-dia" autocomplete="off" placeholder="Ej. Se fue temprano, le dolía la rodilla."></textarea>
     </div>
   </section>
 </main>
 
+<!-- 4. Mandar -->
 <div class="fijo oculto" id="barra">
-  <div class="fila"><span class="cuenta" id="cuenta">0 aquí</span><button class="principal" id="enviar" type="button">Enviar esta hora</button></div>
+  <div class="fila"><span class="cuenta" id="cuenta" aria-live="polite"><b>0</b> vinieron</span><button class="principal" id="enviar" type="button">Enviar lista</button></div>
 </div>
 
 <nav class="pestanas oculto" id="pestanas" aria-label="Secciones">

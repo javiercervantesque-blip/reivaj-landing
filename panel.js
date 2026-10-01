@@ -980,6 +980,7 @@
     estadoHora: function (f, h) { return d ? estadoHora(f, h) : null; },
     marcaDe: function (f, h, id) { return d ? marcaDe(f, h, id) : null; },
     nombreGrupo: nombreGrupo,
-    colorGrupo: colorGrupo
+    colorGrupo: colorGrupo,
+    ordenar: ordenar
   };
 })(window);
