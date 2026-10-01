@@ -270,6 +270,13 @@ em{
 .section{ padding:clamp(64px, 9vw, 116px) 0; }
 .section--alt{ background:var(--paper-2); }
 
+/* Galería de fotos (rostros de alumnos tapados) */
+.galeria{ columns:3 260px; column-gap:16px; }
+.foto{ break-inside:avoid; margin:0 0 16px; border-radius:var(--radius, 14px); overflow:hidden; background:var(--surface); border:1px solid var(--line); }
+.foto img{ display:block; width:100%; height:auto; }
+.foto figcaption{ font-size:.72rem; color:var(--ink-mute); padding:6px 12px 8px; }
+@media (max-width:600px){ .galeria{ columns:2; column-gap:10px; } .foto{ margin-bottom:10px; } .foto figcaption{ font-size:.66rem; padding:4px 8px 6px; } }
+
 .section__head{ max-width:640px; margin:0 auto clamp(38px,5vw,58px); text-align:center; }
 .section__head .section__lead{ margin-inline:auto; }
 .section__head--left{ text-align:left; margin-inline:0; }
