@@ -17,6 +17,13 @@
   window.addEventListener('scroll', alMover, { passive: true });
   alMover();
 
+  /* Video del inicio: quieto si la persona pidió menos movimiento */
+  var heroVideo = document.getElementById('heroVideo');
+  if (heroVideo && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    heroVideo.removeAttribute('autoplay');
+    heroVideo.pause();
+  }
+
   /* Contadores */
   if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     var contar = new IntersectionObserver(function (entradas) {
