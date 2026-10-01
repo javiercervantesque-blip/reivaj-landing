@@ -303,6 +303,9 @@ em{
 .galeria{ columns:3 260px; column-gap:16px; }
 .foto{ break-inside:avoid; margin:0 0 16px; border-radius:var(--radius, 14px); overflow:hidden; background:var(--surface); border:1px solid var(--line); }
 .foto img{ display:block; width:100%; height:auto; }
+.foto--destacada{ border:2px solid var(--gold); }
+.foto.foto--destacada figcaption{ padding:10px 12px 12px; font-size:.8rem; color:var(--ink-mute); }
+.foto.foto--destacada figcaption strong{ display:block; font-family:var(--ff-display); font-style:italic; font-weight:800; font-size:.95rem; color:var(--ink); }
 .foto figcaption{ font-size:.72rem; color:var(--ink-mute); padding:6px 12px 8px; }
 @media (max-width:600px){ .galeria{ columns:2; column-gap:10px; } .foto{ margin-bottom:10px; } .foto figcaption{ font-size:.66rem; padding:4px 8px 6px; } }
 
