@@ -8,7 +8,7 @@
    ========================================================= */
 'use strict';
 
-var CAJA = 'reivaj-lista-3';
+var CAJA = 'reivaj-lista-4';
 var PAGINA = 'asistencia';
 var ARCHIVOS = ['asistencia', 'asistencia.css', 'config.js', 'buzon.js', 'panel.js', 'asistencia.js', 'asistencia.webmanifest', 'asistencia-app.webmanifest', 'assets/icono-192.png', 'assets/apple-touch-icon.png'];
 var ESPERA = 4000;

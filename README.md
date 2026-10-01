@@ -9,11 +9,12 @@ camino lo puede leer.
 
 | Archivo | Qué es |
 |---|---|
-| `index.html` | Inicio: datos del gimnasio (horario, seguridad, cómo se inscribe, preguntas) y el formulario de **clase de prueba** (lunes a viernes, 4:00 pm; el papá escoge el día). No enlaza a la inscripción ni a la carta |
+| `index.html` | Inicio: datos del gimnasio (horario, seguridad, cómo se inscribe, preguntas) y el formulario de **clase de prueba** (lunes a viernes; niñas a las 4:00 pm, niños a las 4:00 o a las 6:00 pm; el papá escoge el día). No enlaza a la inscripción ni a la carta |
 | `inscripcion.html` | **Inscripción en línea** (no enlazada ni indexada: se entra solo con el link que manda el gimnasio) en seis pasos: alumno, tutores, emergencias y quién lo recoge, ficha médica, permisos y la **Carta de seguridad y cobertura firmada con el dedo**. La familia se lleva su copia |
 | `carta.html` | La carta sola, para las familias que ya están inscritas (se firma cada ciclo y al subir de nivel). No enlazada ni indexada |
 | `asistencia.html` | **La lista del celular.** Privada: solo abre con un link personal que da el programa (la llave va después del `#` y nunca sale del celular). Cada link abre lo suyo: el de cada **maestra**, solo sus alumnas para pasar lista de su grupo (y anotar clases de prueba); el del **dueño**, su panel (Hoy · Semana · Alumnas · Maestras) y su lista, que cubre lo que ninguna maestra pasó; desde la ficha de una alumna, el dueño la pone en el grupo de una maestra (día y hora) o le quita una hora, y el programa lo aplica. Un link quitado deja de abrir. Se puede poner en la pantalla de inicio como app. No está enlazada ni se indexa |
 | `aviso-de-privacidad.html` | El Aviso de Privacidad 2027, tal cual el documento oficial |
+| `404.html` | Lo que ve quien escribe mal un link (`/clases`, `/inscripción`…): Vercel la sirve en cualquier ruta que no existe, por eso todo va con ruta absoluta. Lleva al inicio, a la clase de prueba y a WhatsApp. No se indexa |
 
 ## Links para compartir
 

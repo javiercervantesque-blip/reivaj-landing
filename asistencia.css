@@ -18,7 +18,7 @@
   --linea: #E4DED2;
   --texto: #101E3C;
   --suave: #5A6478;
-  --tenue: #8A91A0;
+  --tenue: #646C7E;
   --ok: #1E7B4F;
   --ok-suave: #E3F2E9;
   --mal: #B3261E;
@@ -34,6 +34,9 @@
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html { background: var(--papel); -webkit-text-size-adjust: 100%; }
 body { margin: 0; background: var(--papel); color: var(--texto); font: 16px/1.4 var(--ff); -webkit-font-smoothing: antialiased; }
+/* Sin «jalar para recargar» (Chrome de Android): es fácil hacerlo sin
+   querer a media lista. Para recargar está «Actualizar». */
+html, body { overscroll-behavior-y: contain; }
 button { font-family: inherit; cursor: pointer; }
 .oculto { display: none !important; }
 
@@ -109,6 +112,7 @@ h2.paso { margin: 16px 0 8px; font-size: 14px; color: var(--texto); }
 .hora small.est.falta { color: var(--mal); }
 .hora small.est.ahora { color: var(--marino-2); }
 .hora small.est.tarde { color: var(--tenue); font-weight: 600; }
+.hora small.est.vacia { color: var(--tenue); font-weight: 600; }
 .hora.activa { border-color: var(--marino); background: var(--marino); color: #fff; }
 .hora.activa small { color: #C7CDDA; }
 .hora.activa small.est { color: var(--dorado-claro); }
@@ -116,6 +120,9 @@ h2.paso { margin: 16px 0 8px; font-size: 14px; color: var(--texto); }
 .alumno:last-child { border-bottom: 0; }
 .casilla { width: 36px; height: 36px; border-radius: 10px; border: 2px solid #B9B3A6; flex: none; display: grid; place-items: center; font-weight: 900; color: #fff; font-size: 20px; }
 .alumno.vino .casilla { background: var(--ok); border-color: var(--ok); }
+/* Al dueño: la que ya marcó «vino» otra persona (su maestra). ✓ verde sobre
+   verde claro y borde punteado, distinto del ✓ sólido de lo que palomeó él. */
+.alumno.de-otra .casilla { background: var(--ok-suave); color: var(--ok); border-color: var(--ok); border-style: dashed; }
 .alumno .nombre { flex: 1; font-size: 16px; min-width: 0; }
 .alumno .nombre small { display: block; font-size: 12.5px; color: var(--dorado-osc); margin-top: 2px; }
 .alumno .nombre small.suya { color: var(--suave); }
@@ -320,8 +327,11 @@ button.sec.chico { padding: 6px 10px; min-height: 36px; font-size: 13.5px; }
 /* El renglón: la casilla con el nombre se palomea; la nota va aparte */
 .alumno .marca { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; align-self: stretch; }
 .alumno .marca:focus-visible { outline: 2px solid var(--dorado); outline-offset: 2px; border-radius: 8px; }
-.hora small.est.vieja { color: var(--tenue); }
+.hora:not(.activa) small.est.vieja { color: var(--tenue); }
 .aviso.ok.espera { background: #FFF6DC; border-color: #F0D58A; color: var(--texto); }
 /* Mientras se envía, la lista no se toca */
 #vista-lista.enviando #bloque-alumnos, #vista-lista.enviando #bloque-extra, #vista-lista.enviando .horas, #vista-lista.enviando .dia { opacity: .55; pointer-events: none; }
 .atras { grid-column: 1 / -1; font-size: 14px; font-weight: 600; color: var(--mal); padding: 2px 2px 0; }
+/* «+ Anotar a «nombre y apellido»»: repite lo escrito; con un nombre largo se
+   parte en dos renglones en vez de salirse de la tarjeta (360 px). */
+.nadie button.agregar { white-space: normal; max-width: 100%; text-align: left; overflow-wrap: anywhere; }

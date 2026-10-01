@@ -2,7 +2,8 @@
    REIVAJ · Inscripción en línea (seis pasos)
    Lo que se escribe aquí se cierra en este navegador y viaja
    cifrado al programa del gimnasio. El borrador vive solo en esta
-   pestaña (se borra al cerrarla) y nunca guarda la firma.
+   pestaña (se borra al cerrarla o al día sin tocarlo) y nunca guarda
+   la firma.
    ========================================================= */
 (function () {
   'use strict';
@@ -66,8 +67,12 @@
     guardarBorrador();
   });
   form.addEventListener('input', function (e) {
-    var regla = reglaDe(e.target.name);
-    if (regla && regla(v(e.target.name)) === true) R.mostrarError(form, e.target.name, '');
+    // El nombre del tutor 2 o de la emergencia 2 también quita el aviso de su teléfono.
+    var n = { t2Nombre: 't2Telefono', e2Nombre: 'e2Telefono' }[e.target.name] || e.target.name;
+    var regla = reglaDe(n);
+    if (regla && regla(v(n)) === true) R.mostrarError(form, n, '');
+    // Lo último que se escribe también se guarda, aunque no se salga del campo.
+    guardarEnUnRato();
   });
 
   function edadDe(f) {
@@ -84,7 +89,8 @@
 
   // ─── Quién lo puede recoger ─────────────────────────────────────────
   var contAut = $('autorizados');
-  function filaAutorizado(d) {
+  // auto: 't1' o 't2' si la fila se llena sola con ese tutor (ver mostrar).
+  function filaAutorizado(d, auto) {
     d = d || {};
     var n = contAut.children.length + 1;
     var quitar = R.el('button', { type: 'button', texto: 'Quitar' });
@@ -98,10 +104,21 @@
     ]);
     quitar.addEventListener('click', function () { fila.remove(); numerar(); guardarBorrador(); });
     contAut.appendChild(fila);
+    if (auto) { fila.dataset.auto = auto; fila.dataset.puesto = valoresFila(fila); }
     numerar();
   }
+  // Lo que tiene escrito la fila, para saber si alguien la cambió.
+  function valoresFila(f) { return JSON.stringify([].map.call(f.querySelectorAll('[data-a]'), function (i) { return i.value; })); }
+  function deTutor(t) { return { nombre: v(t + 'Nombre'), parentesco: v(t + 'Parentesco'), telefono: R.telefono10(v(t + 'Telefono')) }; }
+  // Las etiquetas de la fila no van ligadas a su campo: el lector de pantalla
+  // los nombra por aria-label, con el número de la persona (y el «Quitar»).
   function numerar() {
-    [].forEach.call(contAut.children, function (f, i) { f.querySelector('.grupo__titulo span').textContent = 'Persona ' + (i + 1); });
+    [].forEach.call(contAut.children, function (f, i) {
+      var de = ' de la persona ' + (i + 1);
+      f.querySelector('.grupo__titulo span').textContent = 'Persona ' + (i + 1);
+      f.querySelector('.grupo__titulo button').setAttribute('aria-label', 'Quitar a la persona ' + (i + 1));
+      f.querySelectorAll('[data-a]').forEach(function (x) { x.setAttribute('aria-label', x.parentNode.querySelector('label').textContent + de); });
+    });
     $('masAutorizado').hidden = contAut.children.length >= 5;
   }
   function autorizados() {
@@ -111,8 +128,51 @@
       return o;
     }).filter(function (a) { return a.nombre || a.telefono; });
   }
+  // La primera persona que está mal, contada como se ve («Persona N», en el
+  // orden de la página; las filas vacías se saltan, como en autorizados()).
+  // `campo`: el que hay que corregir (el nombre si le faltan letras; si no,
+  // el teléfono).
+  function autorizadoMal() {
+    for (var i = 0; i < contAut.children.length; i++) {
+      var f = contAut.children[i];
+      var nom = f.querySelector('[data-a="nombre"]'), tel = f.querySelector('[data-a="telefono"]');
+      var n = nom.value.trim(), t = tel.value.trim();
+      if (!n && !t) continue;
+      if (n.length < 3 || !R.conLetras(n, 3)) return { n: i + 1, campo: nom, falta: 'nombre' };
+      if (!R.telefonoValido(t)) return { n: i + 1, campo: tel, falta: 'telefono' };
+    }
+    return null;
+  }
+  // Se quita lo rojo de las personas (antes de revisar otra vez).
+  function limpiarAutorizados() {
+    contAut.querySelectorAll('.field').forEach(function (c) { c.classList.remove('has-error'); });
+    contAut.querySelectorAll('input').forEach(function (i) { i.removeAttribute('aria-invalid'); i.removeAttribute('aria-describedby'); });
+  }
+  // La persona que está mal se marca en rojo y, si es el primer error del
+  // paso (`llevar`), se lleva ahí: el aviso queda abajo de la lista y en el
+  // celular no se veía cuál era.
+  function marcarAutorizado(llevar) {
+    var m = autorizadoMal();
+    if (!m) { if (llevar) contAut.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+    var msg = form.querySelector('[data-error-for="autorizados"]');
+    if (msg && !msg.id) msg.id = 'error-' + (form.id || 'form') + '-autorizados';
+    var caja = m.campo.closest('.field');
+    m.campo.setAttribute('aria-invalid', 'true');
+    if (msg) m.campo.setAttribute('aria-describedby', msg.id);
+    if (caja) caja.classList.add('has-error');
+    if (!llevar) return;
+    try { m.campo.focus({ preventScroll: true }); } catch (e) { /* sin foco */ }
+    (caja || m.campo).scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
   $('masAutorizado').addEventListener('click', function () { filaAutorizado(); });
-  contAut.addEventListener('input', guardarBorrador);
+  contAut.addEventListener('input', function (e) {
+    // Al corregir, se quita lo rojo de ese campo (y el aviso, si ya quedó bien).
+    var caja = e.target.closest && e.target.closest('.field');
+    if (caja) caja.classList.remove('has-error');
+    if (e.target.removeAttribute) { e.target.removeAttribute('aria-invalid'); e.target.removeAttribute('aria-describedby'); }
+    if (REGLAS[3].autorizados() === true) R.mostrarError(form, 'autorizados', '');
+    guardarBorrador();
+  });
 
   // ─── Reglas por paso ────────────────────────────────────────────────
   var eligio = function (v) { return Boolean(v) || 'Elija una opción.'; };
@@ -121,10 +181,15 @@
   var TEL_MAL = 'Revise el número: 10 dígitos, con lada (ej. 33 1234 5678).';
   var tel = function (msg) { return function (v) { return R.telefonoValido(v) ? true : (R.telefono10(v) ? TEL_MAL : msg); }; };
   var telOpcional = function (v) { return !v || Boolean(R.telefonoValido(v)) || TEL_MAL; };
+  // Tutor 2 y emergencia 2: sin nombre, el contacto no llega al programa.
+  var telConNombre = function (p) { return function (x) { return x && !v(p + 'Nombre') ? 'Escriba también el nombre de esta persona.' : telOpcional(x); }; };
+  // Dos palabras de dos letras o más, como en la carta suelta: que la carta
+  // no quede firmada por «Laura», sin apellido.
+  var nombreYApellido = function (msg) { return function (x) { return String(x).trim().split(/\s+/).filter(function (w) { return R.conLetras(w, 2); }).length >= 2 || msg; }; };
   var REGLAS = {
     1: {
-      nombres: texto(2, 'Escriba su nombre.'),
-      apellidoPaterno: texto(2, 'Escriba su apellido.'),
+      nombres: texto(2, 'Escriba el nombre del alumno.'),
+      apellidoPaterno: texto(2, 'Escriba el apellido paterno del alumno.'),
       nacimiento: function (x) { var e = edadDe(x); return (e !== null && e >= 4 && e <= 18) || (e !== null && e >= 0 && e < 4 ? 'Recibimos a niñas y niños a partir de los 4 años.' : 'Revise la fecha de nacimiento.'); },
       rama: eligio,
       curp: function (x) { return !x || /^[A-Z]{4}\d{6}[HMX][A-Z]{5}[A-Z0-9]\d$/.test(String(x).toUpperCase()) || 'La CURP tiene 18 letras y números. Revísela o déjela vacía.'; },
@@ -134,22 +199,22 @@
       experiencia: eligio
     },
     2: {
-      t1Nombre: texto(5, 'Escriba el nombre completo.'),
+      t1Nombre: nombreYApellido('Escriba nombre y apellido del tutor.'),
       t1Parentesco: function (x) { return Boolean(x) || 'Elija el parentesco.'; },
       t1Telefono: tel('Escriba un WhatsApp de 10 dígitos.'),
       t1Correo: function (x) { return !x || /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(x) || 'Revise el correo.'; },
-      t2Telefono: telOpcional,
+      t2Telefono: telConNombre('t2'),
       custodia: eligio
     },
     3: {
       e1Nombre: texto(3, 'Escriba el nombre.'),
       e1Parentesco: texto(3, 'Escriba el parentesco.'),
       e1Telefono: tel('Escriba un teléfono de 10 dígitos.'),
-      e2Telefono: telOpcional,
+      e2Telefono: telConNombre('e2'),
       autorizados: function () {
-        var a = autorizados();
-        if (!a.length) return 'Agregue al menos a una persona.';
-        if (a.some(function (x) { return x.nombre.length < 3 || !R.conLetras(x.nombre, 3) || !R.telefonoValido(x.telefono); })) return 'Cada persona necesita nombre y un teléfono válido de 10 dígitos.';
+        if (!autorizados().length) return 'Agregue al menos a una persona.';
+        var m = autorizadoMal();
+        if (m) return 'Revise a la persona ' + m.n + (m.falta === 'nombre' ? ': escriba su nombre completo.' : ': el teléfono lleva 10 dígitos, con lada.');
         return true;
       }
     },
@@ -164,9 +229,10 @@
     })(),
     6: {
       seguro: function (x) { return Boolean(x) || 'Indique si contrata el seguro.'; },
-      firmante: texto(5, 'Escriba su nombre completo.'),
+      firmante: nombreYApellido('Escriba su nombre y apellido.'),
       firmanteParentesco: function (x) { return Boolean(x) || 'Elija el parentesco.'; },
-      firma: function () { return (firma && firma.valida()) || 'Firme en el recuadro con el dedo.'; },
+      // Con trazo pero muy chico (dos rayitas): que no crea que ya firmó.
+      firma: function () { return (firma && firma.valida()) || (firma && firma.datos().trazos ? 'Su firma quedó muy corta: fírmela completa, como en papel.' : 'Firme en el recuadro con el dedo.'); },
       leida: function (x) { return x === true || 'Confirme que leyó la carta.'; },
       firmaElectronica: function (x) { return x === true || 'Confirme su firma electrónica.'; }
     }
@@ -177,6 +243,7 @@
   }
   function revisarPaso(n) {
     var primero = null;
+    if (n === 3) limpiarAutorizados();
     Object.keys(REGLAS[n]).forEach(function (k) {
       var r = REGLAS[n][k](v(k));
       R.mostrarError(form, k, r === true ? '' : r);
@@ -184,9 +251,11 @@
     });
     if (primero) {
       if (primero === 'firma') $('firmaCampo').scrollIntoView({ behavior: 'smooth', block: 'center' });
-      else if (primero === 'autorizados') contAut.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      else if (primero === 'autorizados') marcarAutorizado(true);
       else R.llevarA(form, primero);
     }
+    // Aunque el primer error sea otro, la persona que está mal queda en rojo.
+    if (n === 3 && primero !== 'autorizados') marcarAutorizado(false);
     return !primero;
   }
 
@@ -201,18 +270,48 @@
     $('siguiente').hidden = n === TOTAL;
     $('enviar').hidden = n !== TOTAL;
     if (n === 3 && !contAut.children.length) {
-      filaAutorizado({ nombre: v('t1Nombre'), parentesco: v('t1Parentesco'), telefono: R.telefono10(v('t1Telefono')) });
-      if (v('t2Nombre')) filaAutorizado({ nombre: v('t2Nombre'), parentesco: v('t2Parentesco'), telefono: R.telefono10(v('t2Telefono')) });
+      filaAutorizado(deTutor('t1'), 't1');
+      if (v('t2Nombre')) filaAutorizado(deTutor('t2'), 't2');
+    } else if (n === 3) {
+      // Las que se llenaron solas y nadie ha tocado siguen a su tutor: si
+      // corrigió su WhatsApp en el paso 2, aquí también queda corregido.
+      [].forEach.call(contAut.children, function (f) {
+        if (!f.dataset.auto || f.dataset.puesto !== valoresFila(f)) return;
+        var d = deTutor(f.dataset.auto);
+        f.querySelectorAll('[data-a]').forEach(function (i) { i.value = d[i.getAttribute('data-a')] || ''; });
+        f.dataset.puesto = valoresFila(f);
+      });
     }
     if (n === TOTAL) prepararCarta();
     if (desplazar !== false) {
       var arriba = form.getBoundingClientRect().top + window.scrollY - 96;
       window.scrollTo({ top: Math.max(0, arriba), behavior: 'smooth' });
+      // El foco va al paso nuevo (si no, el lector de pantalla se queda en
+      // el botón o cae al principio de la página). Al cargar no se mueve.
+      var t = pasos[n - 1].querySelector('.paso-titulo');
+      if (t) { t.setAttribute('tabindex', '-1'); t.focus({ preventScroll: true }); }
     }
     guardarBorrador();
+    armarTrampa();
   }
   $('siguiente').addEventListener('click', function () { if (revisarPaso(actual)) mostrar(actual + 1); });
   $('atras').addEventListener('click', function () { mostrar(actual - 1); });
+
+  // El «atrás» del celular regresa un paso, no cierra la pestaña (con ella se
+  // iría el borrador). Una sola entrada de más en el historial, que se vuelve
+  // a poner al usarla; en el paso 1 sale como siempre. El «adelante» no
+  // avanza: así nadie se brinca la revisión de un paso. `trampa`: si la
+  // entrada en la que se está es esa (también al recargar la página).
+  var trampa = Boolean(history.state && history.state.reivajPaso);
+  function armarTrampa() {
+    if (trampa || actual <= 1) return;
+    try { history.pushState({ reivajPaso: true }, ''); trampa = true; } catch (e) { /* sin historial: no pasa nada */ }
+  }
+  window.addEventListener('popstate', function (e) {
+    trampa = Boolean(e.state && e.state.reivajPaso);
+    if (trampa || form.hidden || actual <= 1) return;
+    mostrar(actual - 1);
+  });
 
   // ─── La carta ───────────────────────────────────────────────────────
   function nombreCompleto() {
@@ -240,9 +339,13 @@
       R.el('div', { clase: 'carta__datos' }, fichaCarta().map(function (x) { return R.el('div', {}, [R.el('span', { texto: x[0] }), R.el('b', { texto: x[1] || '—' })]); })),
       R.el('p', { clase: 'field__ayuda' }, ['Si algo no está bien, ', R.el('a', { href: '#', texto: 'corríjalo en la ficha médica', onclick: function (e) { e.preventDefault(); mostrar(4); } }), '.'])
     ]);
+    // Quien firma sigue al tutor 1 mientras nadie lo toque: si corrigió el
+    // nombre en el paso 2, la carta y este campo salen ya corregidos. Si aquí
+    // escribió otro nombre, se respeta. Antes de pintar: la carta lo usa.
+    var fi = form.elements.firmante, fp = form.elements.firmanteParentesco;
+    if (!fi.value.trim() || fi.value === fi.dataset.puesto) { fi.value = v('t1Nombre'); fi.dataset.puesto = fi.value; }
+    if (!fp.value || fp.value === fp.dataset.puesto) { fp.value = v('t1Parentesco'); fp.dataset.puesto = fp.value; }
     CF.pintarCarta($('carta'), datosCarta(), { seguro: seguroNodo, seccion4: ficha });
-    if (!v('firmante')) form.elements.firmante.value = v('t1Nombre');
-    if (!v('firmanteParentesco')) form.elements.firmanteParentesco.value = v('t1Parentesco');
     $('textoEnLinea').textContent = window.CARTA_SEGURIDAD.enLinea;
     if (!firma) {
       firma = CF.Firma($('firma'));
@@ -298,6 +401,10 @@
     try {
       var huella = await CF.huellaCarta();
       var datos = armarDatos(huella, cuando);
+      // El buzón descarta sin aviso lo que llega antes de 2.5 s de abierta la
+      // página (la trampa para robots): tras una recarga, se espera ese rato.
+      var falta = 2600 - (Date.now() - cargada);
+      if (falta > 0) await new Promise(function (listo) { setTimeout(listo, falta); });
       r = await window.Buzon.enviar('inscripcion', { enviado: cuando.toISOString(), datos: datos }, { hp: v('sitio'), t: Date.now() - cargada });
       r.datos = datos;
     } catch (err) {
@@ -306,7 +413,12 @@
     boton.disabled = false;
     boton.textContent = 'Enviar inscripción';
     if (!r.ok) {
-      $('nota').textContent = (r.error || 'No se pudo enviar.') + ' Si el problema continúa, escríbanos por WhatsApp.';
+      // Lo de la red lo escribe buzon.js (de usted); lo que conteste el buzón
+      // no es para las familias (viene de tú y a veces ya pide WhatsApp).
+      // El WhatsApp va con link, sin datos del alumno en el mensaje.
+      $('nota').textContent = (r.red ? (r.error || 'Sin conexión. Revise su internet e intente de nuevo.') : 'No se pudo enviar. Intente de nuevo en un momento.') + ' Si el problema continúa, escríbanos por ';
+      $('nota').appendChild(R.el('a', { href: R.enlaceWhatsApp('Hola, intenté enviar la inscripción en línea y no se pudo.'), target: '_blank', rel: 'noopener', texto: 'WhatsApp' }));
+      $('nota').appendChild(document.createTextNode('.'));
       $('nota').classList.add('form__note--mal');
       return;
     }
@@ -319,23 +431,34 @@
     $('listoTexto').textContent = 'Recibimos la inscripción de ' + v('nombres') + '. En recepción confirmamos grupo, horario y forma de pago.';
     form.hidden = true;
     $('listo').hidden = false;
+    // El foco estaba en el botón que se acaba de ocultar: pasa al aviso.
+    $('listo').setAttribute('tabindex', '-1');
+    $('listo').focus({ preventScroll: true });
     borrarBorrador();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
   var copia = null;
   $('descargarPdf').addEventListener('click', function () {
-    var b = this;
+    // Con mala señal jsPDF tarda en bajar: el botón dice que está en eso.
+    var b = this, txt = b.textContent;
     if (!copia || b.disabled) return;
     b.disabled = true;
-    window.CartaPDF.descargar(copia.datos, copia.extra).then(function () { b.disabled = false; });
+    b.textContent = 'Preparando su PDF…';
+    window.CartaPDF.descargar(copia.datos, copia.extra).then(function () { b.disabled = false; b.textContent = txt; });
   });
   $('guardarCopia').addEventListener('click', function () { window.print(); });
 
   // ─── Borrador en esta pestaña (sin firma) ───────────────────────────
   var CLAVE = 'reivaj_inscripcion_borrador';
+  var DIA = 24 * 60 * 60 * 1000;
+  var espera = null;
+  function guardarEnUnRato() { clearTimeout(espera); espera = setTimeout(guardarBorrador, 400); }
+  // Si la pestaña se va (recargar, cerrar) con algo recién escrito, se guarda ya.
+  window.addEventListener('pagehide', function () { if (espera) guardarBorrador(); });
   function guardarBorrador() {
+    clearTimeout(espera); espera = null;
     try {
-      var o = { paso: actual, campos: {}, autorizados: autorizados() };
+      var o = { paso: actual, t: Date.now(), campos: {}, autorizados: autorizados() };
       [].forEach.call(form.elements, function (x) {
         if (!x.name || x.name === 'sitio' || x.name === 'seguro') return;
         if (x.type === 'radio') { if (x.checked) o.campos[x.name] = x.value; }
@@ -345,10 +468,13 @@
       sessionStorage.setItem(CLAVE, JSON.stringify(o));
     } catch (e) { /* sin almacenamiento: no pasa nada */ }
   }
-  function borrarBorrador() { try { sessionStorage.removeItem(CLAVE); } catch (e) { /* nada */ } }
+  function borrarBorrador() { clearTimeout(espera); espera = null; try { sessionStorage.removeItem(CLAVE); } catch (e) { /* nada */ } }
   function recuperar() {
     var o = null;
     try { o = JSON.parse(sessionStorage.getItem(CLAVE) || 'null'); } catch (e) { o = null; }
+    // El celular restaura pestañas por semanas: un borrador de más de un día
+    // (o sin fecha) se tira, para que otro que abra la pestaña no lo vea.
+    if (o && !(Math.abs(Date.now() - (Number(o.t) || 0)) < DIA)) { borrarBorrador(); o = null; }
     if (!o) return 1;
     Object.keys(o.campos || {}).forEach(function (k) {
       var c = form.elements[k];
@@ -357,7 +483,8 @@
       else if (c.type === 'checkbox') c.checked = Boolean(o.campos[k]);
       else c.value = o.campos[k];
     });
-    (o.autorizados || []).forEach(filaAutorizado);
+    // Sin marca de tutor: lo del borrador ya no se llena solo.
+    (o.autorizados || []).forEach(function (a) { filaAutorizado(a); });
     $('experienciaDetalleCampo').hidden = v('experiencia') !== 'si';
     $('custodiaNota').hidden = v('custodia') !== 'si';
     mostrarEdad();

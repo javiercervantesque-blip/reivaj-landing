@@ -51,6 +51,9 @@
   function fechaLarga(f) { var p = f.split('-'); return DIAS_L[u.diaSemana(f) - 1] + ' ' + (+p[2]) + ' de ' + MESES_L[+p[1] - 1]; }
   function fechaCorta(f) { var p = f.split('-'); return DIAS_C[u.diaSemana(f) - 1] + ' ' + (+p[2]) + ' ' + MESES[+p[1] - 1]; }
   function lunesDe(f) { return u.sumarDias(f, 1 - u.diaSemana(f)); }
+  // El día de lo último que subió la computadora: lo que las maestras
+  // manden después todavía no está aquí.
+  function diaSubida() { return String((d && d.generada) || '').slice(0, 10); }
   function colorSeguro(c, i) { return /^#[0-9a-fA-F]{3,8}$/.test(String(c || '')) ? c : COLORES[i % COLORES.length]; }
   // «16:52», o «28/09 16:52» si llegó otro día.
   function textoLlego(t) {
@@ -94,6 +97,9 @@
     var m = ix.maestras[gid];
     return m ? m.nombre : String(gid || '').replace(/^en_/, '');
   }
+  // «8 alumnas», o «8 alumnos» en el grupo de varonil. Aquí las maestras no
+  // traen rama: se ve por el nombre, como el respaldo de varonil() de la lista.
+  function cuantosDe(n, gid) { var v = /varonil/i.test(nombreGrupo(gid)); return n + (n === 1 ? (v ? ' alumno' : ' alumna') : (v ? ' alumnos' : ' alumnas')); }
   function colorGrupo(gid) { var m = ix.maestras[gid]; return m ? m.color : GRIS; }
   function ordenar(ids) {
     return ids.slice().sort(function (a, b) {
@@ -172,7 +178,8 @@
     if (H.desde && f < H.desde) return null;
     var c = u.diaSemana(f) + '-' + h, g = {};
     d.alumnos.forEach(function (a, k) {
-      if (a.b || !a.s || a.s.indexOf(c) < 0) return;
+      // La que entra después de ese día (`e`, su fecha de ingreso) todavía no tiene clase.
+      if (a.b || !a.s || a.s.indexOf(c) < 0 || (a.e && a.e > f)) return;
       var gid = (a.m && a.m[c]) || '_sin';
       (g[gid] = g[gid] || { p: [], f: [], x: [], sin: [], por: null, llego: null }).sin.push(k);
     });
@@ -236,7 +243,8 @@
     var r = (ix.porAlumna[k] || []).filter(function (x) { return x.f === f && x.h === h; })[0];
     if (!r) return null;
     var g = e && e.grupos && e.grupos[r.g];
-    return { e: r.e, g: r.g, por: g ? g.por : null };
+    // Quien la marcó, si no fue quien pasó la lista del grupo (`q`).
+    return { e: r.e, g: r.g, por: g ? ((g.q && g.q[k]) || g.por) : null };
   }
 
   // ─── Hoy (o el día que se elija) ────────────────────────────────────
@@ -269,6 +277,8 @@
     if (f !== hoy) tit.appendChild(boton('', 'Volver a hoy', function () { vista.dia = hoy; pintarHoy(); }));
     nav.appendChild(ant); nav.appendChild(tit); nav.appendChild(sig);
     cont.appendChild(nav);
+    var gen = diaSubida();
+    if (gen && gen < hoy && f >= hoy) cont.appendChild(el('div', 'aviso', 'La computadora del gimnasio no se ha conectado hoy (lo último que subió es del ' + fechaCorta(gen) + '). Lo que hayan mandado hoy las maestras todavía no se ve aquí.'));
 
     var horas = (d.horas || []).map(function (h) { return { h: h, e: estadoHora(f, h) }; }).filter(function (x) { return x.e; });
     if (!horas.length) {
@@ -309,6 +319,8 @@
       else if (g.por) quien = el('span', 'g-quien falta', 'Sin su lista · marcas de ' + g.por);
       else if (e.cuando === 'tarde') quien = el('span', 'g-quien', 'Más tarde');
       else if (e.cuando === 'curso') quien = el('span', 'g-quien', 'En clase');
+      // Ese día la computadora todavía no sube nada: su lista pudo ya salir.
+      else if (diaSubida() && diaSubida() < f) quien = el('span', 'g-quien falta', 'Todavía no llega su lista');
       else quien = el('span', 'g-quien falta', 'Nadie ha pasado lista');
       filaGrupo(t, f + '|' + h + '|' + gid, gid, nombreGrupo(gid), g, quien);
     });
@@ -318,7 +330,8 @@
       filaGrupo(t, f + '|' + h + '|' + gid, gid, nombreGrupo(gid), g, el('span', 'g-quien', 'Vinieron fuera de su horario' + (g.por ? ' · las marcó ' + g.por : '')));
     });
     if (e.fuera.length) filaGrupo(t, f + '|' + h + '|_fuera', '_fuera', 'Fuera de su horario', { x: e.fuera }, el('span', 'g-quien', 'No les tocaba esta hora'));
-    if (e.cuando !== 'tarde' && e.tipo !== 'completa') {
+    // Como en la lista: no más atrás de dos semanas (lo de antes ya no se corrige aquí).
+    if (e.cuando !== 'tarde' && e.tipo !== 'completa' && f >= u.sumarDias(u.hoy(), -14)) {
       t.appendChild(boton('sec', e.tipo === 'parcial' ? 'Pasar lo que falta de esta hora' : 'Pasar lista de esta hora', function () { u.pasarHora(f, h); }));
     }
     return t;
@@ -340,7 +353,7 @@
       cuenta.appendChild(document.createTextNode(' '));
       cuenta.appendChild(el('span', 'f', (g.f || []).length + ' ✗'));
     } else {
-      cuenta.textContent = n + (n === 1 ? ' alumna' : ' alumnas');
+      cuenta.textContent = cuantosDe(n, gid);
     }
     b.appendChild(cuenta);
     b.appendChild(el('span', 'flechita', '›'));
@@ -392,7 +405,8 @@
     });
     agendadas.forEach(function (p) {
       var li = el('li', null, p.n);
-      li.appendChild(el('small', null, [p.h, 'agendada, nadie la ha anotado'].filter(Boolean).join(' · ')));
+      // Antes de que pase su hora, solo «agendada»: todavía no hay nada que anotar.
+      li.appendChild(el('small', null, [p.h, momento(f, p.h || '16:00') === 'paso' ? 'agendada, nadie la anotó en la lista' : 'agendada'].filter(Boolean).join(' · ')));
       ul.appendChild(li);
     });
     t.appendChild(ul);
@@ -748,7 +762,10 @@
 
   function quitarHora(k, f, b) {
     var a = alumna(k);
-    if (!confirm('¿Quitar a ' + a.n + ' del ' + cuandoTxt(f.dia, f.h) + ' (' + conQuien(f.gid) + ')? Deja de salir en esa lista.')) return;
+    // Sin ninguna hora no desaparece: cuenta como nueva sin grupo.
+    var ultima = Object.keys(horarioConCambios(a).ahora).length === 1;
+    if (!confirm('¿Quitar a ' + a.n + ' del ' + cuandoTxt(f.dia, f.h) + ' (' + conQuien(f.gid) + ')? ' +
+      (ultima ? 'Es su única hora: sin horario sale como «Nuevo» en las listas de las maestras hasta que le pongas otra. Si ya no viene, dala de baja en la computadora.' : 'Deja de salir en esa lista.'))) return;
     // Mientras se guarda, el botón no se vuelve a tocar.
     if (b) { b.disabled = true; b.textContent = 'Quitando…'; }
     enviarCambios(a, [{ alumnoId: a.i, dia: f.dia, hora: f.h, entrenadoraId: f.gid === '_sin' ? null : f.gid, quitar: true }],
@@ -806,6 +823,10 @@
       r.cambios.push({ alumnoId: a.i, dia: dia, hora: s.h, entrenadoraId: s.m, quitar: false });
       if (antes === undefined) r.lineas.push({ t: mayus(cuando) + ' con ' + con + '.', c: 'nueva' });
       else r.lineas.push({ t: 'Ya tenía ' + cuando + ' ' + conQuien(antes) + ': pasa con ' + con + '.', c: 'cambia' });
+      // Poner no es cambiar de hora: la otra hora de ese día se queda, y se dice.
+      if (antes === undefined) Object.keys(ahora).filter(function (k) { return +k.split('-')[0] === dia && k !== c; }).sort().forEach(function (k) {
+        r.lineas.push({ t: 'Sigue también su ' + cuandoTxt(dia, k.split('-')[1]) + ' ' + conQuien(ahora[k]) + ': si es cambio de hora, quítale esa con «Quitar» en su ficha.', c: 'igual' });
+      });
     });
     return r;
   }
@@ -901,7 +922,7 @@
         if (tiene) suyas++;
       });
       if (!suyas && gid !== '_sin' && !enHistorial(gid)) return;
-      cab.appendChild(el('small', null, suyas + (suyas === 1 ? ' alumna' : ' alumnas')));
+      cab.appendChild(el('small', null, cuantosDe(suyas, gid)));
       t.appendChild(cab);
       var porHora = {};
       Object.keys(casillas).forEach(function (c) { var p = c.split('-'); (porHora[p[1]] = porHora[p[1]] || []).push(+p[0]); });

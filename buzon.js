@@ -56,9 +56,12 @@
       // (Google no contesta ese permiso) y la respuesta se puede leer.
       r = await global.fetch(cfg.buzon, { method: 'POST', body: cuerpo, redirect: 'follow' });
     } catch (e) {
+      // La respuesta no se pudo leer (una página de error de Google, o la red
+      // se cortó a media respuesta). Se manda otra vez sin poder leerla; sin
+      // respuesta no se sabe si llegó, así que nunca se da por recibido.
       try {
         await global.fetch(cfg.buzon, { method: 'POST', body: cuerpo, mode: 'no-cors' });
-        return { ok: true, aCiegas: true };
+        return { ok: false, red: true, aCiegas: true, error: 'No pudimos confirmar que llegó al gimnasio. Intente de nuevo en un momento.' };
       } catch (e2) {
         return { ok: false, red: true, error: 'Sin conexión. Revise su internet e intente de nuevo.' };
       }
@@ -66,7 +69,10 @@
     var j = null;
     try { j = await r.json(); } catch (e) { j = null; }
     if (!j) return { ok: false, error: 'No recibimos respuesta del gimnasio. Intente de nuevo en un momento.' };
-    return j;
+    // Lo que se guarda siempre trae id. Un «ok» sin id es lo que el buzón
+    // tiró por la trampa para robots (campo oculto autollenado, o el reloj
+    // del celular movido): no se guardó, así que no se da por recibido.
+    return j.ok && !j.id ? { ok: false, error: 'No pudimos confirmar que llegó.' } : j;
   }
 
   async function leer(accion) {

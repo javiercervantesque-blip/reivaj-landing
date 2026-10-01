@@ -104,7 +104,15 @@ em{
 }
 .skip-link:focus{ left:0; }
 
-:focus-visible{ outline:2px solid var(--gold); outline-offset:3px; border-radius:4px; }
+/* Marco de foco marino sobre hueso y blanco (el dorado ahí no llega a 3:1);
+   dorado claro donde el fondo es marino. El de WhatsApp toma el foco al
+   final, ya con el pie marino detrás. */
+:focus-visible{ outline:2px solid var(--navy); outline-offset:3px; border-radius:4px; }
+.nav :focus-visible, .footer :focus-visible, .cta :focus-visible, .card--dark :focus-visible,
+.skip-link:focus-visible, .wa-flotante:focus-visible{ outline-color:var(--gold-light); }
+/* El aviso de «recibida» toma el foco para que el lector de pantalla lo lea;
+   no es un botón: sin marco. */
+[tabindex="-1"]:focus{ outline:none; }
 
 /* ---------- Marca ----------
    Logo oficial en assets/logo-reivaj.svg, sacado de los vectores .ai:
@@ -574,8 +582,9 @@ em{
   .stat:nth-child(odd){ border-left:none; }
 }
 
-@media (max-width:760px){
-  body{ font-size:16px; }
+/* El menú completo cabe en un renglón desde unos 980 px; abajo de eso
+   (tablet vertical incluida), hamburguesa. */
+@media (max-width:980px){
   .nav__toggle{ display:flex; }
   .nav__links{
     position:absolute; top:76px; left:0; right:0;
@@ -588,6 +597,10 @@ em{
   .nav__links.is-open{ display:flex; }
   .nav__links a{ padding:15px 0; border-bottom:1px solid rgba(255,255,255,.1); font-size:1rem; }
   .nav__links .btn{ margin-top:16px; border-bottom:none; justify-content:center; }
+}
+
+@media (max-width:760px){
+  body{ font-size:16px; }
   .fab{ display:block; }
   .footer__grid{ grid-template-columns:1fr; gap:28px; }
   .field-row{ grid-template-columns:1fr; gap:0; }
@@ -667,9 +680,9 @@ em{
 .inscripcion__acciones .link-arrow{ white-space:normal; }
 
 /* Días de la clase de prueba */
-.chips--dias{ display:grid; grid-template-columns:repeat(auto-fill, minmax(62px,1fr)); gap:8px; }
+.chips--dias{ display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:8px; }
 .chip--dia span{ padding:8px 4px; text-align:center; line-height:1.15; }
-.chip--dia small{ display:block; font-size:.66rem; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-mute); }
+.chip--dia small{ display:block; font-size:.72rem; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-mute); }
 .chip--dia b{ display:block; font-family:var(--ff-display); font-size:1.25rem; font-weight:800; color:var(--navy); }
 .chip--dia input:checked + span small, .chip--dia input:checked + span b{ color:var(--navy); }
 .field__ayuda{ font-size:.8rem; color:var(--ink-mute); margin:8px 0 0; }
@@ -799,8 +812,10 @@ em{
 .firma-img{ display:block; height:80px; max-width:100%; }
 .copia__pie{ font-size:8.5pt; color:#444; border-top:1px solid #999; margin-top:8mm; padding-top:3mm; }
 @media print{
-  body *{ visibility:hidden; }
-  .copia, .copia *{ visibility:visible; }
+  /* Ya armada la copia firmada (firma.js le pone .con-copia al body), solo
+     sale ella. Antes de firmar, y en las demás páginas, sale lo que se ve. */
+  body.con-copia *{ visibility:hidden; }
+  body.con-copia .copia, body.con-copia .copia *{ visibility:visible; }
   .copia{ display:block; position:absolute; left:0; top:0; width:100%; padding:0 6mm; font-size:10.5pt; color:#000; }
   .copia .carta h3 .n{ background:#000; }
   .copia .firma-img{ height:26mm; }

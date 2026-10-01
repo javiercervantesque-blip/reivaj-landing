@@ -99,13 +99,22 @@
     var toggle = document.getElementById('navToggle');
     var links = document.getElementById('navLinks');
     if (toggle && links) {
+      var cerrarMenu = function () { links.classList.remove('is-open'); toggle.setAttribute('aria-expanded', 'false'); toggle.setAttribute('aria-label', 'Abrir menú'); };
       toggle.addEventListener('click', function () {
         var abierto = links.classList.toggle('is-open');
         toggle.setAttribute('aria-expanded', String(abierto));
         toggle.setAttribute('aria-label', abierto ? 'Cerrar menú' : 'Abrir menú');
       });
       links.addEventListener('click', function (e) {
-        if (e.target.tagName === 'A') { links.classList.remove('is-open'); toggle.setAttribute('aria-expanded', 'false'); toggle.setAttribute('aria-label', 'Abrir menú'); }
+        if (e.target.tagName === 'A') cerrarMenu();
+      });
+      // En el celular el menú tapa media pantalla: se cierra con Escape o en
+      // cuanto se toca (o se empieza a desplazar) fuera de él.
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && links.classList.contains('is-open')) { cerrarMenu(); toggle.focus(); }
+      });
+      document.addEventListener('pointerdown', function (e) {
+        if (links.classList.contains('is-open') && !links.contains(e.target) && !toggle.contains(e.target)) cerrarMenu();
       });
     }
     var nav = document.getElementById('nav');
@@ -143,12 +152,21 @@
     else if (campo) caja = campo.closest('.field') || campo.closest('.consent');
     if (msg) { msg.textContent = mensaje || ''; msg.classList.toggle('is-visible', Boolean(mensaje)); }
     if (caja) caja.classList.toggle('has-error', Boolean(mensaje));
+    // El error, ligado a su campo: el lector de pantalla lo dice al llegar ahí.
+    if (msg && campo) {
+      if (!msg.id) msg.id = 'error-' + (form.id || 'form') + '-' + nombre;
+      (campo.tagName ? [campo] : Array.prototype.slice.call(campo)).forEach(function (c) {
+        if (mensaje) { c.setAttribute('aria-invalid', 'true'); c.setAttribute('aria-describedby', msg.id); }
+        else { c.removeAttribute('aria-invalid'); c.removeAttribute('aria-describedby'); }
+      });
+    }
   }
 
   function valor(form, nombre) {
     var c = form.elements[nombre];
     if (!c) return '';
     if (c.length !== undefined && !c.tagName) return c.value || '';   // grupo de radios
+    if (c.type === 'radio') return c.checked ? c.value : '';          // un solo radio (un solo día que pedir)
     if (c.type === 'checkbox') return c.checked;
     return String(c.value || '').trim();
   }
@@ -164,7 +182,7 @@
   var FUENTES = [
     ['', 'Elija una opción'], ['instagram', 'Instagram'], ['facebook', 'Facebook'], ['tiktok', 'TikTok'],
     ['google', 'Google o Maps'], ['referido', 'Me lo recomendaron'], ['paso', 'Pasé por el gimnasio'],
-    ['escuela', 'En su escuela'], ['evento', 'Los vi en una competencia'], ['regreso', 'Ya había estado antes'], ['otro', 'Otro']
+    ['escuela', 'En la escuela de mi hija o hijo'], ['evento', 'Los vi en una competencia'], ['regreso', 'Ya había estado antes'], ['otro', 'Otro']
   ];
 
   global.Reivaj = {

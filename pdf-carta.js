@@ -93,7 +93,7 @@
         var alto = 0;
         [lista[i], lista[i + 1]].forEach(function (par, k) {
           if (!par) return;
-          fuente(false, 7.5, GRIS);
+          fuente(true, 9.5, TINTA); // se mide con la letra con la que se dibuja
           var v = doc.splitTextToSize(String(par[1] || '—'), col - 4);
           alto = Math.max(alto, 4 + v.length * 4.2);
         });
@@ -152,7 +152,8 @@
 
     var img = firmaPNG(extra.firma);
     if (img) {
-      var fw = 70, fh = fw * img.h / img.w;
+      // 70 mm de ancho, sin pasar de 30 de alto (la firma hecha en celular es casi cuadrada).
+      var fh = Math.min(30, 70 * img.h / img.w), fw = fh * img.w / img.h;
       saltoSi(fh + 12);
       doc.addImage(img.url, 'JPEG', M, y, fw, fh);
       y += fh + 1;

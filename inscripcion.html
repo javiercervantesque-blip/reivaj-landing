@@ -250,13 +250,14 @@
         </div>
         <div class="field">
           <label for="padecimientos">Padecimientos o lesiones previas</label>
-          <input id="padecimientos" name="padecimientos" placeholder="Asma, convulsiones, fracturas, cirugías… Si no tiene, déjelo en blanco">
+          <input id="padecimientos" name="padecimientos" placeholder="Asma, convulsiones, cirugías…">
+          <p class="field__ayuda">Si no tiene, déjelo en blanco.</p>
           <p class="error" data-error-for="padecimientos"></p>
         </div>
         <div class="field">
           <label for="medicamentos">Medicamentos que toma</label>
-          <input id="medicamentos" name="medicamentos" placeholder="Nombre y horario. Si no toma, déjelo en blanco">
-          <p class="field__ayuda">El personal de REIVAJ no administra medicamentos. Si debe tomar algo durante la clase, lo trae el alumno con la indicación por escrito.</p>
+          <input id="medicamentos" name="medicamentos" placeholder="Nombre y horario">
+          <p class="field__ayuda">Si no toma, déjelo en blanco. El personal de REIVAJ no administra medicamentos. Si debe tomar algo durante la clase, lo trae el alumno con la indicación por escrito.</p>
           <p class="error" data-error-for="medicamentos"></p>
         </div>
         <div class="field">
@@ -334,7 +335,7 @@
         <button type="button" class="btn btn--primary" id="siguiente">Siguiente</button>
         <button type="submit" class="btn btn--primary" id="enviar" hidden disabled>Enviar inscripción</button>
       </div>
-      <p class="form__note" id="nota"></p>
+      <p class="form__note" id="nota" role="status"></p>
     </form>
 
     <section class="tarjeta tarjeta--oro" id="listo" hidden>
