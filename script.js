@@ -75,7 +75,7 @@
     var dias = R.diasDePrueba(pruebas);
     sinFechas = !dias.length;
     if (sinFechas) {
-      cont.appendChild(R.el('p', { clase: 'field__ayuda sin-fechas', texto: 'Por ahora no hay fechas de clase de prueba. Al enviar su solicitud se abre WhatsApp con el mensaje ya escrito y le avisamos la próxima fecha.' }));
+      cont.appendChild(R.el('p', { clase: 'field__ayuda sin-fechas', texto: 'Por el momento no hay fechas disponibles para clase de prueba. Al enviar su solicitud se abrirá WhatsApp con el mensaje ya escrito y le informaremos la próxima fecha.' }));
       R.mostrarError(form, 'dia', '');
     }
     // Una semana por renglón: cada día en la columna de su día de la semana
@@ -159,7 +159,7 @@
     telefono: function (v) { return R.telefonoValido(v) ? true : R.telefono10(v) ? 'Revise el número: 10 dígitos, con lada (ej. 33 1234 5678).' : 'Escriba un WhatsApp de 10 dígitos.'; },
     // Dos palabras de tres letras o más, igual que palabras() del programa:
     // con una sola (o con «Ma», «Uc») la confunde con otra alumna.
-    alumno: function (v) { return (v.split(/\s+/).filter(function (p) { return R.conLetras(p, 3); }).length >= 2) || 'Escriba el nombre y los dos apellidos.'; },
+    alumno: function (v) { return (v.split(/\s+/).filter(function (p) { return R.conLetras(p, 3); }).length >= 2) || 'Escriba nombre y apellido del alumno.'; },
     edad: function (v) { var n = Number(v); return (n >= 4 && n <= 18) || (n > 0 && n < 4 ? 'Recibimos a niñas y niños a partir de los 4 años.' : 'Escriba la edad (de 4 a 18 años).'); },
     rama: function (v) { return Boolean(v) || 'Indique si es niña o niño.'; },
     dia: function (v) { return Boolean(v) || sinFechas || (diaQuitado ? 'Ese día ya no está disponible. Elija otro.' : 'Elija el día de la clase.'); },
@@ -237,7 +237,7 @@
       // el mismo clic, para que el navegador no bloquee la ventana). Con
       // 'noopener' no se sabe si se abrió: el botón queda por si no.
       window.open(R.enlaceWhatsApp(textoWhatsApp(d)), '_blank', 'noopener');
-      terminar('Abrimos WhatsApp con su solicitud ya escrita. Envíe el mensaje y le confirmamos a la brevedad. Si no se abrió, use este botón.', R.enlaceWhatsApp(textoWhatsApp(d)));
+      terminar('Abrimos WhatsApp con su solicitud ya escrita. Envíe el mensaje y le confirmaremos a la brevedad. Si no se abrió, use este botón.', R.enlaceWhatsApp(textoWhatsApp(d)));
       return;
     }
     boton.disabled = true;
@@ -259,7 +259,7 @@
     // Sin señal, sin respuesta o con un error del buzón (tope de envíos, envío
     // incompleto…): nada de eso lo corrige el papá en el formulario. Sale por
     // WhatsApp, ya escrita.
-    terminar('No pudimos enviar la solicitud desde aquí. Envíela por WhatsApp: ya va escrita.', R.enlaceWhatsApp(textoWhatsApp(d)));
+    terminar('No pudimos enviar la solicitud desde aquí. Envíela por WhatsApp; el mensaje ya está escrito.', R.enlaceWhatsApp(textoWhatsApp(d)));
   });
 
   document.getElementById('resetForm').addEventListener('click', function () {

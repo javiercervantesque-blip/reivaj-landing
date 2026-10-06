@@ -210,7 +210,8 @@ em{
 }
 .hero h1{ color:var(--ink); margin-bottom:.4em; }
 .hero h1 em{ color:var(--gold-text); }
-.hero .lead{ font-size:1.12rem; color:var(--ink-mute); margin-bottom:2rem; }
+.hero .lead{ font-size:1.12rem; color:var(--ink-mute); margin-bottom:.9rem; }
+.hero .lead:last-of-type{ margin-bottom:2rem; }
 
 .hero__actions{ display:flex; flex-wrap:wrap; gap:12px; margin-bottom:2rem; }
 

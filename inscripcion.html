@@ -31,7 +31,7 @@
     <header class="pagina__cab">
       <p class="eyebrow">Inscripción en línea</p>
       <h1>Inscripción del alumno</h1>
-      <p class="lead">Seis pasos, alrededor de diez minutos. Al final firma la Carta de seguridad con el dedo y recibe su copia. En recepción confirmamos grupo, horario y forma de pago, y le pedimos una identificación oficial de quien firmó.</p>
+      <p class="lead">El registro consta de seis pasos y toma alrededor de diez minutos. Al final, firmará la Carta de seguridad con el dedo y recibirá su copia. En recepción confirmamos grupo, horario y forma de pago, y solicitamos una identificación oficial de la persona que firmó.</p>
     </header>
 
     <div class="nota nota--mal" id="sinConexion" hidden>
@@ -70,7 +70,7 @@
             <p class="error" data-error-for="nacimiento"></p>
           </div>
           <div class="field">
-            <span class="label">Es <span aria-hidden="true">*</span></span>
+            <span class="label">¿Es niña o niño? <span aria-hidden="true">*</span></span>
             <div class="chips" role="radiogroup" aria-label="Niña o niño">
               <label class="chip"><input type="radio" name="rama" value="femenil" required><span>Niña</span></label>
               <label class="chip"><input type="radio" name="rama" value="varonil"><span>Niño</span></label>
@@ -188,7 +188,7 @@
           </div>
           <p class="error" data-error-for="custodia"></p>
         </div>
-        <div class="nota" id="custodiaNota" hidden>Traiga copia de la resolución a la Dirección cuando venga a recepción. Es obligatoria para que podamos cumplirla.</div>
+        <div class="nota" id="custodiaNota" hidden>Le pedimos entregar copia de la resolución a la Dirección cuando acuda a recepción; es indispensable para poder cumplirla.</div>
       </fieldset>
 
       <!-- ─── 3 · Emergencias y quién lo recoge ─────────────── -->
@@ -212,7 +212,7 @@
           </div>
         </div>
         <h3>¿Quién puede recogerlo?</h3>
-        <p class="sub" style="color:var(--ink-mute);font-size:.92rem">Solo las personas de esta lista pueden llevárselo. Sin registro previo no se entrega, sin excepción. Incluya a los tutores si ellos lo recogen.</p>
+        <p class="sub" style="color:var(--ink-mute);font-size:.92rem">Solo las personas registradas en esta lista pueden recoger al alumno. Sin registro previo no se entrega a nadie, sin excepción. Incluya a los tutores si también lo recogen.</p>
         <div id="autorizados"></div>
         <button type="button" class="btn-mas" id="masAutorizado">+ Agregar otra persona</button>
         <p class="error" data-error-for="autorizados"></p>
@@ -222,7 +222,7 @@
       <fieldset class="paso" data-paso="4" hidden>
         <p class="paso-titulo">Paso 4 de 6</p>
         <h2>Ficha médica</h2>
-        <p class="sub" style="color:var(--ink-mute)">Declarar una condición no impide entrenar: permite entrenar bien. Esta información solo la ven la Dirección y su entrenador. No preguntamos peso ni medidas.</p>
+        <p class="sub" style="color:var(--ink-mute)">Declarar una condición no impide entrenar; permite hacerlo de forma segura. Esta información solo la consultan la Dirección y el entrenador del alumno. No solicitamos peso ni medidas.</p>
         <div class="field-row">
           <div class="field">
             <label for="sangre">Tipo de sangre <span aria-hidden="true">*</span></label>
@@ -257,7 +257,7 @@
         <div class="field">
           <label for="medicamentos">Medicamentos que toma</label>
           <input id="medicamentos" name="medicamentos" placeholder="Nombre y horario">
-          <p class="field__ayuda">Si no toma, déjelo en blanco. El personal de REIVAJ no administra medicamentos. Si debe tomar algo durante la clase, lo trae el alumno con la indicación por escrito.</p>
+          <p class="field__ayuda">Si no toma ninguno, déjelo en blanco. El personal de REIVAJ no administra medicamentos; si el alumno debe tomar alguno durante la clase, deberá traerlo consigo junto con la indicación por escrito.</p>
           <p class="error" data-error-for="medicamentos"></p>
         </div>
         <div class="field">
@@ -276,11 +276,11 @@
         <p class="paso-titulo">Paso 5 de 6</p>
         <h2>Permisos</h2>
         <h3>Uso de imagen</h3>
-        <p class="sub" style="color:var(--ink-mute)">Usted decide cada uno. Negar un permiso no afecta la inscripción ni el trato, y puede modificarlos por escrito cuando lo desee.</p>
+        <p class="sub" style="color:var(--ink-mute)">Usted decide sobre cada uno. Negar un permiso no afecta la inscripción ni el trato, y puede modificarlos por escrito cuando lo desee.</p>
         <div id="permisosImagen"></div>
-        <p class="field__ayuda">Si su hijo o hija no quiere aparecer en una foto o video, se respeta aunque usted lo haya autorizado.</p>
-        <p class="field__ayuda">Puede retirar cualquiera de estos permisos cuando quiera, por escrito en recepción o al WhatsApp oficial 33 3456 6544. Desde ese momento no se usa más su imagen, y retiramos lo ya publicado a más tardar en cinco días hábiles.</p>
-        <p class="field__ayuda">En competencias y eventos oficiales, el organizador toma y publica sus propias fotos; REIVAJ no las controla. Si no desea que su hijo aparezca, le ayudamos a pedirlo al organizador.</p>
+        <p class="field__ayuda">Si su hija o hijo no desea aparecer en una foto o video, se respeta su decisión aunque usted lo haya autorizado.</p>
+        <p class="field__ayuda">Puede retirar cualquiera de estos permisos en cualquier momento, por escrito en recepción o por el WhatsApp oficial 33 3456 6544. A partir de ese momento dejamos de usar su imagen y retiramos lo ya publicado en un plazo máximo de cinco días hábiles.</p>
+        <p class="field__ayuda">En competencias y eventos oficiales, el organizador toma y publica sus propias fotografías, sobre las que REIVAJ no tiene control. Si no desea que su hija o hijo aparezca, le ayudamos a solicitarlo al organizador.</p>
         <h3>Así trabajamos</h3>
         <div class="permiso">
           <p><b>Uso interno.</b> Tomamos video y fotografía del alumno en clase para analizar y corregir su técnica, y su fotografía para la credencial y el expediente. Ese material es de uso interno del gimnasio y no se publica sin su permiso.</p>
