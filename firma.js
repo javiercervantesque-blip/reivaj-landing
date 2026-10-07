@@ -99,11 +99,12 @@
     };
     lienzo.addEventListener('pointerup', soltar);
     lienzo.addEventListener('pointercancel', soltar);
-    borrar.addEventListener('click', function () {
+    function limpiar() {
       trazos = []; inicio = fin = k0 = null; caja.classList.remove('firmado'); estado.textContent = '';
       pintar();
       if (typeof api.alCambiar === 'function') api.alCambiar();
-    });
+    }
+    borrar.addEventListener('click', limpiar);
     global.addEventListener('resize', medir);
     setTimeout(medir, 0);
 
@@ -125,6 +126,8 @@
     var api = {
       valida: valida,
       medir: medir,
+      // Para firmar otra carta (la del hermano) en el mismo recuadro.
+      borrar: limpiar,
       // La firma tal como se ve: la copia, el PDF y el programa la dibujan con
       // ancho×alto, así que sale con la misma forma que en el recuadro. La
       // forma es la del recuadro en que se firmó, no la de al enviar.

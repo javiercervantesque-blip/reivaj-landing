@@ -130,10 +130,12 @@
     <section class="tarjeta tarjeta--oro" id="listo" hidden>
       <div class="success">
         <div class="success__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <h3>Carta firmada</h3>
+        <h3 id="listoTitulo">Carta firmada</h3>
         <p id="listoTexto"></p>
-        <p><button type="button" class="btn btn--primary" id="descargarPdf">Descargar mi carta en PDF</button></p>
+        <div id="descargas"></div>
         <p><button type="button" class="btn btn--outline-dark" id="guardarCopia">Imprimirla</button></p>
+        <p><button type="button" class="btn btn--outline-dark" id="otraCarta">Firmar la carta de otro hijo</button></p>
+        <p class="field__ayuda" style="margin-inline:auto">Sus datos y los de emergencia se quedan; solo se llenan los del otro alumno y se firma de nuevo.</p>
         <p><a class="link-arrow" href="index.html">Volver al inicio <span aria-hidden="true">→</span></a></p>
       </div>
     </section>

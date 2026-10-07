@@ -820,6 +820,8 @@ em{
   .copia{ display:block; position:absolute; left:0; top:0; width:100%; padding:0 6mm; font-size:10.5pt; color:#000; }
   .copia .carta h3 .n{ background:#000; }
   .copia .firma-img{ height:26mm; }
+  /* Hermanos: cada carta empieza en su hoja. */
+  .copia__una + .copia__una{ break-before:page; }
   @page{ size:letter; margin:12mm; }
 }
 

@@ -103,11 +103,16 @@
     var p = String(h).split(':');
     return ('0' + ((+p[0] + 1) % 24)).slice(-2) + ':' + (p[1] || '00');
   }
-  function horaElegida() {
-    return R.valor(form, 'rama') === 'm' ? R.valor(form, 'hora') : (pruebas.hora || '16:00');
+  // La hora de cada alumno: los niños, la que se escogió; las niñas, la del programa.
+  function horaDe(sexo) {
+    return sexo === 'm' ? R.valor(form, 'hora') : (pruebas.hora || '16:00');
   }
+  // Con hermanos, basta un niño para que se pregunte la hora (la de las
+  // niñas es una sola); con niñas y niños juntos la ayuda dice las dos.
   function pintarHoras() {
-    var rama = R.valor(form, 'rama');
+    var ramas = alumnos().map(function (a) { return a.sexo; });
+    var hayNino = ramas.indexOf('m') >= 0, hayNina = ramas.indexOf('f') >= 0;
+    var rama = hayNino ? 'm' : hayNina ? 'f' : '';
     var campo = document.getElementById('campoHora');
     var cont = document.getElementById('horas');
     var ayuda = document.getElementById('dia-ayuda');
@@ -121,7 +126,11 @@
         cont.appendChild(R.el('label', { clase: 'chip' }, [input, R.el('span', { texto: R.horaBonita(h) + ' a ' + R.horaBonita(horaFinDe(h)) })]));
       });
       campo.hidden = opciones.length < 2;
-      ayuda.textContent = opciones.length < 2 ? 'La clase es de ' + R.horaBonita(opciones[0]) + ' a ' + R.horaBonita(horaFinDe(opciones[0])) + '.' : 'Elija el horario que mejor le acomode.';
+      var hf = pruebas.hora || '16:00';
+      var deNinas = hayNina ? 'Las niñas toman la clase de ' + R.horaBonita(hf) + ' a ' + R.horaBonita(pruebas.horaFin || horaFinDe(hf)) + '. ' : '';
+      ayuda.textContent = deNinas + (opciones.length < 2
+        ? (hayNina ? 'Los niños, de ' : 'La clase es de ') + R.horaBonita(opciones[0]) + ' a ' + R.horaBonita(horaFinDe(opciones[0])) + '.'
+        : hayNina ? 'Para los niños, elija el horario que mejor le acomode.' : 'Elija el horario que mejor le acomode.');
     } else {
       campo.hidden = true;
       var h = pruebas.hora || '16:00';
@@ -129,9 +138,75 @@
     }
   }
   form.addEventListener('change', function (e) {
-    if (e.target.name === 'rama') pintarHoras();
+    if (/^rama(_\d+)?$/.test(e.target.name)) pintarHoras();
     if (e.target.name === 'dia') diaQuitado = false;
   });
+  /* Hermanos o primos: vienen el mismo día y los trae la misma persona.
+     Cada uno llega al programa como su propia solicitud (el programa los
+     distingue por nombre); en sus comentarios va con quién viene. */
+  var MAX_ALUMNOS = 4;
+  var contMas = document.getElementById('masAlumnos');
+  var botonMas = document.getElementById('agregarAlumno');
+  var siguienteClave = 2;
+  // Las claves de los alumnos agregados (no su posición: al quitar uno, los
+  // demás conservan sus campos).
+  function clavesExtra() { return [].map.call(contMas.children, function (f) { return f.dataset.clave; }); }
+  function sufijo(k) { return k ? '_' + k : ''; }
+  function alumnos() {
+    return [''].concat(clavesExtra()).map(function (k) {
+      var sexo = R.valor(form, 'rama' + sufijo(k));
+      return { clave: k, alumno: R.valor(form, 'alumno' + sufijo(k)).replace(/\s+/g, ' '), edad: R.valor(form, 'edad' + sufijo(k)), sexo: sexo, hora: horaDe(sexo) };
+    });
+  }
+  function filaAlumno() {
+    var k = String(siguienteClave++), s = sufijo(k);
+    var quitar = R.el('button', { type: 'button', texto: 'Quitar' });
+    var etiqueta = R.el('span', { clase: 'label', id: 'rama-etiqueta' + s }, ['¿Es niña o niño? ', R.el('span', { 'aria-hidden': 'true', texto: '*' })]);
+    var fila = R.el('div', { clase: 'grupo alumno-extra', 'data-clave': k }, [
+      R.el('p', { clase: 'grupo__titulo' }, [R.el('span'), quitar]),
+      R.el('div', { clase: 'field-row' }, [
+        R.el('div', { clase: 'field' }, [
+          R.el('label', { for: 'alumno' + s, texto: 'Nombre del alumno o alumna' }),
+          R.el('input', { type: 'text', id: 'alumno' + s, name: 'alumno' + s, enterkeyhint: 'next', required: true, placeholder: 'Nombre y apellido' }),
+          R.el('p', { clase: 'error', 'data-error-for': 'alumno' + s })
+        ]),
+        R.el('div', { clase: 'field' }, [
+          R.el('label', { for: 'edad' + s, texto: 'Edad' }),
+          R.el('input', { type: 'number', id: 'edad' + s, name: 'edad' + s, min: '4', max: '18', inputmode: 'numeric', enterkeyhint: 'done', required: true, placeholder: 'Años' }),
+          R.el('p', { clase: 'error', 'data-error-for': 'edad' + s })
+        ])
+      ]),
+      R.el('div', { clase: 'field' }, [
+        etiqueta,
+        R.el('div', { clase: 'chips', role: 'radiogroup', 'aria-labelledby': 'rama-etiqueta' + s }, [
+          R.el('label', { clase: 'chip' }, [R.el('input', { type: 'radio', name: 'rama' + s, value: 'f', required: true }), R.el('span', { texto: 'Niña' })]),
+          R.el('label', { clase: 'chip' }, [R.el('input', { type: 'radio', name: 'rama' + s, value: 'm' }), R.el('span', { texto: 'Niño' })])
+        ]),
+        R.el('p', { clase: 'error', 'data-error-for': 'rama' + s })
+      ])
+    ]);
+    quitar.addEventListener('click', function () {
+      fila.remove();
+      numerarAlumnos();
+      pintarHoras();
+      botonMas.focus();
+    });
+    contMas.appendChild(fila);
+    numerarAlumnos();
+    return fila;
+  }
+  var ORDINAL = ['Segundo', 'Tercer', 'Cuarto'];
+  function numerarAlumnos() {
+    [].forEach.call(contMas.children, function (f, i) {
+      f.querySelector('.grupo__titulo span').textContent = ORDINAL[i] + ' alumno o alumna';
+      f.querySelector('.grupo__titulo button').setAttribute('aria-label', 'Quitar al ' + ORDINAL[i].toLowerCase() + ' alumno');
+    });
+    botonMas.hidden = contMas.children.length >= MAX_ALUMNOS - 1;
+    boton.textContent = textoBoton();
+  }
+  function textoBoton() { return contMas.children.length ? 'Agendar las clases de prueba' : 'Agendar clase de prueba'; }
+  botonMas.addEventListener('click', function () { filaAlumno().querySelector('input').focus(); });
+
   pintarDias();
   // Si el programa del gimnasio está conectado, manda la agenda real
   // (días sin clase, hora de la prueba). Si llega tarde y el día que ya
@@ -163,14 +238,31 @@
     edad: function (v) { var n = Number(v); return (n >= 4 && n <= 18) || (n > 0 && n < 4 ? 'Recibimos a niñas y niños a partir de los 4 años.' : 'Escriba la edad (de 4 a 18 años).'); },
     rama: function (v) { return Boolean(v) || 'Indique si es niña o niño.'; },
     dia: function (v) { return Boolean(v) || sinFechas || (diaQuitado ? 'Ese día ya no está disponible. Elija otro.' : 'Elija el día de la clase.'); },
-    hora: function () { return Boolean(horaElegida()) || 'Elija el horario.'; },
+    hora: function () { return alumnos().every(function (a) { return a.sexo !== 'm' || a.hora; }) || 'Elija el horario.'; },
     aviso: function (v) { return v === true || 'Necesitamos su autorización para contactarle.'; }
   };
 
+  // Las reglas del alumno sirven también para los agregados (alumno_3…),
+  // y que no se escriba dos veces al mismo niño.
+  function reglaDe(n) {
+    var m = /^(alumno|edad|rama)_\d+$/.exec(n || '');
+    if (!m) return REGLAS[n];
+    if (m[1] !== 'alumno') return REGLAS[m[1]];
+    return function (v) {
+      var r = REGLAS.alumno(v), mismo = String(v).replace(/\s+/g, ' ').toLowerCase();
+      if (r !== true) return r;
+      return alumnos().filter(function (a) { return a.alumno.toLowerCase() === mismo; }).length < 2 || 'Este nombre ya está arriba.';
+    };
+  }
+  function nombresDeReglas() {
+    var orden = ['tutor', 'telefono', 'alumno', 'edad', 'rama'];
+    clavesExtra().forEach(function (k) { orden.push('alumno_' + k, 'edad_' + k, 'rama_' + k); });
+    return orden.concat(['dia', 'hora', 'aviso']);
+  }
   function revisar() {
     var primero = null;
-    Object.keys(REGLAS).forEach(function (k) {
-      var r = REGLAS[k](R.valor(form, k));
+    nombresDeReglas().forEach(function (k) {
+      var r = reglaDe(k)(R.valor(form, k));
       R.mostrarError(form, k, r === true ? '' : r);
       if (r !== true && !primero) primero = k;
     });
@@ -178,32 +270,44 @@
   }
   ['input', 'change'].forEach(function (ev) {
     form.addEventListener(ev, function (e) {
-      var k = e.target.name;
-      if (REGLAS[k] && REGLAS[k](R.valor(form, k)) === true) R.mostrarError(form, k, '');
+      var k = e.target.name, regla = reglaDe(k);
+      if (regla && regla(R.valor(form, k)) === true) R.mostrarError(form, k, '');
     });
   });
   // «Ir»/Enter en los recuadros de texto pasa al siguiente en vez de mandar
   // el formulario a medias (y pintar en rojo lo que todavía no llena).
   form.addEventListener('keydown', function (e) {
     var orden = ['tutor', 'telefono', 'alumno', 'edad'], i = orden.indexOf(e.target.name);
-    if (e.key !== 'Enter' || e.isComposing || i < 0) return;
+    var extra = /^(alumno|edad)_(\d+)$/.exec(e.target.name || '');
+    if (e.key !== 'Enter' || e.isComposing || (i < 0 && !extra)) return;
     e.preventDefault();
-    if (orden[i + 1]) form.elements[orden[i + 1]].focus(); else e.target.blur();
+    if (extra && extra[1] === 'alumno') form.elements['edad_' + extra[2]].focus();
+    else if (!extra && orden[i + 1]) form.elements[orden[i + 1]].focus(); else e.target.blur();
   });
 
-  function textoWhatsApp(d) {
-    return 'Hola, me gustaría agendar una clase de prueba en REIVAJ Gimnasia.\n\n' +
-      (d.sexo === 'm' ? 'Alumno: ' : 'Alumna: ') + d.alumno + ' (' + d.edad + ' años)\n' +
-      (d.dia ? 'Día: ' + R.fechaLarga(d.dia) + ', ' : 'Día: el próximo que tengan disponible, ') + R.horaBonita(d.hora) + '\n' +
-      'Mi nombre es ' + d.tutor + (d.comentarios ? '\nNota: ' + d.comentarios : '');
+  // Uno o varios alumnos (hermanos o primos): el día es el mismo; con
+  // varios, la hora va junto a cada uno (niñas y niños pueden ir a distinta).
+  function textoWhatsApp(lista, nota) {
+    var d = lista[0], varios = lista.length > 1;
+    return 'Hola, me gustaría agendar ' + (varios ? 'clases de prueba' : 'una clase de prueba') + ' en REIVAJ Gimnasia.\n\n' +
+      lista.map(function (x) {
+        return (x.sexo === 'm' ? 'Alumno: ' : 'Alumna: ') + x.alumno + ' (' + x.edad + ' años)' + (varios ? ', ' + R.horaBonita(x.hora) : '');
+      }).join('\n') + '\n' +
+      (d.dia ? 'Día: ' + R.fechaLarga(d.dia) : 'Día: el próximo que tengan disponible') + (varios ? '' : ', ' + R.horaBonita(d.hora)) + '\n' +
+      'Mi nombre es ' + d.tutor + (nota ? '\nNota: ' + nota : '');
+  }
+  // «Ana», «Ana y Luis», «Ana, Luis y Sofía»: con el primer nombre basta.
+  function nombres(lista) {
+    var n = lista.map(function (x) { return x.alumno.split(' ')[0]; });
+    return n.length < 2 ? n.join('') : n.slice(0, -1).join(', ') + ' y ' + n[n.length - 1];
   }
 
   var botonWa = document.getElementById('successWa');
   var tituloExito = exito.querySelector('h3');
   var iconoExito = exito.querySelector('.success__icon');
   // Con el botón de WhatsApp todavía falta mandar el mensaje: no se dice «recibida».
-  function terminar(texto, enlaceWa) {
-    tituloExito.textContent = enlaceWa ? 'Falta un paso' : 'Solicitud recibida';
+  function terminar(texto, enlaceWa, varias) {
+    tituloExito.textContent = enlaceWa ? 'Falta un paso' : varias ? 'Solicitudes recibidas' : 'Solicitud recibida';
     iconoExito.hidden = Boolean(enlaceWa);
     mensajeExito.textContent = texto;
     botonWa.hidden = !enlaceWa;
@@ -224,20 +328,30 @@
     if (refrescarDias()) { R.llevarA(form, 'dia'); return; }
     var malo = revisar();
     if (malo) { R.llevarA(form, malo); return; }
-    var d = {
-      alumno: R.valor(form, 'alumno'), edad: R.valor(form, 'edad'), tutor: R.valor(form, 'tutor'),
-      telefono: R.telefono10(R.valor(form, 'telefono')), dia: R.valor(form, 'dia'),
-      sexo: R.valor(form, 'rama'), hora: horaElegida(),
-      fuente: R.valor(form, 'fuente'), comentarios: R.valor(form, 'comentarios'), origen: 'landing'
+    var comun = {
+      tutor: R.valor(form, 'tutor'), telefono: R.telefono10(R.valor(form, 'telefono')), dia: R.valor(form, 'dia'),
+      fuente: R.valor(form, 'fuente'), origen: 'landing'
     };
+    var nota = R.valor(form, 'comentarios');
+    // Un registro por alumno, como si cada uno se hubiera mandado solo. Con
+    // hermanos, sus comentarios empiezan con quién viene (el programa los
+    // recorta a 600: lo de la familia va primero para que no se pierda).
+    var lista = alumnos().map(function (a, i, todos) {
+      var otros = todos.filter(function (o) { return o !== a; }).map(function (o) { return o.alumno + ' (' + o.edad + ' años)'; });
+      return Object.assign({}, comun, {
+        alumno: a.alumno, edad: a.edad, sexo: a.sexo, hora: a.hora,
+        comentarios: [otros.length ? 'Viene junto con ' + otros.join(' y ') + '.' : '', nota].filter(Boolean).join('\n')
+      });
+    });
     var cfg = window.CONFIG || {};
     if (sinFechas || !cfg.buzon || !cfg.llavePublica || !window.Buzon || !window.Buzon.disponible()) {
       // La página todavía no está conectada al programa del gimnasio, o no
       // hay fechas que pedir: la solicitud sale por WhatsApp, ya escrita (en
       // el mismo clic, para que el navegador no bloquee la ventana). Con
       // 'noopener' no se sabe si se abrió: el botón queda por si no.
-      window.open(R.enlaceWhatsApp(textoWhatsApp(d)), '_blank', 'noopener');
-      terminar('Abrimos WhatsApp con su solicitud ya escrita. Envíe el mensaje y le confirmaremos a la brevedad. Si no se abrió, use este botón.', R.enlaceWhatsApp(textoWhatsApp(d)));
+      var wa = R.enlaceWhatsApp(textoWhatsApp(lista, nota));
+      window.open(wa, '_blank', 'noopener');
+      terminar('Abrimos WhatsApp con su solicitud ya escrita. Envíe el mensaje y le confirmaremos a la brevedad. Si no se abrió, use este botón.', wa);
       return;
     }
     boton.disabled = true;
@@ -248,25 +362,39 @@
     // se espera ese rato en vez de perder la solicitud.
     var falta = 2600 - (Date.now() - cargada);
     if (falta > 0) await new Promise(function (listo) { setTimeout(listo, falta); });
-    var r = await window.Buzon.enviar('prueba', { enviado: new Date().toISOString(), datos: d }, { hp: R.valor(form, 'sitio'), t: Date.now() - cargada })
-      .catch(function () { return { ok: false }; });
+    // Uno tras otro. Si uno no sale, los que faltan ya no se intentan (sin
+    // señal fallarían igual) y van por WhatsApp junto con ese.
+    var enviado = new Date().toISOString(), llegaron = [], faltan = [];
+    for (var i = 0; i < lista.length; i++) {
+      var r = faltan.length ? { ok: false } : await window.Buzon.enviar('prueba', { enviado: enviado, datos: lista[i] }, { hp: R.valor(form, 'sitio'), t: Date.now() - cargada })
+        .catch(function () { return { ok: false }; });
+      (r.ok ? llegaron : faltan).push(lista[i]);
+    }
     boton.disabled = false;
-    boton.textContent = 'Agendar clase de prueba';
-    if (r.ok) {
-      terminar('Gracias. Le escribiremos por WhatsApp para confirmar la clase del ' + R.fechaLarga(d.dia) + ' a las ' + R.horaBonita(d.hora) + '.');
+    boton.textContent = textoBoton();
+    var d = lista[0];
+    if (!faltan.length) {
+      // Con niñas y niños a distinta hora, se dice la de cada uno.
+      var mismaHora = lista.every(function (x) { return x.hora === d.hora; });
+      terminar('Gracias. Le escribiremos por WhatsApp para confirmar ' + (lista.length > 1 ? 'las clases de ' + nombres(lista) : 'la clase') + ' del ' + R.fechaLarga(d.dia) +
+        (mismaHora ? ' a las ' + R.horaBonita(d.hora) : ': ' + lista.map(function (x) { return nombres([x]) + ' a las ' + R.horaBonita(x.hora); }).join(' y ')) + '.', null, lista.length > 1);
       return;
     }
     // Sin señal, sin respuesta o con un error del buzón (tope de envíos, envío
     // incompleto…): nada de eso lo corrige el papá en el formulario. Sale por
-    // WhatsApp, ya escrita.
-    terminar('No pudimos enviar la solicitud desde aquí. Envíela por WhatsApp; el mensaje ya está escrito.', R.enlaceWhatsApp(textoWhatsApp(d)));
+    // WhatsApp, ya escrita, solo con los que no llegaron.
+    terminar(llegaron.length
+      ? 'Recibimos la solicitud de ' + nombres(llegaron) + ', pero la de ' + nombres(faltan) + ' no se pudo enviar desde aquí. Envíela por WhatsApp; el mensaje ya está escrito.'
+      : 'No pudimos enviar la solicitud desde aquí. Envíela por WhatsApp; el mensaje ya está escrito.', R.enlaceWhatsApp(textoWhatsApp(faltan, nota)));
   });
 
   document.getElementById('resetForm').addEventListener('click', function () {
-    // Para el hermano: el papá y su WhatsApp se quedan; la autorización se
+    // Para otro alumno: el papá y su WhatsApp se quedan; la autorización se
     // vuelve a dar.
     var queda = { tutor: form.elements.tutor.value, telefono: form.elements.telefono.value, fuente: form.elements.fuente.value };
     form.reset();
+    contMas.innerHTML = '';
+    numerarAlumnos();
     Object.keys(queda).forEach(function (k) { form.elements[k].value = queda[k]; });
     form.querySelectorAll('.has-error').forEach(function (f) { f.classList.remove('has-error'); });
     form.querySelectorAll('.error').forEach(function (f) { f.classList.remove('is-visible'); });

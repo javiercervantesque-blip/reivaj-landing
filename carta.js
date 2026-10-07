@@ -168,13 +168,12 @@
       $('nota').classList.add('form__note--mal');
       return;
     }
-    copia = { datos: datosCarta(), extra: {
+    copias.push({ datos: datosCarta(), nombre: v('alumno').split(/\s+/)[0], extra: {
       seguro: r.datos.carta.seguro, ficha: ficha, firma: r.datos.carta.firma, firmante: r.datos.carta.firmante,
       parentesco: r.datos.carta.parentesco, huella: r.datos.carta.huella, folio: r.id || '',
       cuando: cuando.toLocaleString('es-MX', { timeZone: 'America/Mexico_City', dateStyle: 'long', timeStyle: 'short' })
-    } };
-    CF.armarCopia($('copia'), copia.datos, copia.extra);
-    $('listoTexto').textContent = 'Recibimos la carta de ' + v('alumno') + '. Queda en su expediente.';
+    } });
+    pintarListo();
     form.hidden = true;
     $('listo').hidden = false;
     borrarBorrador();
@@ -183,16 +182,60 @@
     $('listo').focus({ preventScroll: true });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
-  var copia = null;
-  $('descargarPdf').addEventListener('click', function () {
-    // Con mala señal jsPDF tarda en bajar: el botón dice que está en eso.
-    var b = this, txt = b.textContent;
-    if (!copia || b.disabled) return;
-    b.disabled = true;
-    b.textContent = 'Preparando su PDF…';
-    window.CartaPDF.descargar(copia.datos, copia.extra).then(function () { b.disabled = false; b.textContent = txt; });
-  });
+  // Las cartas firmadas en esta visita (hermanos: una por alumno). Cada una
+  // con su PDF; imprimir saca todas, cada una en su hoja.
+  var copias = [];
+  function pintarListo() {
+    var varios = copias.length > 1;
+    var cont = $('copia');
+    cont.innerHTML = '';
+    copias.forEach(function (c) {
+      var una = R.el('div', { clase: 'copia__una' });
+      cont.appendChild(una);
+      CF.armarCopia(una, c.datos, c.extra);
+    });
+    var desc = $('descargas');
+    desc.innerHTML = '';
+    copias.forEach(function (c) {
+      var b = R.el('button', { type: 'button', clase: 'btn btn--primary', texto: varios ? 'Descargar la carta de ' + c.nombre + ' (PDF)' : 'Descargar mi carta en PDF' });
+      b.addEventListener('click', function () {
+        // Con mala señal jsPDF tarda en bajar: el botón dice que está en eso.
+        var txt = b.textContent;
+        if (b.disabled) return;
+        b.disabled = true;
+        b.textContent = 'Preparando su PDF…';
+        window.CartaPDF.descargar(c.datos, c.extra).then(function () { b.disabled = false; b.textContent = txt; });
+      });
+      desc.appendChild(R.el('p', {}, [b]));
+    });
+    var nombres = copias.map(function (c) { return c.nombre; });
+    $('listoTitulo').textContent = varios ? 'Cartas firmadas' : 'Carta firmada';
+    $('listoTexto').textContent = varios
+      ? 'Recibimos las cartas de ' + nombres.slice(0, -1).join(', ') + ' y ' + nombres[nombres.length - 1] + '. Quedan en su expediente.'
+      : 'Recibimos la carta de ' + copias[0].datos.alumno + '. Queda en su expediente.';
+    $('guardarCopia').textContent = varios ? 'Imprimir las ' + copias.length + ' cartas' : 'Imprimirla';
+    $('otraCarta').parentNode.hidden = copias.length >= 4;
+  }
   $('guardarCopia').addEventListener('click', function () { window.print(); });
+  // La del hermano: quien firma, su WhatsApp y las emergencias se quedan; lo
+  // del alumno, su salud, el seguro y la firma se llenan de nuevo.
+  $('otraCarta').addEventListener('click', function () {
+    ['alumno', 'nacimiento', 'sangre', 'alergias', 'padecimientos', 'medicamentos', 'servicio', 'afiliacion'].forEach(function (n) { form.elements[n].value = ''; });
+    ['consentimientoSalud', 'leida', 'firmaElectronica'].forEach(function (n) { form.elements[n].checked = false; });
+    [].forEach.call(form.querySelectorAll('input[name="seguro"]'), function (r) { r.checked = false; });
+    form.querySelectorAll('.has-error').forEach(function (f) { f.classList.remove('has-error'); });
+    form.querySelectorAll('.error').forEach(function (f) { f.textContent = ''; f.classList.remove('is-visible'); });
+    $('nota').textContent = '';
+    $('nota').classList.remove('form__note--mal');
+    $('listo').hidden = true;
+    form.hidden = false;
+    firma.medir();
+    firma.borrar();
+    pintar();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    form.elements.alumno.focus({ preventScroll: true });
+    guardarBorrador();
+  });
 
   // ─── Borrador en esta pestaña (sin firma) ───────────────────────────
   // Como en la inscripción: si se recarga o el celular cierra la pestaña
