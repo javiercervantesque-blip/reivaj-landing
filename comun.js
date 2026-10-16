@@ -65,6 +65,24 @@
     return d;
   }
   // Al menos n letras (no solo espacios, puntos o números).
+  // La CURP lleva la fecha de nacimiento en las posiciones 5 a 10 (AAMMDD).
+  // Vacía o sin fecha con qué compararla, no se reclama nada.
+  function curpCuadra(curp, nacimiento) {
+    var c = String(curp || '').trim().toUpperCase();
+    var n = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(nacimiento || ''));
+    if (!c || !n || !/^[A-Z]{4}\d{6}/.test(c)) return true;
+    return c.slice(4, 10) === n[1].slice(2) + n[2] + n[3];
+  }
+  // Una clave al azar para un envío: si el mismo envío llega dos veces (se
+  // reintentó sin saber si había llegado, o se recargó la página), el
+  // programa lo reconoce por ella.
+  function claveAlAzar() {
+    var b = new Uint8Array(16), s = '';
+    if (global.crypto && global.crypto.getRandomValues) global.crypto.getRandomValues(b);
+    else for (var j = 0; j < b.length; j++) b[j] = Math.floor(Math.random() * 256);
+    for (var i = 0; i < b.length; i++) s += ('0' + b[i].toString(16)).slice(-2);
+    return s;
+  }
   function conLetras(t, n) { return (String(t || '').match(/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/g) || []).length >= (n || 2); }
   function enlaceWhatsApp(texto) {
     var cfg = global.CONFIG || {};
@@ -188,6 +206,7 @@
   global.Reivaj = {
     ahoraGdl: ahoraGdl, sumarDias: sumarDias, diaSemana: diaSemana, fechaLarga: fechaLarga, fechaChip: fechaChip,
     horaBonita: horaBonita, diasDePrueba: diasDePrueba, soloDigitos: soloDigitos, telefono10: telefono10, telefonoValido: telefonoValido, conLetras: conLetras,
+    curpCuadra: curpCuadra, claveAlAzar: claveAlAzar,
     enlaceWhatsApp: enlaceWhatsApp, conNegritas: conNegritas, el: el, iniciarPagina: iniciarPagina,
     mostrarError: mostrarError, valor: valor, llevarA: llevarA, FUENTES: FUENTES
   };

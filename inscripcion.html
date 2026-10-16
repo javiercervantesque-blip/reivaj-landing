@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>Inscripción en línea | REIVAJ Gimnasia Artística</title>
-<meta name="description" content="Inscripción en línea a REIVAJ Gimnasia Artística: datos del alumno, contactos de emergencia, ficha médica y carta de seguridad firmada desde su celular.">
+<title>Inscripción en línea | REIVAJ Gimnasia</title>
+<meta name="description" content="Inscripción en línea a REIVAJ Gimnasia: datos del alumno, contactos de emergencia, ficha médica y carta de seguridad firmada desde su celular.">
 <meta name="theme-color" content="#101E3C">
 <meta name="color-scheme" content="only light">
 <link rel="icon" href="assets/icono-192.png">
@@ -19,7 +19,7 @@
 
 <header class="nav" id="nav">
   <div class="wrap nav__inner">
-    <a class="brand" href="index.html" aria-label="REIVAJ Gimnasia Artística, inicio">
+    <a class="brand" href="index.html" aria-label="REIVAJ Gimnasia, inicio">
       <svg class="brand__logo" aria-hidden="true"><use href="assets/logo-reivaj.svg#reivaj-wordmark"/></svg>
     </a>
     <a class="nav__volver" href="index.html">← Volver al inicio</a>
@@ -49,7 +49,7 @@
         <p class="sub" style="color:var(--ink-mute)">¿Inscribe a más de un hijo? Agréguelos aquí: los datos de la familia se piden una sola vez y firmará una carta por cada uno.</p>
         <div id="alumnos"></div>
         <button type="button" class="btn-mas" id="masAlumno">+ Inscribir también a otro hijo o hija</button>
-        <p class="field__ayuda" style="margin-top:-8px">Si son primos, cada familia llena su propia inscripción: la carta la firma la madre, el padre o el tutor de cada alumno.</p>
+        <p class="field__ayuda" style="margin-top:-8px">Si son primos, cada familia llena su propia inscripción: la carta la firma el padre, la madre o el tutor de cada alumno.</p>
         <h3>Domicilio</h3>
         <div class="field">
           <label for="domicilio">Calle y número <span aria-hidden="true">*</span></label>
@@ -64,7 +64,7 @@
           </div>
           <div class="field">
             <label for="cp">Código postal</label>
-            <input id="cp" name="cp" inputmode="numeric" maxlength="5" autocomplete="postal-code">
+            <input id="cp" name="cp" inputmode="numeric" maxlength="5" autocomplete="postal-code"><p class="error" data-error-for="cp"></p>
           </div>
         </div>
         <div class="field">
@@ -211,17 +211,17 @@
         <div class="grupo">
           <p class="grupo__titulo">Contacto de emergencia 1</p>
           <div class="field-row--3">
-            <div class="field"><label for="e1Nombre">Nombre <span aria-hidden="true">*</span></label><input id="e1Nombre" name="e1Nombre" required><p class="error" data-error-for="e1Nombre"></p></div>
-            <div class="field"><label for="e1Parentesco">Parentesco <span aria-hidden="true">*</span></label><input id="e1Parentesco" name="e1Parentesco" required><p class="error" data-error-for="e1Parentesco"></p></div>
-            <div class="field"><label for="e1Telefono">Teléfono <span aria-hidden="true">*</span></label><input type="tel" id="e1Telefono" name="e1Telefono" inputmode="tel" required placeholder="10 dígitos"><p class="error" data-error-for="e1Telefono"></p></div>
+            <div class="field"><label for="e1Nombre">Nombre <span aria-hidden="true">*</span></label><input id="e1Nombre" name="e1Nombre" required autocomplete="off"><p class="error" data-error-for="e1Nombre"></p></div>
+            <div class="field"><label for="e1Parentesco">Parentesco <span aria-hidden="true">*</span></label><input id="e1Parentesco" name="e1Parentesco" required autocomplete="off"><p class="error" data-error-for="e1Parentesco"></p></div>
+            <div class="field"><label for="e1Telefono">Teléfono <span aria-hidden="true">*</span></label><input type="tel" id="e1Telefono" name="e1Telefono" inputmode="tel" autocomplete="off" required placeholder="10 dígitos"><p class="error" data-error-for="e1Telefono"></p></div>
           </div>
         </div>
         <div class="grupo">
           <p class="grupo__titulo">Contacto de emergencia 2</p>
           <div class="field-row--3">
-            <div class="field"><label for="e2Nombre">Nombre</label><input id="e2Nombre" name="e2Nombre"></div>
-            <div class="field"><label for="e2Parentesco">Parentesco</label><input id="e2Parentesco" name="e2Parentesco"></div>
-            <div class="field"><label for="e2Telefono">Teléfono</label><input type="tel" id="e2Telefono" name="e2Telefono" inputmode="tel" placeholder="10 dígitos"><p class="error" data-error-for="e2Telefono"></p></div>
+            <div class="field"><label for="e2Nombre">Nombre</label><input id="e2Nombre" name="e2Nombre" autocomplete="off"></div>
+            <div class="field"><label for="e2Parentesco">Parentesco</label><input id="e2Parentesco" name="e2Parentesco" autocomplete="off"></div>
+            <div class="field"><label for="e2Telefono">Teléfono</label><input type="tel" id="e2Telefono" name="e2Telefono" inputmode="tel" autocomplete="off" placeholder="10 dígitos"><p class="error" data-error-for="e2Telefono"></p></div>
           </div>
         </div>
         <h3>¿Quién puede recogerlo?</h3>
@@ -239,7 +239,7 @@
         <div id="fichas"></div>
         <label class="consent">
           <input type="checkbox" name="consentimientoSalud" required>
-          <span><b>Otorgo mi consentimiento expreso</b> para que REIVAJ trate los datos de salud de <span data-uno="mi hijo o hija" data-varios="mis hijos">mi hijo o hija</span> con las finalidades necesarias del <a href="aviso-de-privacidad.html" target="_blank">Aviso de Privacidad</a>: seguridad durante el entrenamiento, atención de urgencias, adecuación de la carga de trabajo, afiliación federativa y trámite de seguro.</span>
+          <span><b>Otorgo mi consentimiento expreso</b> para que REIVAJ trate los datos de salud <span data-uno="del alumno" data-varios="de los alumnos">del alumno</span> con las finalidades necesarias del <a href="aviso-de-privacidad.html" target="_blank">Aviso de Privacidad</a>: seguridad durante el entrenamiento, atención de urgencias, adecuación de la carga de trabajo, afiliación federativa y trámite de seguro.</span>
         </label>
         <p class="error" data-error-for="consentimientoSalud"></p>
       </fieldset>
@@ -265,28 +265,28 @@
           </div>
           <div class="field">
             <label for="afiliacion">N.º de afiliación o póliza, y hospital de preferencia <span class="opt">(si aplica)</span></label>
-            <input id="afiliacion" name="afiliacion">
+            <input id="afiliacion" name="afiliacion" autocomplete="off">
           </div>
           <div class="field">
             <label for="alergias">Alergias (a qué)</label>
-            <input id="alergias" name="alergias" placeholder="Si no tiene, déjelo en blanco">
+            <input id="alergias" name="alergias" autocomplete="off" placeholder="Si no tiene, déjelo en blanco">
             <p class="error" data-error-for="alergias"></p>
           </div>
           <div class="field">
             <label for="padecimientos">Padecimientos o lesiones previas</label>
-            <input id="padecimientos" name="padecimientos" placeholder="Asma, convulsiones, cirugías…">
+            <input id="padecimientos" name="padecimientos" autocomplete="off" placeholder="Asma, convulsiones, cirugías…">
             <p class="field__ayuda">Si no tiene, déjelo en blanco.</p>
             <p class="error" data-error-for="padecimientos"></p>
           </div>
           <div class="field">
             <label for="medicamentos">Medicamentos que toma</label>
-            <input id="medicamentos" name="medicamentos" placeholder="Nombre y horario">
+            <input id="medicamentos" name="medicamentos" autocomplete="off" placeholder="Nombre y horario">
             <p class="field__ayuda">Si no toma ninguno, déjelo en blanco. El personal de REIVAJ no administra medicamentos; si el alumno debe tomar alguno durante la clase, deberá traerlo consigo junto con la indicación por escrito.</p>
             <p class="error" data-error-for="medicamentos"></p>
           </div>
           <div class="field">
             <label for="mas">¿Hay algo más que debamos saber para cuidarlo mejor? <span class="opt">(opcional)</span></label>
-            <textarea id="mas" name="mas" rows="3" placeholder="Miedos, cómo reacciona al dolor o a la frustración, algo que ayude al entrenador a entenderlo."></textarea>
+            <textarea id="mas" name="mas" autocomplete="off" rows="3" placeholder="Miedos, cómo reacciona al dolor o a la frustración, algo que ayude al entrenador a entenderlo."></textarea>
           </div>
         </div>
       </template>
@@ -296,15 +296,15 @@
         <p class="paso-titulo">Paso 5 de 6</p>
         <h2>Permisos</h2>
         <h3>Uso de imagen</h3>
-        <p class="sub" style="color:var(--ink-mute)">Usted decide sobre cada uno. Negar un permiso no afecta la inscripción ni el trato, y puede modificarlos por escrito cuando lo desee.</p>
+        <p class="sub" style="color:var(--ink-mute)">Usted decide sobre cada uno. Negar un permiso no afecta la inscripción ni el trato.</p>
         <div id="permisosImagen"></div>
         <p class="field__ayuda">Si su hija o hijo no desea aparecer en una foto o video, se respeta su decisión aunque usted lo haya autorizado.</p>
-        <p class="field__ayuda">Puede retirar cualquiera de estos permisos en cualquier momento, por escrito en recepción o por el WhatsApp oficial 33 3456 6544. A partir de ese momento dejamos de usar su imagen y retiramos lo ya publicado en un plazo máximo de cinco días hábiles.</p>
+        <p class="field__ayuda">Puede retirar cualquiera de estos permisos en cualquier momento, por escrito en recepción o por el WhatsApp oficial 33 3456 6544. A partir de ese momento dejamos de usar la imagen del alumno y retiramos lo ya publicado en un plazo máximo de cinco días hábiles.</p>
         <p class="field__ayuda">En competencias y eventos oficiales, el organizador toma y publica sus propias fotografías, sobre las que REIVAJ no tiene control. Si no desea que su hija o hijo aparezca, le ayudamos a solicitarlo al organizador.</p>
         <h3>Así trabajamos</h3>
         <div class="permiso">
           <p><b>Uso interno.</b> Tomamos video y fotografía del alumno en clase para analizar y corregir su técnica, y su fotografía para la credencial y el expediente. Ese material es de uso interno del gimnasio y no se publica sin su permiso.</p>
-          <p><b>Contacto físico técnico.</b> La gimnasia requiere contacto físico para el ayudaje, la corrección postural y la prevención de caídas. En REIVAJ ese contacto se hace siempre a la vista de terceros y nunca en privado; se limita a las zonas técnicamente necesarias —espalda, cintura, caderas, brazos y piernas—; se anuncia al alumno cuando la situación lo permite; nunca involucra zonas íntimas, y se detiene de inmediato si el alumno manifiesta incomodidad, comunicándolo al tutor.</p>
+          <p><b>Contacto físico técnico.</b> La gimnasia requiere contacto físico para la asistencia técnica, la corrección postural y la prevención de caídas. En REIVAJ ese contacto se hace siempre a la vista de terceros y nunca en privado; se limita a las zonas técnicamente necesarias —espalda, cintura, caderas, brazos y piernas—; se anuncia al alumno cuando la situación lo permite; nunca involucra zonas íntimas, y se detiene de inmediato si el alumno manifiesta incomodidad, comunicándolo al tutor.</p>
           <p><b>Si algo le preocupa.</b> Cualquier situación de riesgo o de trato inadecuado hacia un alumno puede reportarla directamente a la Dirección, en persona o al WhatsApp oficial 33 3456 6544. Se atiende el mismo día y sin represalias para quien reporta.</p>
         </div>
         <h3>Avisos del gimnasio <span class="opt">(opcional)</span></h3>

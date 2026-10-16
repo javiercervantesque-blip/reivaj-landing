@@ -40,6 +40,8 @@
     });
   }
   llenarParentescos(form);
+  // El aviso del código postal (el HTML no trae su renglón de error).
+  if (form.elements.cp && !form.querySelector('[data-error-for="cp"]')) form.elements.cp.parentNode.appendChild(R.el('p', { clase: 'error', 'data-error-for': 'cp' }));
   R.FUENTES.forEach(function (f) { form.elements.fuente.appendChild(R.el('option', { value: f[0], texto: f[1] })); });
 
   // La grabación técnica en clase, la foto de credencial y el contacto físico
@@ -89,10 +91,12 @@
     });
     return caja;
   }
-  function agregarHijo(k) {
+  function agregarHijo(k, envio) {
     k = k || siguienteClave;
     siguienteClave = Math.max(siguienteClave, Number(k) + 1);
-    var h = { k: String(k) };
+    // envio: la clave de su inscripción (ver claveAlAzar); con el borrador
+    // vuelve la misma, así un reenvío tras recargar no llega dos veces.
+    var h = { k: String(k), envio: /^[0-9a-f]{32}$/.test(String(envio || '')) ? envio : R.claveAlAzar() };
     h.alumno = deLaPlantilla('tplAlumno', k);
     h.salud = deLaPlantilla('tplSalud', k);
     h.permisos = bloquePermisos(k);
@@ -129,7 +133,9 @@
     guardarBorrador();
     $('masAlumno').focus();
   }
-  function nombreDe(h) { return v('nombres_' + h.k).split(/\s+/)[0] || ''; }
+  // Todos sus nombres de pila («María José», no solo «María»): dos hermanas
+  // pueden compartir el primero.
+  function nombreDe(h) { return v('nombres_' + h.k).trim().replace(/\s+/g, ' '); }
   // Títulos, «Quitar» y los textos que dicen «el alumno» o «los alumnos».
   function titulos() {
     var varios = hijos.length > 1;
@@ -148,9 +154,9 @@
       tp.querySelector('span').textContent = 'Permisos de ' + (nom || 'alumno ' + (i + 1));
       tp.hidden = !varios;
       var c = tp.querySelector('.btn-copiar');
-      if (c) c.textContent = 'Los mismos que ' + (nombreDe(hijos[0]) || 'el alumno 1');
+      if (c) c.textContent = 'Usar los mismos permisos que ' + (nombreDe(hijos[0]) || 'el alumno 1');
     });
-    $('masAlumno').hidden = hijos.length >= MAX_HIJOS;
+    $('masAlumno').hidden = hijos.length + previos.length >= MAX_HIJOS;
     document.querySelectorAll('[data-uno]').forEach(function (x) { x.textContent = x.getAttribute(varios ? 'data-varios' : 'data-uno'); });
   }
   $('masAlumno').addEventListener('click', function () {
@@ -299,7 +305,8 @@
   var FAMILIA = {
     1: {
       domicilio: texto(5, 'Escriba calle y número.'),
-      colonia: texto(3, 'Escriba la colonia.')
+      colonia: texto(3, 'Escriba la colonia.'),
+      cp: function (x) { return !x || /^\d{5}$/.test(String(x).trim()) || 'El código postal lleva 5 dígitos.'; }
     },
     2: {
       t1Nombre: nombreYApellido('Escriba nombre y apellido del tutor.'),
@@ -322,7 +329,7 @@
       }
     },
     4: {
-      consentimientoSalud: function (x) { return x === true || 'Sin este consentimiento no podemos inscribirlo: la ley lo pide para los datos de salud.'; }
+      consentimientoSalud: function (x) { return x === true || 'Sin este consentimiento no podemos completar la inscripción: la ley lo exige para los datos de salud.'; }
     },
     5: {},
     6: {}
@@ -336,12 +343,16 @@
         // El mismo niño escrito dos veces (dos cartas para el mismo alumno).
         var completo = function (j) { return [v('nombres_' + j), v('apellidoPaterno_' + j)].join(' ').toLowerCase().replace(/\s+/g, ' '); };
         var antes = hijos.slice(0, hijos.map(function (h) { return h.k; }).indexOf(k));
-        return !antes.some(function (h) { return completo(h.k) === completo(k); }) || 'Este alumno ya está arriba.';
+        return !antes.some(function (h) { return completo(h.k) === completo(k); }) || 'Este alumno ya está registrado arriba.';
       },
       apellidoPaterno: texto(2, 'Escriba el apellido paterno del alumno.'),
       nacimiento: function (x) { var e = edadDe(x); return (e !== null && e >= 4 && e <= 18) || (e !== null && e >= 0 && e < 4 ? 'Recibimos a niñas y niños a partir de los 4 años.' : 'Revise la fecha de nacimiento.'); },
       rama: eligio,
-      curp: function (x) { return !x || /^[A-Z]{4}\d{6}[HMX][A-Z]{5}[A-Z0-9]\d$/.test(String(x).toUpperCase()) || 'La CURP tiene 18 letras y números. Revísela o déjela vacía.'; },
+      curp: function (x, k) {
+        if (!x) return true;
+        if (!/^[A-Z]{4}\d{6}[HMX][A-Z]{5}[A-Z0-9]\d$/.test(String(x).toUpperCase())) return 'La CURP tiene 18 letras y números. Revísela o déjela vacía.';
+        return R.curpCuadra(x, v('nacimiento_' + k)) || 'La CURP no coincide con la fecha de nacimiento. Revise las dos.';
+      },
       horas: eligio,
       experiencia: eligio
     },
@@ -360,7 +371,7 @@
       // Con trazo pero muy chico (dos rayitas): que no crea que ya firmó.
       firma: function (x, k) {
         var f = (hijoDe('_' + k) || {}).firma;
-        return (f && f.valida()) || (f && f.datos().trazos ? 'Su firma quedó muy corta: fírmela completa, como en papel.' : 'Firme en el recuadro con el dedo.');
+        return (f && f.valida()) || (f && f.datos().trazos ? 'Su firma quedó muy corta o es solo una raya: fírmela completa, como en papel.' : 'Firme en el recuadro con el dedo.');
       },
       leida: function (x) { return x === true || 'Confirme que leyó la carta.'; },
       firmaElectronica: function (x) { return x === true || 'Confirme su firma electrónica.'; }
@@ -411,7 +422,7 @@
     });
     var ultimaCarta = n === TOTAL && cartaVista === hijos.length - 1;
     // Ya salió alguna inscripción (ver enviar): no se regresa a cambiar lo que ya llegó.
-    $('atras').hidden = (n === 1) || enviados.some(Boolean);
+    $('atras').hidden = (n === 1) || algoEnviado();
     $('siguiente').hidden = ultimaCarta;
     var otra = n === TOTAL && hijos[cartaVista + 1];
     $('siguiente').textContent = otra ? 'Siguiente: carta de ' + (nombreDe(otra) || 'alumno ' + (cartaVista + 2)) : 'Siguiente';
@@ -444,8 +455,8 @@
     armarTrampa();
   }
   function textoEnviar() {
-    var faltan = hijos.filter(function (h, i) { return !enviados[i]; }).length;
-    if (faltan < hijos.length) return faltan > 1 ? 'Enviar las ' + faltan + ' que faltan' : 'Enviar la que falta';
+    var faltan = hijos.filter(function (h) { return !enviados[h.k]; }).length;
+    if (algoEnviado()) return faltan > 1 ? 'Enviar las ' + faltan + ' que faltan' : 'Enviar la que falta';
     return hijos.length > 1 ? 'Enviar las ' + hijos.length + ' inscripciones' : 'Enviar inscripción';
   }
   function avanzar() {
@@ -472,7 +483,9 @@
   }
   window.addEventListener('popstate', function (e) {
     trampa = Boolean(e.state && e.state.reivajPaso);
-    if (trampa || form.hidden || actual <= 1 || enviados.some(Boolean)) return;
+    // Mientras se envía no se cambia de paso: se vuelve a poner la entrada.
+    if (enviando) { armarTrampa(); return; }
+    if (trampa || form.hidden || actual <= 1 || algoEnviado()) return;
     regresar();
   });
 
@@ -549,7 +562,9 @@
       plan: { horas: Number(v('horas_' + k)) || null },
       // Hermanos inscritos en el mismo envío (el programa todavía no lo usa;
       // queda para ligarlos como familia).
-      familia: hijos.length > 1 ? { total: hijos.length, hermanos: hijos.filter(function (o) { return o !== h; }).map(function (o) { return nombreCompleto(o.k); }) } : null,
+      familia: hijos.length + previos.length > 1 ? { total: hijos.length + previos.length, hermanos: previos.map(function (p) { return p.completo || p.nombre; }).concat(hijos.filter(function (o) { return o !== h; }).map(function (o) { return nombreCompleto(o.k); })) } : null,
+      // La clave de esta inscripción: si llega dos veces, el programa aparta la repetida.
+      envio: h.envio,
       carta: {
         documento: window.CARTA_SEGURIDAD.documento, version: window.CARTA_SEGURIDAD.version, huella: huella,
         seguro: v('seguro_' + k), firmante: v('firmante_' + k), parentesco: v('firmanteParentesco_' + k),
@@ -559,28 +574,55 @@
     };
   }
 
-  // Lo que ya llegó, por posición del alumno: si la red falla a la mitad,
-  // «Enviar» de nuevo solo manda los que faltan. Volver a mandar uno que sí
-  // llegó no duplica nada: el programa reconoce la misma firma.
-  var enviados = [];
+  // Lo que ya llegó, por la clave de cada alumno (no por su lugar en la
+  // lista): si la red falla a la mitad, «Enviar» de nuevo solo manda los que
+  // faltan. Va también en el borrador: si la página se recarga o se regresa
+  // después de un envío a medias, los que ya llegaron no se vuelven a ofrecer.
+  // previos: los que llegaron antes de recargar ({ k, nombre, completo }).
+  var enviados = {};
+  var previos = [];
   var copias = [];
-  function nombresDe(lista) {
-    var n = lista.map(function (h) { return nombreDe(h) || nombreCompleto(h.k); });
-    return n.length < 2 ? n.join('') : n.slice(0, -1).join(', ') + ' y ' + n[n.length - 1];
+  var enviando = false;
+  function algoEnviado() { return previos.length > 0 || hijos.some(function (h) { return enviados[h.k]; }); }
+  function unir(n) { return n.length < 2 ? n.join('') : n.slice(0, -1).join(', ') + ' y ' + n[n.length - 1]; }
+  function nombresDe(lista) { return unir(lista.map(function (h) { return nombreDe(h) || nombreCompleto(h.k); })); }
+  function nombresPrevios() { return unir(previos.map(function (p) { return p.nombre || p.completo; })); }
+
+  // Mientras se envía, el formulario no se puede tocar (ni «Atrás», ni
+  // «Deshacer» y «Borrar todo» de la firma, ni el link a la ficha médica). Donde el
+  // navegador no conoce «inert», los toques se detienen aquí.
+  function bloquear(si) {
+    enviando = si;
+    form.setAttribute('aria-busy', si ? 'true' : 'false');
+    if ('inert' in form) form.inert = si;
   }
+  ['click', 'pointerdown', 'keydown', 'input', 'change'].forEach(function (tipo) {
+    form.addEventListener(tipo, function (e) {
+      if (!enviando) return;
+      e.preventDefault();
+      e.stopPropagation();
+    }, true);
+  });
 
   form.addEventListener('submit', async function (e) {
     e.preventDefault();
-    if (!conectado) return;
+    if (!conectado || enviando) return;
     // Enter o «Ir» del teclado antes de la última carta: funciona como «Siguiente».
     if (actual !== TOTAL || cartaVista < hijos.length - 1) { avanzar(); return; }
     if (!revisarPaso(TOTAL)) return;
     // Todas las cartas firmadas (por si se quitó o agregó un alumno después).
     for (var j = 0; j < hijos.length; j++) {
       cartaVista = j;
-      if (!enviados[j] && !(hijos[j].firma && hijos[j].firma.valida())) { mostrar(TOTAL); revisarPaso(TOTAL); return; }
+      if (!enviados[hijos[j].k] && !(hijos[j].firma && hijos[j].firma.valida())) { mostrar(TOTAL); revisarPaso(TOTAL); return; }
     }
+    // Todo lo que se manda se arma aquí, antes de esperar nada: lo que se
+    // toque mientras sale ya no cambia lo que llega ni la copia.
+    var cuando = new Date(), hp = v('sitio');
+    var lote = hijos.filter(function (h) { return !enviados[h.k]; }).map(function (h) {
+      return { h: h, datos: armarDatos(h, null, cuando), copia: datosCarta(h.k), nombre: nombreDe(h) || nombreCompleto(h.k), ficha: fichaCarta(h.k) };
+    });
     var boton = $('enviar');
+    bloquear(true);
     boton.disabled = true;
     boton.textContent = 'Enviando…';
     $('nota').textContent = '';
@@ -592,31 +634,35 @@
       // página (la trampa para robots): tras una recarga, se espera ese rato.
       var falta = 2600 - (Date.now() - cargada);
       if (falta > 0) await new Promise(function (listo) { setTimeout(listo, falta); });
-      for (var i = 0; i < hijos.length && !falla; i++) {
-        if (enviados[i]) continue;
-        var h = hijos[i], cuando = new Date(), datos = armarDatos(h, huella, cuando);
-        var r = await window.Buzon.enviar('inscripcion', { enviado: cuando.toISOString(), datos: datos }, { hp: v('sitio'), t: Date.now() - cargada });
+      for (var i = 0; i < lote.length; i++) {
+        var l = lote[i];
+        l.datos.carta.huella = huella;
+        var r = await window.Buzon.enviar('inscripcion', { enviado: cuando.toISOString(), datos: l.datos }, { hp: hp, t: Date.now() - cargada });
         if (!r.ok) { falla = r; break; }
-        enviados[i] = true;
-        copias[i] = { datos: datosCarta(h.k), nombre: nombreDe(h) || nombreCompleto(h.k), extra: {
-          seguro: datos.carta.seguro, ficha: fichaCarta(h.k), firma: datos.carta.firma, firmante: datos.carta.firmante,
-          parentesco: datos.carta.parentesco, huella: datos.carta.huella, folio: r.id || '',
+        enviados[l.h.k] = true;
+        copias.push({ datos: l.copia, nombre: l.nombre, extra: {
+          seguro: l.datos.carta.seguro, ficha: l.ficha, firma: l.datos.carta.firma, firmante: l.datos.carta.firmante,
+          parentesco: l.datos.carta.parentesco, huella: huella, folio: r.id || '',
           cuando: cuando.toLocaleString('es-MX', { timeZone: 'America/Mexico_City', dateStyle: 'long', timeStyle: 'short' })
-        } };
+        } });
+        // Ya: si ahora se recarga la página, este no se vuelve a ofrecer.
+        guardarBorrador();
       }
     } catch (err) {
       falla = { ok: false, error: 'No se pudo preparar el envío. Intente de nuevo.' };
     }
+    bloquear(false);
     boton.disabled = false;
     if (falla) {
       boton.textContent = textoEnviar();
-      $('atras').hidden = enviados.some(Boolean);
+      $('atras').hidden = algoEnviado();
       // Lo de la red lo escribe buzon.js (de usted); lo que conteste el buzón
       // no es para las familias (viene de tú y a veces ya pide WhatsApp).
       // El WhatsApp va con link, sin datos del alumno en el mensaje.
-      var listos = hijos.filter(function (h, i) { return enviados[i]; });
-      var pendientes = hijos.filter(function (h, i) { return !enviados[i]; });
-      $('nota').textContent = (listos.length ? 'Ya recibimos la inscripción de ' + nombresDe(listos) + '. Falta la de ' + nombresDe(pendientes) + ': presione «' + textoEnviar() + '». ' : '') +
+      var listos = hijos.filter(function (h) { return enviados[h.k]; });
+      var pendientes = hijos.filter(function (h) { return !enviados[h.k]; });
+      var ya = unir(previos.map(function (p) { return p.nombre || p.completo; }).concat(listos.map(function (h) { return nombreDe(h) || nombreCompleto(h.k); })));
+      $('nota').textContent = (listos.length ? 'Ya recibimos la inscripción de ' + ya + '. Falta la de ' + nombresDe(pendientes) + ': presione «' + textoEnviar() + '». ' : '') +
         (falla.red ? (falla.error || 'Sin conexión. Revise su internet e intente de nuevo.') : 'No se pudo enviar. Intente de nuevo en un momento.') + ' Si el problema continúa, escríbanos por ';
       $('nota').appendChild(R.el('a', { href: R.enlaceWhatsApp('Hola, intenté enviar la inscripción en línea y no se pudo.'), target: '_blank', rel: 'noopener', texto: 'WhatsApp' }));
       $('nota').appendChild(document.createTextNode('.'));
@@ -651,8 +697,11 @@
       desc.appendChild(R.el('p', {}, [b]));
     });
     $('guardarCopia').textContent = varios ? 'Imprimir las ' + copias.length + ' cartas' : 'Imprimirla';
-    $('listoTitulo').textContent = varios ? 'Inscripciones recibidas' : 'Inscripción recibida';
-    $('listoTexto').textContent = (varios ? 'Recibimos las inscripciones de ' : 'Recibimos la inscripción de ') + nombresDe(hijos) + '. En recepción confirmamos grupo, horario y forma de pago.';
+    var todos = previos.map(function (p) { return p.nombre || p.completo; }).concat(hijos.map(function (h) { return nombreDe(h) || nombreCompleto(h.k); }));
+    $('listoTitulo').textContent = todos.length > 1 ? 'Inscripciones recibidas' : 'Inscripción recibida';
+    $('listoTexto').textContent = (todos.length > 1 ? 'Recibimos las inscripciones de ' : 'Recibimos la inscripción de ') + unir(todos) + '. En recepción confirmamos grupo, horario y forma de pago.' +
+      (previos.length ? ' La copia de la carta de ' + nombresPrevios() + ' se la damos en recepción.' : '') +
+      ' Al acudir, traiga una identificación oficial de quien firmó.';
     form.hidden = true;
     $('listo').hidden = false;
     // El foco estaba en el botón que se acaba de ocultar: pasa al aviso.
@@ -672,10 +721,14 @@
   window.addEventListener('pagehide', function () { if (espera) guardarBorrador(); });
   function guardarBorrador() {
     clearTimeout(espera); espera = null;
-    // Con alguna inscripción ya enviada, el borrador la volvería a ofrecer.
-    if (enviados.some(Boolean)) return;
     try {
-      var o = { paso: actual, carta: cartaVista, t: Date.now(), hijos: hijos.map(function (h) { return h.k; }), campos: {}, autorizados: autorizados() };
+      // enviados: los que ya llegaron (al recuperar el borrador quedan fuera);
+      // envios: la clave de cada inscripción, para que un reenvío no duplique.
+      var o = {
+        paso: actual, carta: cartaVista, t: Date.now(), hijos: hijos.map(function (h) { return h.k; }), campos: {}, autorizados: autorizados(),
+        enviados: previos.concat(hijos.filter(function (h) { return enviados[h.k]; }).map(function (h) { return { k: h.k, nombre: nombreDe(h), completo: nombreCompleto(h.k) }; })),
+        envios: hijos.reduce(function (m, h) { m[h.k] = h.envio; return m; }, {})
+      };
       [].forEach.call(form.elements, function (x) {
         if (!x.name || x.name === 'sitio' || /^seguro_/.test(x.name)) return;
         if (x.type === 'radio') { if (x.checked) o.campos[x.name] = x.value; }
@@ -694,7 +747,24 @@
     // Uno de antes de los hermanos (sin «hijos») no cabe en estos campos.
     if (o && (!(Math.abs(Date.now() - (Number(o.t) || 0)) < DIA) || !Array.isArray(o.hijos))) { borrarBorrador(); o = null; }
     if (!o) { agregarHijo(); return 1; }
-    o.hijos.slice(0, MAX_HIJOS).forEach(function (k) { if (/^\d+$/.test(String(k))) agregarHijo(k); });
+    // Los que ya llegaron no vuelven: se dice arriba que ya se recibieron.
+    var ya = {};
+    previos = (Array.isArray(o.enviados) ? o.enviados : []).filter(function (x) { return x && /^\d+$/.test(String(x.k)); }).slice(0, MAX_HIJOS).map(function (x) {
+      ya[String(x.k)] = true;
+      siguienteClave = Math.max(siguienteClave, Number(x.k) + 1);
+      return { k: String(x.k), nombre: String(x.nombre || '').slice(0, 80), completo: String(x.completo || '').slice(0, 160) };
+    });
+    var envios = o.envios && typeof o.envios === 'object' ? o.envios : {};
+    o.hijos.slice(0, MAX_HIJOS).forEach(function (k) { if (/^\d+$/.test(String(k)) && !ya[String(k)]) agregarHijo(k, envios[k]); });
+    if (!hijos.length && previos.length) {
+      // Ya habían llegado todas (la página se cerró antes de mostrar la copia):
+      // no queda nada que mandar. Se avisa y se empieza de cero.
+      avisarPrevios(true);
+      previos = [];
+      borrarBorrador();
+      agregarHijo();
+      return 1;
+    }
     if (!hijos.length) agregarHijo();
     Object.keys(o.campos || {}).forEach(function (k) {
       var c = form.elements[k];
@@ -708,7 +778,17 @@
     hijos.forEach(mostrarDetalles);
     $('custodiaNota').hidden = v('custodia') !== 'si';
     cartaVista = Math.max(0, Math.min(Number(o.carta) || 0, hijos.length - 1));
+    avisarPrevios(false);
     return Math.min(Math.max(1, o.paso || 1), TOTAL);
+  }
+
+  // Arriba del formulario: de quién ya se recibió la inscripción.
+  function avisarPrevios(todas) {
+    if (!previos.length) return;
+    var n = nombresPrevios(), varias = previos.length > 1;
+    var t = (varias ? 'Las inscripciones de ' + n + ' ya se recibieron' : 'La inscripción de ' + n + ' ya se recibió') +
+      (todas ? '. No hace falta volver a enviarla' + (varias ? 's' : '') + '.' : '; no hace falta volver a enviarla' + (varias ? 's' : '') + '. Falta la de ' + nombresDe(hijos) + ': firme su carta y envíela.');
+    form.insertBefore(R.el('p', { clase: 'form__note', role: 'status', texto: t }), pasos[0]);
   }
 
   if (!conectado) {

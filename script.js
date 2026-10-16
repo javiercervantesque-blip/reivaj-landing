@@ -12,7 +12,7 @@
   var agendar = document.getElementById('agendar');
   var alMover = function () {
     var y = window.scrollY;
-    fab.classList.toggle('is-visible', y > 520 && agendar.getBoundingClientRect().top > window.innerHeight * 0.6);
+    fab.classList.toggle('is-visible', y > 200 && agendar.getBoundingClientRect().top > window.innerHeight * 0.6);
   };
   window.addEventListener('scroll', alMover, { passive: true });
   alMover();
@@ -22,24 +22,6 @@
   if (heroVideo && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     heroVideo.removeAttribute('autoplay');
     heroVideo.pause();
-  }
-
-  /* Contadores */
-  if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    var contar = new IntersectionObserver(function (entradas) {
-      entradas.forEach(function (e) {
-        if (!e.isIntersecting) return;
-        var n = Number(e.target.dataset.count), t0 = performance.now();
-        var paso = function (t) {
-          var p = Math.min((t - t0) / 900, 1);
-          e.target.textContent = Math.round(n * (1 - Math.pow(1 - p, 3)));
-          if (p < 1) requestAnimationFrame(paso);
-        };
-        requestAnimationFrame(paso);
-        contar.unobserve(e.target);
-      });
-    }, { threshold: 0.6 });
-    document.querySelectorAll('[data-count]').forEach(function (x) { contar.observe(x); });
   }
 
   /* Un FAQ abierto a la vez */
@@ -235,11 +217,16 @@
     // Dos palabras de tres letras o más, igual que palabras() del programa:
     // con una sola (o con «Ma», «Uc») la confunde con otra alumna.
     alumno: function (v) { return (v.split(/\s+/).filter(function (p) { return R.conLetras(p, 3); }).length >= 2) || 'Escriba nombre y apellido del alumno.'; },
-    edad: function (v) { var n = Number(v); return (n >= 4 && n <= 18) || (n > 0 && n < 4 ? 'Recibimos a niñas y niños a partir de los 4 años.' : 'Escriba la edad (de 4 a 18 años).'); },
+    // Años cumplidos: «5.5» o «6,5» no es una edad que el programa entienda.
+    edad: function (v) {
+      var n = Number(v);
+      if (String(v).trim() && Number.isFinite(n) && !Number.isInteger(n)) return 'Escriba la edad en años cumplidos, sin decimales.';
+      return (n >= 4 && n <= 18) || (n > 0 && n < 4 ? 'Recibimos a niñas y niños a partir de los 4 años.' : 'Escriba la edad (de 4 a 18 años).');
+    },
     rama: function (v) { return Boolean(v) || 'Indique si es niña o niño.'; },
     dia: function (v) { return Boolean(v) || sinFechas || (diaQuitado ? 'Ese día ya no está disponible. Elija otro.' : 'Elija el día de la clase.'); },
     hora: function () { return alumnos().every(function (a) { return a.sexo !== 'm' || a.hora; }) || 'Elija el horario.'; },
-    aviso: function (v) { return v === true || 'Necesitamos su autorización para contactarle.'; }
+    aviso: function (v) { return v === true || 'Necesitamos su autorización para escribirle por WhatsApp.'; }
   };
 
   // Las reglas del alumno sirven también para los agregados (alumno_3…),
@@ -251,7 +238,7 @@
     return function (v) {
       var r = REGLAS.alumno(v), mismo = String(v).replace(/\s+/g, ' ').toLowerCase();
       if (r !== true) return r;
-      return alumnos().filter(function (a) { return a.alumno.toLowerCase() === mismo; }).length < 2 || 'Este nombre ya está arriba.';
+      return alumnos().filter(function (a) { return a.alumno.toLowerCase() === mismo; }).length < 2 || 'Este nombre ya está registrado arriba.';
     };
   }
   function nombresDeReglas() {
@@ -272,8 +259,23 @@
     form.addEventListener(ev, function (e) {
       var k = e.target.name, regla = reglaDe(k);
       if (regla && regla(R.valor(form, k)) === true) R.mostrarError(form, k, '');
+      if (/^edad(_\d+)?$/.test(k || '')) notaMayor(e.target);
     });
   });
+  // De 16 a 18 años sí se reciben, pero no siempre hay grupo: se avisa bajo
+  // su edad, sin detener el envío.
+  var MAYOR = 'Para mayores de 15 años le confirmamos por WhatsApp si hay grupo disponible.';
+  function notaMayor(campo) {
+    var caja = campo && campo.closest('.field');
+    if (!caja) return;
+    var p = caja.querySelector('.nota-mayor');
+    var n = Number(campo.value);
+    var mostrar = Number.isInteger(n) && n >= 16 && n <= 18;
+    if (!p && !mostrar) return;
+    if (!p) { p = R.el('p', { clase: 'field__ayuda nota-mayor', role: 'status', texto: MAYOR }); caja.appendChild(p); }
+    p.hidden = !mostrar;
+  }
+  function notasMayores() { form.querySelectorAll('input[name^="edad"]').forEach(notaMayor); }
   // «Ir»/Enter en los recuadros de texto pasa al siguiente en vez de mandar
   // el formulario a medias (y pintar en rojo lo que todavía no llena).
   form.addEventListener('keydown', function (e) {
@@ -399,14 +401,18 @@
     form.querySelectorAll('.has-error').forEach(function (f) { f.classList.remove('has-error'); });
     form.querySelectorAll('.error').forEach(function (f) { f.classList.remove('is-visible'); });
     var nota = form.querySelector('.form__note');
-    nota.textContent = 'Le confirmamos por WhatsApp el mismo día hábil.';
+    nota.textContent = 'Le confirmamos por WhatsApp el mismo día hábil en que recibimos su solicitud.';
     nota.classList.remove('form__note--mal');
     diaQuitado = false;
+    notasMayores();
     pintarDias();
     exito.hidden = true;
     form.hidden = false;
     form.elements.alumno.focus();
   });
+
+  // El navegador pudo devolver la edad ya escrita (al regresar a la página).
+  notasMayores();
 
   // El botón viene apagado en el HTML: así, si alguien da Enter antes de que
   // cargue este script, el navegador no manda el formulario por su cuenta.

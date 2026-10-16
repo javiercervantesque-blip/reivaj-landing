@@ -422,6 +422,8 @@ em{
 }
 .booking__contact{ padding-top:22px; border-top:1px solid var(--line); }
 .booking__contact p{ font-size:.9rem; color:var(--ink-mute); margin-bottom:.4rem; }
+.booking__lugar{ margin-top:16px; font-size:.9rem; color:var(--ink-mute); }
+.booking__lugar a{ color:inherit; text-decoration:underline; text-underline-offset:2px; }
 
 .booking__form{
   background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-l);
@@ -799,8 +801,19 @@ em{
 .firma__linea{ position:absolute; left:6%; right:6%; bottom:44px; border-bottom:1.5px solid #C9C2B1; pointer-events:none; }
 .firma__guia{ position:absolute; left:0; right:0; bottom:16px; text-align:center; font-size:.75rem; color:var(--ink-mute); pointer-events:none; }
 .firma__lienzo.firmado .firma__guia{ display:none; }
-.firma__acciones{ display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:8px; font-size:.8rem; color:var(--ink-mute); }
-.firma__acciones button{ font:inherit; font-weight:600; color:var(--gold-dark); background:none; border:0; cursor:pointer; padding:4px 0; }
+.firma__acciones{ display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px 10px; margin-top:10px; font-size:.85rem; color:var(--ink-mute); }
+.firma__estado:empty{ display:none; }
+.firma__botones{ display:flex; flex-wrap:wrap; gap:8px; flex:1 1 100%; }
+.firma__botones .firma__btn{ flex:1 1 auto; }
+/* Del tamaño de un dedo: el papá que se equivocó tiene que atinarle a la primera. */
+.firma__btn{
+  font:inherit; font-weight:600; color:var(--gold-dark); background:var(--surface);
+  border:1.5px solid var(--line); border-radius:999px; cursor:pointer;
+  min-height:44px; padding:8px 12px; touch-action:manipulation; white-space:nowrap;
+}
+.firma__btn:hover:not(:disabled){ border-color:var(--gold-dark); }
+.firma__btn:focus-visible{ outline:2px solid var(--gold-dark); outline-offset:2px; }
+.firma__btn:disabled{ color:var(--ink-mute); opacity:.55; cursor:default; }
 .has-error .firma__lienzo{ border-color:#D93A3A; }
 
 .resumen{ display:grid; gap:4px; font-size:.9rem; }

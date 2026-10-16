@@ -49,7 +49,10 @@
     if (!cfg.buzon || !cfg.llavePublica) return { ok: false, sinBuzon: true, error: 'La página todavía no está conectada al gimnasio.' };
     if (!disponible()) return { ok: false, sinBuzon: true, error: 'Este navegador no puede enviar el formulario de forma segura.' };
     var sobre = await cerrarSobre(cfg.llavePublica, tipo, contenido);
-    var cuerpo = JSON.stringify({ accion: 'enviar', tipo: tipo, sobre: sobre, hp: (extra && extra.hp) || '', t: (extra && extra.t) || 0 });
+    // n: la seña de este envío. Si se reintenta a ciegas (abajo), el buzón
+    // reconoce que es el mismo y no lo cuenta ni lo guarda dos veces.
+    var n = aB64url(global.crypto.getRandomValues(new Uint8Array(16)));
+    var cuerpo = JSON.stringify({ accion: 'enviar', tipo: tipo, sobre: sobre, hp: (extra && extra.hp) || '', t: (extra && extra.t) || 0, n: n });
     var r;
     try {
       // Texto plano a propósito: así el navegador no pide permiso antes

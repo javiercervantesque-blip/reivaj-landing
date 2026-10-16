@@ -10,6 +10,32 @@
   var R = global.Reivaj;
   var ANCHO = 1000, ALTO = 320;   // medidas lógicas del trazo
 
+  // ¿Es una firma? trazos: [[x, y], …] por trazo, en medidas lógicas
+  // (ANCHO×ALTO); k: cuánto se estira lo vertical en pantalla (ver
+  // proporcion), para medir distancias como se ven. Pide:
+  //  - al menos 12 puntos y un tamaño mínimo (no un toque accidental), y
+  //  - que no sea una raya: algún punto se aparta de la recta entre los dos
+  //    extremos del trazo más de lo que tiembla el dedo al hacer una línea.
+  // Una firma corta de celular (unas letras de 3 o 4 cm) pasa de sobra.
+  function trazoValido(trazos, k) {
+    k = k > 0 ? k : 1;
+    var ps = [];
+    (trazos || []).forEach(function (t) { (t || []).forEach(function (p) { ps.push([p[0], p[1] * k]); }); });
+    if (ps.length < 12) return false;
+    var xs = ps.map(function (p) { return p[0]; }), ys = ps.map(function (p) { return p[1] / k; });
+    var ancho = Math.max.apply(null, xs) - Math.min.apply(null, xs), alto = Math.max.apply(null, ys) - Math.min.apply(null, ys);
+    if (!(ancho > 90 || alto > 60)) return false;
+    // Los dos puntos más alejados (aproximado: los extremos a lo largo del lado más largo).
+    var a = ps[0], b = ps[0];
+    var eje = ancho >= alto * k ? 0 : 1;
+    ps.forEach(function (p) { if (p[eje] < a[eje]) a = p; if (p[eje] > b[eje]) b = p; });
+    var dx = b[0] - a[0], dy = b[1] - a[1], largo = Math.sqrt(dx * dx + dy * dy) || 1;
+    var lejos = 0;
+    ps.forEach(function (p) { lejos = Math.max(lejos, Math.abs(dx * (a[1] - p[1]) - dy * (a[0] - p[0])) / largo); });
+    // 25 unidades = 2.5 % del ancho del recuadro (unos 8 px en un celular).
+    return lejos >= 25;
+  }
+
   // ─── Lienzo de firma ────────────────────────────────────────────────
   function Firma(contenedor) {
     var caja = R.el('div', { clase: 'firma__lienzo' });
@@ -17,10 +43,13 @@
     caja.appendChild(lienzo);
     caja.appendChild(R.el('div', { clase: 'firma__linea' }));
     caja.appendChild(R.el('div', { clase: 'firma__guia', texto: 'Firme aquí con el dedo' }));
-    var borrar = R.el('button', { type: 'button', texto: 'Borrar y volver a firmar' });
-    var estado = R.el('span', { texto: '' });
+    // Dos salidas si se equivocó: quitar solo el último trazo (se le fue el
+    // dedo al final) o empezar de cero. Botones de tamaño de dedo, no un link.
+    var deshacer = R.el('button', { type: 'button', clase: 'firma__btn', texto: '↶ Deshacer', 'aria-label': 'Deshacer el último trazo', disabled: true });
+    var borrar = R.el('button', { type: 'button', clase: 'firma__btn', texto: '✕ Borrar todo', 'aria-label': 'Borrar todo y volver a firmar', disabled: true });
+    var estado = R.el('span', { clase: 'firma__estado', role: 'status', texto: '' });
     contenedor.appendChild(caja);
-    contenedor.appendChild(R.el('div', { clase: 'firma__acciones' }, [estado, borrar]));
+    contenedor.appendChild(R.el('div', { clase: 'firma__acciones' }, [estado, R.el('div', { clase: 'firma__botones' }, [deshacer, borrar])]));
 
     // k0: la forma del recuadro cuando se empezó a firmar (ver proporcion).
     var trazos = [], actual = null, inicio = null, fin = null, k0 = null;
@@ -44,10 +73,13 @@
         trazos = []; actual = null; inicio = fin = k0 = null;
         caja.classList.remove('firmado');
         estado.textContent = 'Se giró el celular: vuelva a firmar.';
+        botones();
         if (typeof api.alCambiar === 'function') api.alCambiar();
       }
       pintar();
     }
+    // Sin nada firmado no hay qué deshacer ni qué borrar.
+    function botones() { deshacer.disabled = borrar.disabled = !trazos.length; }
     function aPantalla(p) { return [p[0] / ANCHO * lienzo.width, p[1] / ALTO * lienzo.height]; }
     function pintar() {
       ctx.clearRect(0, 0, lienzo.width, lienzo.height);
@@ -77,12 +109,14 @@
       ev.preventDefault();
       if (actual && ev.pointerId !== dedo) return;
       dedo = ev.pointerId;
-      lienzo.setPointerCapture(ev.pointerId);
+      // Si el navegador no deja capturar el dedo, se firma igual.
+      try { lienzo.setPointerCapture(ev.pointerId); } catch (e) { /* sin captura */ }
       if (!trazos.length) k0 = proporcion();
       actual = [punto(ev)];
       trazos.push(actual);
       if (!inicio) inicio = Date.now();
       caja.classList.add('firmado');
+      botones();
       pintar();
     });
     lienzo.addEventListener('pointermove', function (ev) {
@@ -100,22 +134,29 @@
     lienzo.addEventListener('pointerup', soltar);
     lienzo.addEventListener('pointercancel', soltar);
     function limpiar() {
-      trazos = []; inicio = fin = k0 = null; caja.classList.remove('firmado'); estado.textContent = '';
+      trazos = []; actual = null; dedo = null; inicio = fin = k0 = null; caja.classList.remove('firmado'); estado.textContent = '';
+      botones();
+      pintar();
+      if (typeof api.alCambiar === 'function') api.alCambiar();
+    }
+    // Quita solo el último trazo; si era el único, queda como recién abierto.
+    function deshacerTrazo() {
+      if (actual || !trazos.length) return;
+      trazos.pop();
+      if (!trazos.length) { limpiar(); return; }
+      estado.textContent = valida() ? 'Firma lista.' : '';
+      botones();
       pintar();
       if (typeof api.alCambiar === 'function') api.alCambiar();
     }
     borrar.addEventListener('click', limpiar);
+    deshacer.addEventListener('click', deshacerTrazo);
     global.addEventListener('resize', medir);
     setTimeout(medir, 0);
 
     function puntos() { return trazos.reduce(function (n, t) { return n + t.length; }, 0); }
-    // Que sea un trazo de verdad y no un toque accidental.
-    function valida() {
-      if (puntos() < 12) return false;
-      var xs = [], ys = [];
-      trazos.forEach(function (t) { t.forEach(function (p) { xs.push(p[0]); ys.push(p[1]); }); });
-      return Math.max.apply(null, xs) - Math.min.apply(null, xs) > 90 || Math.max.apply(null, ys) - Math.min.apply(null, ys) > 60;
-    }
+    // Que sea un trazo de verdad y no un toque accidental ni una raya.
+    function valida() { return trazoValido(trazos, k0 || proporcion()); }
     // k: la proporción del recuadro (ver proporcion).
     function svgPath(k) {
       var y = function (p) { return Math.round(p[1] * k); };
@@ -210,7 +251,9 @@
       });
       if (s.campos && opciones.seccion4) cont.appendChild(opciones.seccion4);
     });
-    cont.appendChild(R.el('p', { clase: 'carta__lo-llena', texto: C.cierre + ' Recibe su copia al enviar.' }));
+    // En la copia ya enviada no se promete otra copia. (Esta frase no es parte
+    // del texto firmado: la huella sale solo de carta-texto.js.)
+    cont.appendChild(R.el('p', { clase: 'carta__lo-llena', texto: C.cierre + (opciones.copia ? ' Esta es su copia.' : ' Recibe su copia al enviar.') }));
   }
 
   // Las dos opciones del seguro, con el texto exacto de la carta.
@@ -244,6 +287,7 @@
     cont.innerHTML = '';
     var cuerpo = R.el('div');
     pintarCarta(cuerpo, datos, {
+      copia: true,
       seguro: R.el('p', {}, [R.el('b', { texto: 'Decisión sobre el seguro: ' }), extra.seguro === 'si' ? 'Sí contrato el seguro de accidentes que ofrece REIVAJ.' : 'No lo contrato.']),
       seccion4: extra.ficha ? R.el('div', { clase: 'carta__datos' }, extra.ficha.map(function (x) {
         return R.el('div', {}, [R.el('span', { texto: x[0] }), R.el('b', { texto: x[1] || 'Ninguno' })]);
@@ -258,5 +302,5 @@
     document.body.classList.add('con-copia');
   }
 
-  global.CartaFirma = { Firma: Firma, pintarCarta: pintarCarta, opcionesSeguro: opcionesSeguro, huellaCarta: huellaCarta, armarCopia: armarCopia, imagenDeFirma: imagenDeFirma };
+  global.CartaFirma = { Firma: Firma, trazoValido: trazoValido, pintarCarta: pintarCarta, opcionesSeguro: opcionesSeguro, huellaCarta: huellaCarta, armarCopia: armarCopia, imagenDeFirma: imagenDeFirma };
 })(window);

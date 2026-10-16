@@ -1,2 +1,4 @@
 User-agent: *
 Disallow: /asistencia
+
+Sitemap: https://www.gimnasiareivaj.com/sitemap.xml

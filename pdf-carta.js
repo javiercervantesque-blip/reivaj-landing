@@ -34,10 +34,36 @@
     return { url: c.toDataURL('image/jpeg', 0.85), w: w, h: h };
   }
 
+  // La letra del PDF (Helvetica, WinAnsi) no tiene emoji ni letras de otros
+  // alfabetos: jsPDF las convierte en basura. Se quedan los acentos, la ñ, la
+  // ü, «», —, “” y lo demás que sí tiene; lo que se puede, se pasa a su letra
+  // sin marca (ł → l, ș → s); lo demás (emoji) se quita.
+  var EXTRA = '€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ';
+  var CAMBIOS = {
+    'ł': 'l', 'Ł': 'L', 'đ': 'd', 'Đ': 'D', 'ı': 'i', 'ħ': 'h', 'Ħ': 'H', 'ŀ': 'l', 'Ŀ': 'L', 'ŋ': 'n', 'Ŋ': 'N', 'ŧ': 't', 'Ŧ': 'T',
+    '\u2010': '-', '\u2011': '-', '\u2012': '-', '\u2212': '-', '\u2032': '\'', '\u2033': '"',
+    '\u2009': ' ', '\u202F': ' ', '\u2007': ' ', '\u200B': '', '\u200D': '', '\uFE0F': '', '\t': ' '
+  };
+  function cabe(c) {
+    var n = c.charCodeAt(0);
+    return c.length === 1 && (c === '\n' || (n >= 0x20 && n <= 0x7e) || (n >= 0xa0 && n <= 0xff) || EXTRA.indexOf(c) >= 0);
+  }
+  function limpio(t) {
+    var out = '';
+    Array.from(String(t === null || t === undefined ? '' : t).normalize('NFC')).forEach(function (c) {
+      if (CAMBIOS[c] !== undefined) { out += CAMBIOS[c]; return; }
+      if (cabe(c)) { out += c; return; }
+      // Una letra con una marca que la letra del PDF no tiene (ș, ő, ā…): la letra sola.
+      var base = c.normalize('NFD').replace(/[\u0300-\u036F]/g, '');
+      if (base && Array.from(base).every(cabe)) out += base.normalize('NFC');
+    });
+    return out.replace(/ {2,}/g, ' ');
+  }
+
   // «texto con **negritas**» → [{t:'palabra', b:true}, ...]
   function palabras(texto) {
     var out = [];
-    String(texto || '').split('**').forEach(function (trozo, i, todos) {
+    limpio(texto).split('**').forEach(function (trozo, i, todos) {
       // «**riesgo**: se…»: los dos puntos van pegados a la negrita, sin espacio.
       var pegado = i > 0 && !/^\s/.test(trozo) && !/\s$/.test(todos[i - 1]);
       trozo.split(/\s+/).forEach(function (p) {
@@ -94,23 +120,23 @@
         [lista[i], lista[i + 1]].forEach(function (par, k) {
           if (!par) return;
           fuente(true, 9.5, TINTA); // se mide con la letra con la que se dibuja
-          var v = doc.splitTextToSize(String(par[1] || '—'), col - 4);
+          var v = doc.splitTextToSize(limpio(par[1] || '—'), col - 4);
           alto = Math.max(alto, 4 + v.length * 4.2);
         });
         saltoSi(alto);
         [lista[i], lista[i + 1]].forEach(function (par, k) {
           if (!par) return;
           var x = M + k * col;
-          fuente(false, 7.5, GRIS); doc.text(String(par[0]).toUpperCase(), x, y + 2.6);
-          fuente(true, 9.5, TINTA); doc.text(doc.splitTextToSize(String(par[1] || '—'), col - 4), x, y + 7);
+          fuente(false, 7.5, GRIS); doc.text(limpio(par[0]).toUpperCase(), x, y + 2.6);
+          fuente(true, 9.5, TINTA); doc.text(doc.splitTextToSize(limpio(par[1] || '—'), col - 4), x, y + 7);
         });
         y += alto + 2;
       }
       y += 2;
     }
 
-    fuente(false, 8, GRIS); doc.text(C.aviso.toUpperCase(), M, y); y += 7;
-    fuente(true, 17, TINTA); doc.text(C.titulo, M, y); y += 4;
+    fuente(false, 8, GRIS); doc.text(limpio(C.aviso).toUpperCase(), M, y); y += 7;
+    fuente(true, 17, TINTA); doc.text(limpio(C.titulo), M, y); y += 4;
     doc.setDrawColor(200, 160, 40); doc.setLineWidth(0.6); doc.line(M, y, M + ANCHO, y); y += 6;
 
     pares([
@@ -122,7 +148,7 @@
     C.secciones.forEach(function (s) {
       saltoSi(14);
       y += 2;
-      fuente(true, 11.5, TINTA); doc.text(s.n + '.  ' + s.titulo, M, y + 3); y += 8;
+      fuente(true, 11.5, TINTA); doc.text(limpio(s.n + '.  ' + s.titulo), M, y + 3); y += 8;
       if (s.recuadro) {
         parrafo('**' + s.recuadro.titulo + '**', { despues: 1 });
         parrafo(s.recuadro.texto);
@@ -133,7 +159,7 @@
         s.cuadro.forEach(function (f) {
           var v = f[1] || '________________';
           saltoSi(6);
-          fuente(true, 9, GRIS); doc.text(f[0], M, y + 3);
+          fuente(true, 9, GRIS); doc.text(limpio(f[0]), M, y + 3);
           var yAntes = y;
           parrafo(v, { sangria: 38, despues: 0 });
           if (y - yAntes < 5) y = yAntes + 5;
@@ -159,12 +185,12 @@
       y += fh + 1;
     }
     doc.setDrawColor(120, 120, 120); doc.setLineWidth(0.3); doc.line(M, y, M + 80, y); y += 4.5;
-    fuente(false, 9.5); doc.text((extra.firmante || '') + ' · ' + (extra.parentesco || 'tutor'), M, y); y += 8;
+    fuente(false, 9.5); doc.text(limpio((extra.firmante || '') + ' · ' + (extra.parentesco || 'tutor')), M, y); y += 8;
 
     fuente(false, 7.5, GRIS);
     var pie = C.pie + ' · firmada en línea el ' + extra.cuando + (extra.folio ? ' · folio de envío ' + extra.folio : '') + ' · huella ' + String(extra.huella || '').slice(0, 16);
     saltoSi(8);
-    doc.text(doc.splitTextToSize(pie, ANCHO), M, y);
+    doc.text(doc.splitTextToSize(limpio(pie), ANCHO), M, y);
 
     var n = doc.getNumberOfPages();
     for (var i = 1; i <= n; i++) {
@@ -189,5 +215,5 @@
     }).catch(function () { global.print(); return false; });
   }
 
-  global.CartaPDF = { descargar: descargar, cargarLib: cargarLib, generar: generar };
+  global.CartaPDF = { descargar: descargar, cargarLib: cargarLib, generar: generar, limpio: limpio };
 })(window);

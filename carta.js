@@ -13,6 +13,25 @@
   var v = function (n) { var x = R.valor(form, n); return x === '' && NINGUNO[n] ? NINGUNO[n] : x; };
   var firma = null;
 
+  // El link que manda el gimnasio desde el expediente trae un código del
+  // alumno después del «#» (/carta#c=…): con él, el programa sabe de quién es
+  // la carta sin adivinar por el nombre. Va solo dentro del sobre cerrado:
+  // se quita de la barra en cuanto se lee y no viaja en ningún link.
+  var codigo = '';
+  (function () {
+    var m = /(?:^#|&)c=([A-Za-z0-9_-]{16,64})(?:&|$)/.exec(String(location.hash || ''));
+    if (!m) return;
+    codigo = m[1];
+    try { history.replaceState(history.state, '', location.pathname + location.search); } catch (e) { /* sin historial: no pasa nada */ }
+  })();
+  // La clave de este envío: si la misma carta llega dos veces (se reintentó
+  // sin saber si había llegado, o se recargó la página), el programa aparta
+  // la repetida. Una nueva para cada carta.
+  var envio = R.claveAlAzar();
+  // De qué alumno es la clave: si después de un envío sin confirmar se
+  // cambia el alumno, la carta nueva no debe tomarse por repetida.
+  var envioDe = '';
+
   var PARENTESCOS = ['Madre', 'Padre', 'Abuela', 'Abuelo', 'Tía', 'Tío', 'Hermana', 'Hermano', 'Tutor legal', 'Otro'];
   form.querySelectorAll('[data-parentescos]').forEach(function (s) {
     s.appendChild(R.el('option', { value: '', texto: 'Elija' }));
@@ -97,7 +116,7 @@
     seguro: function (x) { return Boolean(x) || 'Indique si contrata el seguro.'; },
     consentimientoSalud: function (x) { return x === true || 'Sin este consentimiento no podemos guardar sus datos de salud.'; },
     // Con trazo pero muy chico (dos rayitas): que no crea que ya firmó.
-    firma: function () { return firma.valida() || (firma.datos().trazos ? 'Su firma quedó muy corta: fírmela completa, como en papel.' : 'Firme en el recuadro con el dedo.'); },
+    firma: function () { return firma.valida() || (firma.datos().trazos ? 'Su firma quedó muy corta o es solo una raya: fírmela completa, como en papel.' : 'Firme en el recuadro con el dedo.'); },
     leida: function (x) { return x === true || 'Confirme que leyó la carta.'; },
     firmaElectronica: function (x) { return x === true || 'Confirme su firma electrónica.'; }
   };
@@ -109,9 +128,24 @@
     guardarEnUnRato();
   });
 
+  // Mientras se envía, el formulario no se puede tocar (ver inscripcion.js).
+  var enviando = false;
+  function bloquear(si) {
+    enviando = si;
+    form.setAttribute('aria-busy', si ? 'true' : 'false');
+    if ('inert' in form) form.inert = si;
+  }
+  ['click', 'pointerdown', 'keydown', 'input', 'change'].forEach(function (tipo) {
+    form.addEventListener(tipo, function (e) {
+      if (!enviando) return;
+      e.preventDefault();
+      e.stopPropagation();
+    }, true);
+  });
+
   form.addEventListener('submit', async function (e) {
     e.preventDefault();
-    if (!conectado) return;
+    if (!conectado || enviando) return;
     pintar();
     var primero = null;
     Object.keys(REGLAS).forEach(function (k) {
@@ -125,37 +159,48 @@
       return;
     }
     var boton = $('enviar');
-    boton.disabled = true;
-    boton.textContent = 'Enviando…';
     var cuando = new Date();
     var ficha = CAMPOS.map(function (t, i) { return [t, v(NOMBRES[i])]; });
+    // Lo que se manda y la copia se arman aquí, antes de esperar nada.
+    var copia = datosCarta(), hp = v('sitio');
+    var deQuien = v('alumno').replace(/\s+/g, ' ').toLowerCase();
+    if (envioDe && envioDe !== deQuien) envio = R.claveAlAzar();
+    envioDe = deQuien;
     var r;
+    var datos = {
+      alumno: { nombre: v('alumno').replace(/\s+/g, ' '), nacimiento: v('nacimiento') },
+      tutor: { nombre: v('firmante'), parentesco: v('parentesco'), telefono: R.telefono10(v('telefono')) },
+      emergencias: ['e1', 'e2'].filter(function (n) { return v(n + 'Nombre'); }).map(function (n) {
+        return { nombre: v(n + 'Nombre'), parentesco: v(n + 'Parentesco'), telefono: R.telefono10(v(n + 'Telefono')) };
+      }),
+      salud: { sangre: v('sangre'), alergias: v('alergias'), padecimientos: v('padecimientos'), medicamentos: v('medicamentos'), servicio: v('servicio'), afiliacion: v('afiliacion') },
+      consentimientoSalud: true,
+      carta: {
+        documento: C.documento, version: C.version, huella: null, seguro: v('seguro'),
+        firmante: v('firmante'), parentesco: v('parentesco'), firma: firma.datos(), firmadaEn: cuando.toISOString(),
+        leida: true, firmaElectronica: true, dispositivo: String(navigator.userAgent || '').slice(0, 180)
+      },
+      envio: envio
+    };
+    // El código del link del expediente (si se entró con él). Un programa
+    // anterior lo ignora.
+    if (codigo) datos.codigo = codigo;
+    bloquear(true);
+    boton.disabled = true;
+    boton.textContent = 'Enviando…';
     try {
-      var huella = await CF.huellaCarta();
-      var datos = {
-        alumno: { nombre: v('alumno').replace(/\s+/g, ' '), nacimiento: v('nacimiento') },
-        tutor: { nombre: v('firmante'), parentesco: v('parentesco'), telefono: R.telefono10(v('telefono')) },
-        emergencias: ['e1', 'e2'].filter(function (n) { return v(n + 'Nombre'); }).map(function (n) {
-          return { nombre: v(n + 'Nombre'), parentesco: v(n + 'Parentesco'), telefono: R.telefono10(v(n + 'Telefono')) };
-        }),
-        salud: { sangre: v('sangre'), alergias: v('alergias'), padecimientos: v('padecimientos'), medicamentos: v('medicamentos'), servicio: v('servicio'), afiliacion: v('afiliacion') },
-        consentimientoSalud: true,
-        carta: {
-          documento: C.documento, version: C.version, huella: huella, seguro: v('seguro'),
-          firmante: v('firmante'), parentesco: v('parentesco'), firma: firma.datos(), firmadaEn: cuando.toISOString(),
-          leida: true, firmaElectronica: true, dispositivo: String(navigator.userAgent || '').slice(0, 180)
-        }
-      };
+      datos.carta.huella = await CF.huellaCarta();
       // El buzón descarta sin aviso lo que llega antes de 2.5 s de abierta la
       // página (la trampa para robots). Si la pestaña se recargó y el borrador
       // la devolvió llena, se espera ese rato en vez de perder la carta.
       var falta = 2600 - (Date.now() - cargada);
       if (falta > 0) await new Promise(function (listo) { setTimeout(listo, falta); });
-      r = await window.Buzon.enviar('carta', { enviado: cuando.toISOString(), datos: datos }, { hp: v('sitio'), t: Date.now() - cargada });
+      r = await window.Buzon.enviar('carta', { enviado: cuando.toISOString(), datos: datos }, { hp: hp, t: Date.now() - cargada });
       r.datos = datos;
     } catch (err) {
       r = { ok: false, error: 'No se pudo preparar el envío. Intente de nuevo.' };
     }
+    bloquear(false);
     boton.disabled = false;
     boton.textContent = 'Firmar y enviar';
     if (!r.ok) {
@@ -168,7 +213,11 @@
       $('nota').classList.add('form__note--mal');
       return;
     }
-    copias.push({ datos: datosCarta(), nombre: v('alumno').split(/\s+/)[0], extra: {
+    // Llegó: la que sigue (la de un hermano) lleva su propia clave.
+    envio = R.claveAlAzar(); envioDe = '';
+    // El código del link es del alumno de esta carta: la de un hermano va sin él.
+    codigo = '';
+    copias.push({ datos: copia, nombre: copia.alumno, extra: {
       seguro: r.datos.carta.seguro, ficha: ficha, firma: r.datos.carta.firma, firmante: r.datos.carta.firmante,
       parentesco: r.datos.carta.parentesco, huella: r.datos.carta.huella, folio: r.id || '',
       cuando: cuando.toLocaleString('es-MX', { timeZone: 'America/Mexico_City', dateStyle: 'long', timeStyle: 'short' })
@@ -250,7 +299,7 @@
   function guardarBorrador() {
     clearTimeout(espera); espera = null;
     try {
-      var o = { t: Date.now(), campos: {} };
+      var o = { t: Date.now(), campos: {}, envio: envio, envioDe: envioDe, codigo: codigo };
       [].forEach.call(form.elements, function (x) {
         if (!x.name || x.name === 'sitio') return;
         if (x.type === 'radio') { if (x.checked) o.campos[x.name] = x.value; }
@@ -268,6 +317,8 @@
     // (o sin fecha) se tira, para que otro que abra la pestaña no lo vea.
     if (o && !(Math.abs(Date.now() - (Number(o.t) || 0)) < DIA)) { borrarBorrador(); o = null; }
     if (!o) return;
+    if (/^[0-9a-f]{32}$/.test(String(o.envio || ''))) { envio = o.envio; envioDe = String(o.envioDe || ''); }
+    if (!codigo && /^[A-Za-z0-9_-]{16,64}$/.test(String(o.codigo || ''))) codigo = o.codigo;
     Object.keys(o.campos || {}).forEach(function (k) {
       var c = form.elements[k];
       if (!c) return;
