@@ -167,7 +167,7 @@
         });
         y += 2;
       }
-      if (s.opciones) parrafo('**Decisión sobre el seguro:** ' + (extra.seguro === 'si' ? 'Sí contrato el seguro de accidentes que ofrece REIVAJ.' : 'No lo contrato.'));
+      if (s.opciones) parrafo('**Decisión sobre el seguro:** ' + String(global.CartaFirma.textoDecision(extra)).replace(/\*/g, ''));
       (s.parrafos || []).forEach(function (t) { parrafo(t); });
       if (s.campos && extra.ficha) pares(extra.ficha.map(function (x) { return [x[0], x[1] || '—']; }));
     });

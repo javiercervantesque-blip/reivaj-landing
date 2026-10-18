@@ -256,8 +256,10 @@
     cont.appendChild(R.el('p', { clase: 'carta__lo-llena', texto: C.cierre + (opciones.copia ? ' Esta es su copia.' : ' Recibe su copia al enviar.') }));
   }
 
-  // Las dos opciones del seguro, con el texto exacto de la carta.
-  function opcionesSeguro(nombre) {
+  // Las opciones del seguro, con el texto exacto de la carta: lo contrata, ya
+  // cuenta con otro (y con qué aseguradora) o no lo contrata. La aseguradora
+  // solo se pide (y solo se ve) si dice que ya cuenta con otro.
+  function opcionesSeguro(nombre, nombreAseguradora) {
     var C = global.CARTA_SEGURIDAD;
     var s = C.secciones.filter(function (x) { return x.opciones; })[0].opciones;
     var hacer = function (valor, texto, nota) {
@@ -267,13 +269,40 @@
       if (nota) span.appendChild(R.el('span', { clase: 'carta__lo-llena', texto: ' ' + nota }));
       return R.el('label', { clase: 'opcion' }, [input, span]);
     };
-    return R.el('div', { clase: 'field' }, [
-      R.el('div', { clase: 'opciones', role: 'radiogroup', 'aria-label': 'Seguro de accidentes' }, [
-        hacer('si', s.si, '(El importe lo calcula REIVAJ al dar el alta.)'),
-        hacer('no', s.no)
-      ]),
-      R.el('p', { clase: 'error', 'data-error-for': nombre })
+    var cual = R.el('input', { id: nombreAseguradora, name: nombreAseguradora, maxlength: '120', autocomplete: 'off', 'aria-required': 'true', placeholder: 'Ej. GNP, AXA, MetLife…' });
+    var campoCual = R.el('div', { clase: 'field', hidden: true }, [
+      R.el('label', { for: nombreAseguradora, texto: '¿Con qué aseguradora?' }),
+      cual,
+      R.el('p', { clase: 'field__ayuda', texto: 'Si tiene el número de póliza, escríbalo también. No se le cobrará el seguro de REIVAJ.' }),
+      R.el('p', { clase: 'error', 'data-error-for': nombreAseguradora })
     ]);
+    // La aseguradora va justo debajo de su opción.
+    var grupo = R.el('div', { clase: 'opciones', role: 'radiogroup', 'aria-label': 'Seguro de accidentes' }, [
+      hacer('si', s.si, '(El importe lo calcula REIVAJ al dar el alta.)'),
+      s.propio ? hacer('propio', s.propio) : null,
+      s.propio ? campoCual : null,
+      hacer('no', s.no)
+    ].filter(Boolean));
+    var nodo = R.el('div', {}, [
+      R.el('div', { clase: 'field' }, [grupo, R.el('p', { clase: 'error', 'data-error-for': nombre })])
+    ]);
+    // Ver u ocultar la aseguradora según lo elegido (también al recuperar un borrador).
+    nodo.actualizar = function () {
+      var elegido = nodo.querySelector('input[name="' + nombre + '"]:checked');
+      var propio = Boolean(elegido && elegido.value === 'propio');
+      campoCual.hidden = !propio;
+      if (!propio && cual.form) R.mostrarError(cual.form, nombreAseguradora, '');
+    };
+    // Sin mover el foco: quien recorre las opciones con las flechas sigue en ellas.
+    grupo.addEventListener('change', function () { nodo.actualizar(); });
+    return nodo;
+  }
+
+  // La decisión del seguro en la copia (pantalla, impresión y PDF).
+  function textoDecision(extra) {
+    if (extra.seguro === 'si') return 'Sí contrato el seguro de accidentes que ofrece REIVAJ.';
+    if (extra.seguro === 'propio') return 'Ya cuento con otro seguro que cubre al alumno' + (extra.aseguradora ? ', con la aseguradora: ' + extra.aseguradora : '') + '. No contrato el de REIVAJ.';
+    return 'No lo contrato.';
   }
 
   // La huella del texto que se firmó: el programa la compara con la suya.
@@ -288,7 +317,7 @@
     var cuerpo = R.el('div');
     pintarCarta(cuerpo, datos, {
       copia: true,
-      seguro: R.el('p', {}, [R.el('b', { texto: 'Decisión sobre el seguro: ' }), extra.seguro === 'si' ? 'Sí contrato el seguro de accidentes que ofrece REIVAJ.' : 'No lo contrato.']),
+      seguro: R.el('p', {}, [R.el('b', { texto: 'Decisión sobre el seguro: ' }), textoDecision(extra)]),
       seccion4: extra.ficha ? R.el('div', { clase: 'carta__datos' }, extra.ficha.map(function (x) {
         return R.el('div', {}, [R.el('span', { texto: x[0] }), R.el('b', { texto: x[1] || 'Ninguno' })]);
       })) : null
@@ -302,5 +331,5 @@
     document.body.classList.add('con-copia');
   }
 
-  global.CartaFirma = { Firma: Firma, trazoValido: trazoValido, pintarCarta: pintarCarta, opcionesSeguro: opcionesSeguro, huellaCarta: huellaCarta, armarCopia: armarCopia, imagenDeFirma: imagenDeFirma };
+  global.CartaFirma = { Firma: Firma, trazoValido: trazoValido, pintarCarta: pintarCarta, opcionesSeguro: opcionesSeguro, textoDecision: textoDecision, huellaCarta: huellaCarta, armarCopia: armarCopia, imagenDeFirma: imagenDeFirma };
 })(window);

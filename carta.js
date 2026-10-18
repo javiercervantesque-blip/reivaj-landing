@@ -53,7 +53,7 @@
       R.el('p', { clase: 'error', 'data-error-for': NOMBRES[i] })
     ]);
   }));
-  var seguro = CF.opcionesSeguro('seguro');
+  var seguro = CF.opcionesSeguro('seguro', 'aseguradora');
 
   function edadDe(f) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(f || '')) return null;
@@ -114,6 +114,7 @@
     e2Telefono: function (x) { return !x || (!v('e2Nombre') ? 'Escriba también el nombre de esta persona.' : Boolean(R.telefonoValido(x)) || TEL_MAL); },
     sangre: function (x) { return Boolean(x) || 'Elija una opción (puede ser «No lo sé»).'; },
     seguro: function (x) { return Boolean(x) || 'Indique si contrata el seguro.'; },
+    aseguradora: function (x) { return v('seguro') !== 'propio' || (String(x).length >= 2 && R.conLetras(x, 2)) || 'Escriba con qué aseguradora cuenta.'; },
     consentimientoSalud: function (x) { return x === true || 'Sin este consentimiento no podemos guardar sus datos de salud.'; },
     // Con trazo pero muy chico (dos rayitas): que no crea que ya firmó.
     firma: function () { return firma.valida() || (firma.datos().trazos ? 'Su firma quedó muy corta o es solo una raya: fírmela completa, como en papel.' : 'Firme en el recuadro con el dedo.'); },
@@ -177,6 +178,7 @@
       consentimientoSalud: true,
       carta: {
         documento: C.documento, version: C.version, huella: null, seguro: v('seguro'),
+        aseguradora: v('seguro') === 'propio' ? v('aseguradora').replace(/\s+/g, ' ') : '',
         firmante: v('firmante'), parentesco: v('parentesco'), firma: firma.datos(), firmadaEn: cuando.toISOString(),
         leida: true, firmaElectronica: true, dispositivo: String(navigator.userAgent || '').slice(0, 180)
       },
@@ -218,7 +220,7 @@
     // El código del link es del alumno de esta carta: la de un hermano va sin él.
     codigo = '';
     copias.push({ datos: copia, nombre: copia.alumno, extra: {
-      seguro: r.datos.carta.seguro, ficha: ficha, firma: r.datos.carta.firma, firmante: r.datos.carta.firmante,
+      seguro: r.datos.carta.seguro, aseguradora: r.datos.carta.aseguradora, ficha: ficha, firma: r.datos.carta.firma, firmante: r.datos.carta.firmante,
       parentesco: r.datos.carta.parentesco, huella: r.datos.carta.huella, folio: r.id || '',
       cuando: cuando.toLocaleString('es-MX', { timeZone: 'America/Mexico_City', dateStyle: 'long', timeStyle: 'short' })
     } });
@@ -269,9 +271,10 @@
   // La del hermano: quien firma, su WhatsApp y las emergencias se quedan; lo
   // del alumno, su salud, el seguro y la firma se llenan de nuevo.
   $('otraCarta').addEventListener('click', function () {
-    ['alumno', 'nacimiento', 'sangre', 'alergias', 'padecimientos', 'medicamentos', 'servicio', 'afiliacion'].forEach(function (n) { form.elements[n].value = ''; });
+    ['alumno', 'nacimiento', 'sangre', 'alergias', 'padecimientos', 'medicamentos', 'servicio', 'afiliacion', 'aseguradora'].forEach(function (n) { form.elements[n].value = ''; });
     ['consentimientoSalud', 'leida', 'firmaElectronica'].forEach(function (n) { form.elements[n].checked = false; });
     [].forEach.call(form.querySelectorAll('input[name="seguro"]'), function (r) { r.checked = false; });
+    seguro.actualizar();
     form.querySelectorAll('.has-error').forEach(function (f) { f.classList.remove('has-error'); });
     form.querySelectorAll('.error').forEach(function (f) { f.textContent = ''; f.classList.remove('is-visible'); });
     $('nota').textContent = '';
@@ -327,6 +330,7 @@
       else c.value = o.campos[k];
     });
     pintar();
+    seguro.actualizar();
   }
   if (conectado) recuperar();
 

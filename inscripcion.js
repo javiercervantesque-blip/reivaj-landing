@@ -366,6 +366,7 @@
     })(),
     6: {
       seguro: function (x) { return Boolean(x) || 'Indique si contrata el seguro.'; },
+      aseguradora: function (x, k) { return v('seguro_' + k) !== 'propio' || (String(x).length >= 2 && R.conLetras(x, 2)) || 'Escriba con qué aseguradora cuenta.'; },
       firmante: nombreYApellido('Escriba su nombre y apellido.'),
       firmanteParentesco: function (x) { return Boolean(x) || 'Elija el parentesco.'; },
       // Con trazo pero muy chico (dos rayitas): que no crea que ya firmó.
@@ -513,7 +514,7 @@
     var k = h.k;
     hijos.forEach(function (o) { o.carta.hidden = o !== h; });
     $('cartaDe').textContent = hijos.length > 1 ? ' · Carta ' + (cartaVista + 1) + ' de ' + hijos.length + ': ' + (nombreDe(h) || 'alumno ' + (cartaVista + 1)) : '';
-    if (!h.seguro) h.seguro = CF.opcionesSeguro('seguro_' + k);
+    if (!h.seguro) h.seguro = CF.opcionesSeguro('seguro_' + k, 'aseguradora_' + k);
     var ficha = R.el('div', {}, [
       R.el('div', { clase: 'carta__datos' }, fichaCarta(k).map(function (x) { return R.el('div', {}, [R.el('span', { texto: x[0] }), R.el('b', { texto: x[1] || '—' })]); })),
       R.el('p', { clase: 'field__ayuda' }, ['Si algo no está bien, ', R.el('a', { href: '#', texto: 'corríjalo en la ficha médica', onclick: function (e) { e.preventDefault(); mostrar(4); } }), '.'])
@@ -567,7 +568,8 @@
       envio: h.envio,
       carta: {
         documento: window.CARTA_SEGURIDAD.documento, version: window.CARTA_SEGURIDAD.version, huella: huella,
-        seguro: v('seguro_' + k), firmante: v('firmante_' + k), parentesco: v('firmanteParentesco_' + k),
+        seguro: v('seguro_' + k), aseguradora: v('seguro_' + k) === 'propio' ? v('aseguradora_' + k).replace(/\s+/g, ' ') : '',
+        firmante: v('firmante_' + k), parentesco: v('firmanteParentesco_' + k),
         firma: h.firma.datos(), firmadaEn: cuando.toISOString(), leida: true, firmaElectronica: true,
         dispositivo: String(navigator.userAgent || '').slice(0, 180)
       }
@@ -641,7 +643,7 @@
         if (!r.ok) { falla = r; break; }
         enviados[l.h.k] = true;
         copias.push({ datos: l.copia, nombre: l.nombre, extra: {
-          seguro: l.datos.carta.seguro, ficha: l.ficha, firma: l.datos.carta.firma, firmante: l.datos.carta.firmante,
+          seguro: l.datos.carta.seguro, aseguradora: l.datos.carta.aseguradora, ficha: l.ficha, firma: l.datos.carta.firma, firmante: l.datos.carta.firmante,
           parentesco: l.datos.carta.parentesco, huella: huella, folio: r.id || '',
           cuando: cuando.toLocaleString('es-MX', { timeZone: 'America/Mexico_City', dateStyle: 'long', timeStyle: 'short' })
         } });
@@ -730,7 +732,7 @@
         envios: hijos.reduce(function (m, h) { m[h.k] = h.envio; return m; }, {})
       };
       [].forEach.call(form.elements, function (x) {
-        if (!x.name || x.name === 'sitio' || /^seguro_/.test(x.name)) return;
+        if (!x.name || x.name === 'sitio' || /^(seguro|aseguradora)_/.test(x.name)) return;
         if (x.type === 'radio') { if (x.checked) o.campos[x.name] = x.value; }
         else if (x.type === 'checkbox') o.campos[x.name] = x.checked;
         else o.campos[x.name] = x.value;

@@ -1,10 +1,10 @@
 /* La Carta de seguridad y cobertura médica que se firma en línea.
    La genera el programa del gimnasio (herramientas/carta-a-landing.js)
    a partir de la versión impresa. No se edita a mano: si cambia una letra,
-   el programa ya no la reconoce como la v1.2. */
+   el programa ya no la reconoce como la v1.3. */
 window.CARTA_SEGURIDAD = {
   "documento": "carta-seguridad",
-  "version": "1.2",
+  "version": "1.3",
   "titulo": "Carta de seguridad y cobertura médica",
   "aviso": "Se firma al inscribir · sin esta hoja el alumno no entrena",
   "encabezado": [
@@ -75,10 +75,12 @@ window.CARTA_SEGURIDAD = {
       ],
       "opciones": {
         "si": "**Sí contrato** el seguro de accidentes que ofrece REIVAJ. Importe que pago hoy: **$__________**",
+        "propio": "**Ya cuento con otro seguro** que cubre al alumno (aseguradora: **__________**). No contrato el de REIVAJ.",
         "no": "**No lo contrato.**"
       },
       "parrafos": [
         "**Si lo contrato**, entiendo que va aparte de la mensualidad; que **la póliza corre del 8 de agosto al 8 de agosto**, así que si el alumno se da de alta a mitad del año pago **solo la parte proporcional hasta el 8 de agosto siguiente**; que la cobertura empieza desde el alta en la póliza y no desde hoy; y que las exclusiones las fija la aseguradora, no REIVAJ. Siniestros: **800 911 7692**.",
+        "**Si ya cuento con otro seguro**, declaro que está vigente y cubre al alumno en la práctica de la gimnasia; sus siniestros los tramito con mi aseguradora y **lo que esa póliza no cubra corre por mi cuenta**. Si deja de estar vigente, aviso a la Dirección y puedo contratar el de REIVAJ.",
         "**Si no lo contrato**, declaro que se me informó de su existencia y **de su costo y su cobertura, los del cuadro de arriba**, que decidí libremente no contratarlo, y que **los gastos médicos derivados de cualquier lesión del alumno corren por mi cuenta**. Entiendo que puedo contratarlo después, en cualquier momento, avisando a la Dirección."
       ]
     },
@@ -116,6 +118,6 @@ window.CARTA_SEGURIDAD = {
     ]
   ],
   "cierre": "Se firma un ejemplar para el expediente del alumno y se entrega copia a la familia.",
-  "pie": "REIVAJ Gimnasia Artística · Carta de seguridad y cobertura médica · v1.2",
+  "pie": "REIVAJ Gimnasia Artística · Carta de seguridad y cobertura médica · v1.3",
   "enLinea": "Firmo esta carta de forma electrónica: el trazo que dibujé, mi nombre y la fecha y hora de envío expresan mi consentimiento igual que mi firma en papel. Recibo copia de esta carta al enviarla."
 };
