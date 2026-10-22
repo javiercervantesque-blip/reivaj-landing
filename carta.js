@@ -15,15 +15,45 @@
 
   // El link que manda el gimnasio desde el expediente trae un código del
   // alumno después del «#» (/carta#c=…): con él, el programa sabe de quién es
-  // la carta sin adivinar por el nombre. Va solo dentro del sobre cerrado:
-  // se quita de la barra en cuanto se lee y no viaja en ningún link.
+  // la carta sin adivinar por el nombre. Desde la 1.3.21 del programa trae
+  // también (f=…) el nombre y la fecha de nacimiento que tiene el gimnasio de
+  // cada hijo de ese WhatsApp, cada uno con su código: la carta llega ya
+  // llena (la familia solo corrige si algo está mal) y, con hermanos, se
+  // escoge de quién es y al terminar sigue la del otro. Lo que va después del
+  // «#» no llega al servidor de la página; el código va solo dentro del sobre
+  // cerrado, y todo se quita de la barra en cuanto se lee.
   var codigo = '';
+  var CODIGO = /^[A-Za-z0-9_-]{16,64}$/;
+  var familia = [];
+  var actual = null; // el hijo de la familia cuya carta se está llenando
+  function deLaFamilia(lista) {
+    return (Array.isArray(lista) ? lista : []).slice(0, 6).map(function (k) {
+      return { codigo: String(k && k.codigo || ''), nombre: String(k && k.nombre || '').replace(/\s+/g, ' ').trim().slice(0, 120), nacimiento: /^\d{4}-\d{2}-\d{2}$/.test(k && k.nacimiento || '') ? k.nacimiento : '', firmada: Boolean(k && k.firmada) };
+    }).filter(function (k) { return CODIGO.test(k.codigo) && k.nombre; });
+  }
+  // f = base64url de un renglón por hijo: código, nombre y nacimiento separados por tabulador.
+  function leerFamilia(t) {
+    try {
+      var b = atob(String(t).replace(/-/g, '+').replace(/_/g, '/'));
+      var bytes = new Uint8Array(b.length);
+      for (var i = 0; i < b.length; i++) bytes[i] = b.charCodeAt(i);
+      return deLaFamilia(new TextDecoder().decode(bytes).split('\n').map(function (l) {
+        var p = l.split('\t');
+        return { codigo: p[0], nombre: p[1], nacimiento: p[2] };
+      }));
+    } catch (e) { return []; }
+  }
   (function () {
-    var m = /(?:^#|&)c=([A-Za-z0-9_-]{16,64})(?:&|$)/.exec(String(location.hash || ''));
-    if (!m) return;
-    codigo = m[1];
+    var h = String(location.hash || '');
+    var m = /(?:^#|&)c=([A-Za-z0-9_-]{16,64})(?:&|$)/.exec(h);
+    var f = /(?:^#|&)f=([A-Za-z0-9_-]{4,2000})(?:&|$)/.exec(h);
+    if (!m && !f) return;
+    if (f) familia = leerFamilia(f[1]);
+    codigo = m ? m[1] : familia.length ? familia[0].codigo : '';
     try { history.replaceState(history.state, '', location.pathname + location.search); } catch (e) { /* sin historial: no pasa nada */ }
   })();
+  var delLink = Boolean(codigo);
+  var normal = function (t) { return String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim(); };
   // La clave de este envío: si la misma carta llega dos veces (se reintentó
   // sin saber si había llegado, o se recargó la página), el programa aparta
   // la repetida. Una nueva para cada carta.
@@ -87,6 +117,52 @@
   $('textoEnLinea').textContent = C.enLinea;
   firma = CF.Firma($('firma'));
   firma.alCambiar = function () { if (firma.valida()) R.mostrarError(form, 'firma', ''); };
+
+  // ─── De quién es la carta (link con los datos del gimnasio) ─────────
+  function ponerAlumno(k) {
+    actual = k;
+    codigo = k.codigo;
+    form.elements.alumno.value = k.nombre;
+    form.elements.nacimiento.value = k.nacimiento;
+    $('ayudaAlumno').hidden = false;
+    pintarFamilia();
+  }
+  function pintarFamilia() {
+    var caja = $('familiaHijos');
+    $('familia').hidden = familia.length < 2;
+    caja.innerHTML = '';
+    if (familia.length < 2) return;
+    familia.forEach(function (k) {
+      var r = R.el('input', { type: 'radio', name: 'deQuien', value: k.codigo });
+      r.checked = k === actual;
+      r.disabled = k.firmada;
+      caja.appendChild(R.el('label', { clase: 'chip' }, [r, R.el('span', { texto: k.nombre + (k.firmada ? ' · firmada ✓' : '') })]));
+    });
+  }
+  // Lo del alumno (sus datos, su salud, el seguro y la firma) se llena de
+  // nuevo; quien firma, su WhatsApp y las emergencias se quedan.
+  function limpiarAlumno() {
+    ['alumno', 'nacimiento', 'sangre', 'alergias', 'padecimientos', 'medicamentos', 'servicio', 'afiliacion', 'aseguradora'].forEach(function (n) { form.elements[n].value = ''; });
+    ['consentimientoSalud', 'leida', 'firmaElectronica'].forEach(function (n) { form.elements[n].checked = false; });
+    [].forEach.call(form.querySelectorAll('input[name="seguro"]'), function (r) { r.checked = false; });
+    seguro.actualizar();
+    form.querySelectorAll('.has-error').forEach(function (f) { f.classList.remove('has-error'); });
+    form.querySelectorAll('.error').forEach(function (f) { f.textContent = ''; f.classList.remove('is-visible'); });
+    $('nota').textContent = '';
+    $('nota').classList.remove('form__note--mal');
+    firma.borrar();
+    actual = null; codigo = '';
+    $('ayudaAlumno').hidden = true;
+  }
+  $('familiaHijos').addEventListener('change', function (e) {
+    var k = familia.filter(function (x) { return x.codigo === e.target.value; })[0];
+    if (!k || k === actual || enviando) return;
+    limpiarAlumno();
+    ponerAlumno(k);
+    pintar();
+    guardarBorrador();
+  });
+  if (familia.length) { ponerAlumno(familia.filter(function (k) { return k.codigo === codigo; })[0] || familia[0]); pintar(); }
 
   if (!conectado) {
     $('sinConexion').hidden = false;
@@ -164,6 +240,9 @@
     var ficha = CAMPOS.map(function (t, i) { return [t, v(NOMBRES[i])]; });
     // Lo que se manda y la copia se arman aquí, antes de esperar nada.
     var copia = datosCarta(), hp = v('sitio');
+    // ¿Escribieron el nombre de otro de los hijos del link? Esa carta va con el código de ese.
+    var otro = familia.filter(function (k) { return !k.firmada && normal(k.nombre) === normal(v('alumno')); })[0];
+    if (otro && otro !== actual) { actual = otro; codigo = otro.codigo; pintarFamilia(); }
     var deQuien = v('alumno').replace(/\s+/g, ' ').toLowerCase();
     if (envioDe && envioDe !== deQuien) envio = R.claveAlAzar();
     envioDe = deQuien;
@@ -217,8 +296,11 @@
     }
     // Llegó: la que sigue (la de un hermano) lleva su propia clave.
     envio = R.claveAlAzar(); envioDe = '';
-    // El código del link es del alumno de esta carta: la de un hermano va sin él.
-    codigo = '';
+    // El código del link es del alumno de esta carta: la de un hermano va con
+    // el suyo (si venía en el link) o sin código. Del link, esta ya quedó
+    // (si el nombre sigue siendo el suyo: con otro, el programa decide).
+    if (actual && normal(deQuien).split(' ')[0] === normal(actual.nombre).split(' ')[0]) actual.firmada = true;
+    codigo = ''; actual = null;
     copias.push({ datos: copia, nombre: copia.alumno, extra: {
       seguro: r.datos.carta.seguro, aseguradora: r.datos.carta.aseguradora, ficha: ficha, firma: r.datos.carta.firma, firmante: r.datos.carta.firmante,
       parentesco: r.datos.carta.parentesco, huella: r.datos.carta.huella, folio: r.id || '',
@@ -265,27 +347,27 @@
       ? 'Recibimos las cartas de ' + nombres.slice(0, -1).join(', ') + ' y ' + nombres[nombres.length - 1] + '. Quedan en su expediente.'
       : 'Recibimos la carta de ' + copias[0].datos.alumno + '. Queda en su expediente.';
     $('guardarCopia').textContent = varios ? 'Imprimir las ' + copias.length + ' cartas' : 'Imprimirla';
-    $('otraCarta').parentNode.hidden = copias.length >= 4;
+    // Si el link traía a otro hijo que falta, el botón ya dice de quién.
+    var sigue = familia.filter(function (k) { return !k.firmada; })[0];
+    var otraB = $('otraCarta');
+    otraB.textContent = sigue ? 'Firmar ahora la de ' + sigue.nombre.split(' ')[0] : 'Firmar la carta de otro hijo o hija';
+    otraB.className = sigue ? 'btn btn--primary' : 'btn btn--outline-dark';
+    otraB.parentNode.hidden = !sigue && copias.length >= 4;
   }
   $('guardarCopia').addEventListener('click', function () { window.print(); });
   // La del hermano: quien firma, su WhatsApp y las emergencias se quedan; lo
   // del alumno, su salud, el seguro y la firma se llenan de nuevo.
+  // Con el link de la familia, sigue el hijo que falta, ya lleno.
   $('otraCarta').addEventListener('click', function () {
-    ['alumno', 'nacimiento', 'sangre', 'alergias', 'padecimientos', 'medicamentos', 'servicio', 'afiliacion', 'aseguradora'].forEach(function (n) { form.elements[n].value = ''; });
-    ['consentimientoSalud', 'leida', 'firmaElectronica'].forEach(function (n) { form.elements[n].checked = false; });
-    [].forEach.call(form.querySelectorAll('input[name="seguro"]'), function (r) { r.checked = false; });
-    seguro.actualizar();
-    form.querySelectorAll('.has-error').forEach(function (f) { f.classList.remove('has-error'); });
-    form.querySelectorAll('.error').forEach(function (f) { f.textContent = ''; f.classList.remove('is-visible'); });
-    $('nota').textContent = '';
-    $('nota').classList.remove('form__note--mal');
     $('listo').hidden = true;
     form.hidden = false;
     firma.medir();
-    firma.borrar();
+    limpiarAlumno();
+    var sigue = familia.filter(function (k) { return !k.firmada; })[0];
+    if (sigue) ponerAlumno(sigue); else pintarFamilia();
     pintar();
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    form.elements.alumno.focus({ preventScroll: true });
+    form.elements[sigue ? 'sangre' : 'alumno'].focus({ preventScroll: true });
     guardarBorrador();
   });
 
@@ -302,9 +384,9 @@
   function guardarBorrador() {
     clearTimeout(espera); espera = null;
     try {
-      var o = { t: Date.now(), campos: {}, envio: envio, envioDe: envioDe, codigo: codigo };
+      var o = { t: Date.now(), campos: {}, envio: envio, envioDe: envioDe, codigo: codigo, familia: familia };
       [].forEach.call(form.elements, function (x) {
-        if (!x.name || x.name === 'sitio') return;
+        if (!x.name || x.name === 'sitio' || x.name === 'deQuien') return;
         if (x.type === 'radio') { if (x.checked) o.campos[x.name] = x.value; }
         else if (x.type === 'checkbox') o.campos[x.name] = x.checked;
         else o.campos[x.name] = x.value;
@@ -320,8 +402,16 @@
     // (o sin fecha) se tira, para que otro que abra la pestaña no lo vea.
     if (o && !(Math.abs(Date.now() - (Number(o.t) || 0)) < DIA)) { borrarBorrador(); o = null; }
     if (!o) return;
+    // Se abrió otro link en esta pestaña: lo que había era de otra carta.
+    var suyo = CODIGO.test(String(o.codigo || '')) ? o.codigo : '';
+    if (delLink && suyo !== codigo && !familia.some(function (k) { return k.codigo === suyo; })) { borrarBorrador(); return; }
+    if (!familia.length) familia = deLaFamilia(o.familia);
+    else deLaFamilia(o.familia).forEach(function (x) { familia.forEach(function (k) { if (k.codigo === x.codigo && x.firmada) k.firmada = true; }); });
     if (/^[0-9a-f]{32}$/.test(String(o.envio || ''))) { envio = o.envio; envioDe = String(o.envioDe || ''); }
-    if (!codigo && /^[A-Za-z0-9_-]{16,64}$/.test(String(o.codigo || ''))) codigo = o.codigo;
+    if (suyo) codigo = suyo;
+    actual = familia.filter(function (k) { return k.codigo === codigo; })[0] || null;
+    $('ayudaAlumno').hidden = !actual;
+    pintarFamilia();
     Object.keys(o.campos || {}).forEach(function (k) {
       var c = form.elements[k];
       if (!c) return;

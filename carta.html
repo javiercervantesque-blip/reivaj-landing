@@ -42,6 +42,11 @@
     <form id="formCarta" method="post" novalidate>
       <section class="tarjeta">
         <h2>Datos</h2>
+        <div class="grupo" id="familia" hidden>
+          <p class="grupo__titulo" id="familiaTitulo">¿De quién es esta carta?</p>
+          <div class="chips" id="familiaHijos" role="radiogroup" aria-labelledby="familiaTitulo"></div>
+          <p class="field__ayuda">Se firma una carta por cada alumno. Al enviar una, sigue la del otro.</p>
+        </div>
         <div class="field-row">
           <div class="field">
             <label for="alumno">Nombre completo del alumno <span aria-hidden="true">*</span></label>
@@ -54,6 +59,7 @@
             <p class="error" data-error-for="nacimiento"></p>
           </div>
         </div>
+        <p class="field__ayuda" id="ayudaAlumno" hidden>Lo llenamos con los datos que tiene el gimnasio. Si algo no está bien, corríjalo aquí.</p>
         <div class="field-row--3">
           <div class="field">
             <label for="firmante">Su nombre completo <span aria-hidden="true">*</span></label>
