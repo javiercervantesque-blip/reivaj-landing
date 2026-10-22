@@ -22,7 +22,7 @@
   // `borrador`: la hora abierta a medias, sin mandar (ver guardarBorrador).
   // `quitados`: links (por su seña) que ya se supo aquí que se quitaron; no se
   // borra, para que volver a abrir uno siga diciendo «ya no funciona».
-  var K = { llave: 'reivaj_lista_llave', cerrada: 'reivaj_lista_cerrada', pasadas: 'reivaj_lista_pasadas', cola: 'reivaj_lista_cola', instalar: 'reivaj_lista_instalar', vistas: 'reivaj_lista_vistas', horarios: 'reivaj_lista_horarios', borrador: 'reivaj_lista_borrador', quitados: 'reivaj_lista_quitados' };
+  var K = { llave: 'reivaj_lista_llave', cerrada: 'reivaj_lista_cerrada', cerradaCuando: 'reivaj_lista_cerrada_cuando', pasadas: 'reivaj_lista_pasadas', cola: 'reivaj_lista_cola', instalar: 'reivaj_lista_instalar', vistas: 'reivaj_lista_vistas', horarios: 'reivaj_lista_horarios', borrador: 'reivaj_lista_borrador', quitados: 'reivaj_lista_quitados' };
   var BLOQUES = ['bloque-alumnos', 'bloque-extra', 'barra'];
   var PANELES = ['hoy', 'semana', 'alumnas', 'maestras'];
   var estado = { llave: '', canal: '', datos: null, conPanel: false, panel: 'lista', hora: null, marcados: {}, extras: {}, notas: {}, agendadas: {}, noEnc: [], cargada: 0, sinRed: false, quitado: false };
@@ -91,6 +91,14 @@
   if (delLink && !delCelular) guardado(K.llave, delLink);
   estado.llave = delLink || delCelular;
   estado.decidir = Boolean(delLink && delCelular && delCelular !== delLink);
+  // Revisión de seguridad (21-oct-2026): fuera de iPhone, la llave se quita
+  // de la barra (y del historial, que Chrome sincroniza con la cuenta) en
+  // cuanto quedó guardada en este celular. En iPhone se queda: el acceso
+  // directo de la pantalla de inicio la necesita en el link.
+  var esIphone = /iPad|iPhone|iPod/.test(navigator.userAgent || '') || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (delLink && !esIphone && guardado(K.llave) === delLink) {
+    try { history.replaceState(history.state, '', location.pathname + location.search); } catch (e) { /* sin historial: no pasa nada */ }
+  }
   // Si con la página abierta se abre otro link (otra llave), se empieza de nuevo.
   window.addEventListener('hashchange', function () {
     var otra = llaveDelLink();
@@ -223,6 +231,12 @@
     try {
       if (!estado.canal) estado.canal = await window.Buzon.canalDe(estado.llave);
       var guardada = guardado(K.cerrada);
+      // La copia que lleva más de 14 días sin actualizarse ya no se abre sin
+      // señal (y se borra): así un link quitado o un celular que cambió de
+      // manos no sigue enseñando la lista para siempre.
+      var desde = Number(guardado(K.cerradaCuando)) || 0;
+      if (guardada && !desde) guardado(K.cerradaCuando, String(Date.now()));
+      if (guardada && desde && Date.now() - desde > 14 * 86400000) { guardado(K.cerrada, null); guardado(K.cerradaCuando, null); guardada = null; }
       if (guardada && !estado.datos) await abrir(guardada, true);
       // La primera vez, sin lista guardada, que se vea que está bajando.
       if (!estado.datos) { estado.avisoCarga = true; mensaje('Abriendo tu lista…'); }
@@ -236,7 +250,7 @@
       $('actualizar').textContent = 'Actualizar';
       estado.sinRed = !r;
       if (r && r.ok && r.lista) {
-        if (await abrir(r.lista, false)) { guardado(K.cerrada, r.lista); estado.cargada = Date.now(); }
+        if (await abrir(r.lista, false)) { guardado(K.cerrada, r.lista); guardado(K.cerradaCuando, String(Date.now())); estado.cargada = Date.now(); }
       } else if (!estado.datos) {
         // Se reintenta sola cada minuto; «Actualizar» para no esperar.
         mostrar($('actualizar'), true);
