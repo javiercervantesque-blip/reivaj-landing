@@ -432,6 +432,9 @@ em{
 }
 
 .field{ margin-bottom:18px; }
+.field--corto{ max-width:260px; }
+/* Carta con los datos del gimnasio: el aviso va pegado a la fecha, con aire abajo. */
+#ayudaAlumno{ margin:-8px 0 18px; }
 .field-row{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
 .field label, .field .label{
   display:block; font-size:.83rem; font-weight:600; color:var(--navy); margin-bottom:7px;
@@ -756,6 +759,10 @@ em{
 }
 .opcion input{ margin-top:3px; width:17px; height:17px; accent-color:var(--gold); flex:none; }
 .opcion:has(input:checked){ border-color:var(--gold); background:var(--gold-soft); color:var(--ink); }
+/* Dentro de un .field, «.field label» las volvía bloque: el circulito quedaba
+   solo arriba y el texto debajo. */
+.field .opcion{ display:flex; margin-bottom:0; font-size:.92rem; font-weight:400; color:var(--ink-soft); }
+.field .opcion:has(input:checked){ color:var(--ink); }
 .permiso{ border-bottom:1px solid var(--line); padding:14px 0; }
 .permiso:last-child{ border-bottom:0; }
 .permiso p{ margin:0 0 10px; font-size:.92rem; color:var(--ink-soft); }
@@ -879,3 +886,31 @@ em{
 }
 @media print{ .wa-flotante{ display:none; } }
 #dia-ayuda{ margin:-6px 0 18px; }
+
+/* =========================================================
+   Celular: aprovechar el ancho (21-oct-2026, Javier: «está muy angosto, de
+   todo»). La orilla de la página, el relleno de la tarjeta y el de los
+   recuadros se sumaban (casi 60 px por lado en la carta): los campos se
+   quedaban en dos tercios de la pantalla. Aquí la orilla baja a 14 px, las
+   tarjetas de los trámites y el formulario de la clase de prueba van de
+   orilla a orilla, y los recuadros se abren hacia los lados.
+   ========================================================= */
+@media (max-width:600px){
+  :root{ --pad:14px; }
+  .pagina{ padding-top:24px; }
+  .pagina .tarjeta, .booking__form{
+    margin-inline:calc(-1 * var(--pad)); padding:22px 16px;
+    border-radius:0; border-left:0; border-right:0;
+  }
+  .grupo{ margin-inline:-6px; padding:14px 10px 2px; }
+  .field--corto{ max-width:none; }
+  .card{ padding:26px 18px 24px; }
+  .step{ padding:28px 18px 30px; }
+  .opcion{ padding:12px; }
+  .carta__recuadro{ padding:10px 12px; }
+  .carta__cuadro th, .carta__cuadro td{ padding:8px 6px; }
+  /* «Carta firmada» / «Inscripción enviada»: botones a lo ancho, fáciles de picar. */
+  .success{ padding-inline:0; }
+  .success p{ max-width:none; }
+  .success .btn{ width:100%; justify-content:center; }
+}
