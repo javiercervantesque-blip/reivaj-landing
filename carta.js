@@ -68,6 +68,88 @@
     PARENTESCOS.forEach(function (p) { s.appendChild(R.el('option', { value: p, texto: p })); });
   });
 
+  // ─── Para completar su expediente (21-oct-2026) ──────────────────────
+  // Lo que la inscripción en línea pide y la carta no pedía: quién puede
+  // recogerlo, custodia, segundo tutor, CURP, permisos de imagen y avisos,
+  // con los mismos textos. Llega en el mismo sobre que la carta y el programa
+  // lo pasa al expediente (sin el link de su expediente, quién lo recoge no
+  // se guarda solo).
+  var IMAGEN = [
+    ['imagenRostro', 'Fotos y videos con rostro en redes y publicidad.', 'Que el alumno aparezca con el rostro reconocible en las redes sociales, la página y la publicidad de REIVAJ. Nunca se publica su nombre completo ni datos personales junto a su imagen, ni se cede a terceros o a otras marcas.'],
+    ['imagenDifusion', 'Imagen sin rostro en redes y publicidad.', 'Manos, pies, silueta a contraluz o plano de detalle sin rostro reconocible, en materiales de REIVAJ.'],
+    ['imagenFamilia', 'Envío a la familia.', 'Que las fotos y videos de clase se le envíen por el WhatsApp oficial del gimnasio.'],
+    ['resultados', 'Resultados deportivos.', 'Publicación del nombre del alumno y su resultado en competencia.']
+  ];
+  IMAGEN.forEach(function (p) {
+    $('permisosImagen').appendChild(R.el('div', { clase: 'permiso field' }, [
+      R.el('p', {}, [R.el('b', { texto: p[1] + ' ' }), p[2]]),
+      R.el('div', { clase: 'chips', role: 'radiogroup', 'aria-label': p[1] }, [
+        R.el('label', { clase: 'chip' }, [R.el('input', { type: 'radio', name: p[0], value: 'si', required: true }), R.el('span', { texto: 'Autorizo' })]),
+        R.el('label', { clase: 'chip' }, [R.el('input', { type: 'radio', name: p[0], value: 'no' }), R.el('span', { texto: 'No autorizo' })])
+      ]),
+      R.el('p', { clase: 'error', 'data-error-for': p[0] })
+    ]));
+  });
+
+  // Quién lo puede recoger. La primera persona se llena sola con quien firma
+  // mientras nadie la cambie (como el tutor 1 en la inscripción).
+  var contAut = $('autorizados');
+  function valoresFila(f) { return JSON.stringify([].map.call(f.querySelectorAll('[data-a]'), function (i) { return i.value; })); }
+  function filaAutorizado(d, auto) {
+    d = d || {};
+    var quitar = R.el('button', { type: 'button', texto: 'Quitar' });
+    var fila = R.el('div', { clase: 'grupo autorizado' }, [
+      R.el('p', { clase: 'grupo__titulo' }, [R.el('span', { texto: 'Persona' }), quitar]),
+      R.el('div', { clase: 'field-row--3' }, [
+        R.el('div', { clase: 'field' }, [R.el('label', { texto: 'Nombre completo' }), R.el('input', { 'data-a': 'nombre', value: d.nombre || '', autocomplete: 'off' })]),
+        R.el('div', { clase: 'field' }, [R.el('label', { texto: 'Parentesco' }), R.el('input', { 'data-a': 'parentesco', value: d.parentesco || '', autocomplete: 'off' })]),
+        R.el('div', { clase: 'field' }, [R.el('label', { texto: 'Teléfono' }), R.el('input', { 'data-a': 'telefono', type: 'tel', inputmode: 'tel', value: d.telefono || '', placeholder: '10 dígitos', autocomplete: 'off' })])
+      ])
+    ]);
+    quitar.addEventListener('click', function () { fila.remove(); numerar(); guardarBorrador(); });
+    contAut.appendChild(fila);
+    if (auto) { fila.dataset.auto = auto; fila.dataset.puesto = valoresFila(fila); }
+    numerar();
+  }
+  // Las etiquetas de la fila no van ligadas a su campo: el lector de pantalla
+  // los nombra por aria-label, con el número de la persona.
+  function numerar() {
+    [].forEach.call(contAut.children, function (f, i) {
+      var de = ' de la persona ' + (i + 1);
+      f.querySelector('.grupo__titulo span').textContent = 'Persona ' + (i + 1);
+      f.querySelector('.grupo__titulo button').setAttribute('aria-label', 'Quitar a la persona ' + (i + 1));
+      f.querySelectorAll('[data-a]').forEach(function (x) { x.setAttribute('aria-label', x.parentNode.querySelector('label').textContent + de); });
+    });
+    $('masAutorizado').hidden = contAut.children.length >= 5;
+  }
+  function autorizados() {
+    return [].map.call(contAut.children, function (f) {
+      var o = {};
+      f.querySelectorAll('[data-a]').forEach(function (i) { o[i.getAttribute('data-a')] = i.value.trim(); });
+      return o;
+    }).filter(function (a) { return a.nombre || a.telefono; });
+  }
+  function autorizadoMal() {
+    for (var i = 0; i < contAut.children.length; i++) {
+      var f = contAut.children[i];
+      var n = f.querySelector('[data-a="nombre"]').value.trim(), t = f.querySelector('[data-a="telefono"]').value.trim();
+      if (!n && !t) continue;
+      if (n.length < 3 || !R.conLetras(n, 3)) return { n: i + 1, falta: 'nombre' };
+      if (!R.telefonoValido(t)) return { n: i + 1, falta: 'telefono' };
+    }
+    return null;
+  }
+  function seguirAlFirmante() {
+    var f = contAut.querySelector('[data-auto="firmante"]');
+    if (!f) return;
+    if (valoresFila(f) !== f.dataset.puesto) { delete f.dataset.auto; return; }
+    var d = { nombre: form.elements.firmante.value.trim(), parentesco: form.elements.parentesco.value, telefono: R.telefono10(form.elements.telefono.value) || form.elements.telefono.value.trim() };
+    ['nombre', 'parentesco', 'telefono'].forEach(function (k) { f.querySelector('[data-a="' + k + '"]').value = d[k]; });
+    f.dataset.puesto = valoresFila(f);
+  }
+  filaAutorizado({}, 'firmante');
+  $('masAutorizado').addEventListener('click', function () { filaAutorizado(); guardarBorrador(); });
+
   var cfg = window.CONFIG || {};
   var conectado = Boolean(cfg.buzon && cfg.llavePublica && window.Buzon && window.Buzon.disponible());
 
@@ -110,6 +192,8 @@
   var temporizador = null;
   form.addEventListener('input', function (e) {
     guardarEnUnRato();
+    if (e.target.name === 'firmante' || e.target.name === 'telefono') seguirAlFirmante();
+    if (e.target.closest('#autorizados') && autorizados().length) R.mostrarError(form, 'autorizados', '');
     if (e.target.closest('#carta')) return;
     clearTimeout(temporizador);
     temporizador = setTimeout(pintar, 400);
@@ -142,7 +226,7 @@
   // Lo del alumno (sus datos, su salud, el seguro y la firma) se llena de
   // nuevo; quien firma, su WhatsApp y las emergencias se quedan.
   function limpiarAlumno() {
-    ['alumno', 'nacimiento', 'sangre', 'alergias', 'padecimientos', 'medicamentos', 'servicio', 'afiliacion', 'aseguradora'].forEach(function (n) { form.elements[n].value = ''; });
+    ['alumno', 'nacimiento', 'curp', 'sangre', 'alergias', 'padecimientos', 'medicamentos', 'servicio', 'afiliacion', 'aseguradora'].forEach(function (n) { form.elements[n].value = ''; });
     ['consentimientoSalud', 'leida', 'firmaElectronica'].forEach(function (n) { form.elements[n].checked = false; });
     [].forEach.call(form.querySelectorAll('input[name="seguro"]'), function (r) { r.checked = false; });
     seguro.actualizar();
@@ -177,6 +261,7 @@
   // Dos palabras de dos letras o más, como lo pide el programa: con una sola
   // («Sofía») la carta no entra a su expediente (se queda en Descartadas).
   var nombreYApellido = function (msg) { return function (x) { return String(x).trim().split(/\s+/).filter(function (w) { return R.conLetras(w, 2); }).length >= 2 || msg; }; };
+  var elegido = function (x) { return Boolean(x) || 'Elija «Autorizo» o «No autorizo».'; };
   var REGLAS = {
     alumno: nombreYApellido('Escriba nombre y apellido del alumno.'),
     nacimiento: function (x) { var e = edadDe(x); return (e !== null && e >= 3 && e <= 25) || 'Revise la fecha de nacimiento.'; },
@@ -189,6 +274,21 @@
     // Sin nombre, la emergencia 2 no llega al programa: con teléfono, se pide.
     e2Telefono: function (x) { return !x || (!v('e2Nombre') ? 'Escriba también el nombre de esta persona.' : Boolean(R.telefonoValido(x)) || TEL_MAL); },
     sangre: function (x) { return Boolean(x) || 'Elija una opción (puede ser «No lo sé»).'; },
+    autorizados: function () {
+      if (!autorizados().length) return 'Agregue al menos a una persona.';
+      var m = autorizadoMal();
+      if (m) return 'Revise a la persona ' + m.n + (m.falta === 'nombre' ? ': escriba su nombre completo.' : ': el teléfono lleva 10 dígitos, con lada.');
+      return true;
+    },
+    custodia: function (x) { return Boolean(x) || 'Elija una opción.'; },
+    t2Nombre: function (x) { return !x ? (v('t2Telefono') ? 'Escriba también su nombre.' : true) : nombreYApellido('Escriba nombre y apellido.')(x); },
+    t2Telefono: function (x) { return !x || Boolean(R.telefonoValido(x)) || TEL_MAL; },
+    curp: function (x) {
+      if (!x) return true;
+      if (!/^[A-Z]{4}\d{6}[HMX][A-Z]{5}[A-Z0-9]\d$/.test(String(x).toUpperCase())) return 'La CURP tiene 18 letras y números. Revísela o déjela vacía.';
+      return R.curpCuadra(x, v('nacimiento')) || 'La CURP no coincide con la fecha de nacimiento. Revise las dos.';
+    },
+    imagenRostro: elegido, imagenDifusion: elegido, imagenFamilia: elegido, resultados: elegido,
     seguro: function (x) { return Boolean(x) || 'Indique si contrata el seguro.'; },
     aseguradora: function (x) { return v('seguro') !== 'propio' || (String(x).length >= 2 && R.conLetras(x, 2)) || 'Escriba con qué aseguradora cuenta.'; },
     consentimientoSalud: function (x) { return x === true || 'Sin este consentimiento no podemos guardar sus datos de salud.'; },
@@ -200,6 +300,10 @@
   form.addEventListener('change', function (e) {
     // El nombre de la emergencia 2 también quita el aviso de su teléfono.
     var n = e.target.name === 'e2Nombre' ? 'e2Telefono' : e.target.name;
+    // El nombre del tutor 2 se pide si hay teléfono: al cambiar uno se revisa el otro.
+    if (n === 't2Telefono' && REGLAS.t2Nombre(v('t2Nombre')) === true) R.mostrarError(form, 't2Nombre', '');
+    if (n === 'custodia') $('custodiaNota').hidden = v('custodia') !== 'si';
+    if (n === 'parentesco') seguirAlFirmante();
     var r = REGLAS[n];
     if (r && r(v(n)) === true) R.mostrarError(form, n, '');
     guardarEnUnRato();
@@ -232,6 +336,7 @@
     });
     if (primero) {
       if (primero === 'firma') $('firmaCampo').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      else if (primero === 'autorizados') contAut.scrollIntoView({ behavior: 'smooth', block: 'center' });
       else R.llevarA(form, primero);
       return;
     }
@@ -248,13 +353,22 @@
     envioDe = deQuien;
     var r;
     var datos = {
-      alumno: { nombre: v('alumno').replace(/\s+/g, ' '), nacimiento: v('nacimiento') },
+      alumno: { nombre: v('alumno').replace(/\s+/g, ' '), nacimiento: v('nacimiento'), curp: v('curp').toUpperCase().replace(/\s+/g, '') },
       tutor: { nombre: v('firmante'), parentesco: v('parentesco'), telefono: R.telefono10(v('telefono')) },
       emergencias: ['e1', 'e2'].filter(function (n) { return v(n + 'Nombre'); }).map(function (n) {
         return { nombre: v(n + 'Nombre'), parentesco: v(n + 'Parentesco'), telefono: R.telefono10(v(n + 'Telefono')) };
       }),
       salud: { sangre: v('sangre'), alergias: v('alergias'), padecimientos: v('padecimientos'), medicamentos: v('medicamentos'), servicio: v('servicio'), afiliacion: v('afiliacion') },
       consentimientoSalud: true,
+      tutor2: v('t2Nombre') ? { nombre: v('t2Nombre'), parentesco: v('t2Parentesco'), telefono: R.telefono10(v('t2Telefono')) } : null,
+      custodia: v('custodia'),
+      autorizados: autorizados().map(function (a) { return { nombre: a.nombre, parentesco: a.parentesco, telefono: R.telefono10(a.telefono) }; }),
+      // Lo de «Así trabajamos» (uso interno, contacto técnico) se informa, como en la inscripción.
+      permisos: (function () {
+        var p = { imagenInterna: true, imagenExpediente: true, contactoFisico: true, promociones: v('promociones') === true, encuestas: v('encuestas') === true, testimonios: v('testimonios') === true };
+        IMAGEN.forEach(function (x) { p[x[0]] = v(x[0]) === 'si'; });
+        return p;
+      })(),
       carta: {
         documento: C.documento, version: C.version, huella: null, seguro: v('seguro'),
         aseguradora: v('seguro') === 'propio' ? v('aseguradora').replace(/\s+/g, ' ') : '',
@@ -384,7 +498,7 @@
   function guardarBorrador() {
     clearTimeout(espera); espera = null;
     try {
-      var o = { t: Date.now(), campos: {}, envio: envio, envioDe: envioDe, codigo: codigo, familia: familia };
+      var o = { t: Date.now(), campos: {}, envio: envio, envioDe: envioDe, codigo: codigo, familia: familia, autorizados: autorizados(), autoFirmante: Boolean(contAut.querySelector('[data-auto="firmante"]')) };
       [].forEach.call(form.elements, function (x) {
         if (!x.name || x.name === 'sitio' || x.name === 'deQuien') return;
         if (x.type === 'radio') { if (x.checked) o.campos[x.name] = x.value; }
@@ -419,6 +533,11 @@
       else if (c.type === 'checkbox') c.checked = Boolean(o.campos[k]);
       else c.value = o.campos[k];
     });
+    if (Array.isArray(o.autorizados) && o.autorizados.length) {
+      contAut.innerHTML = '';
+      o.autorizados.slice(0, 5).forEach(function (a, i) { filaAutorizado(a, i === 0 && o.autoFirmante ? 'firmante' : null); });
+    }
+    $('custodiaNota').hidden = v('custodia') !== 'si';
     pintar();
     seguro.actualizar();
   }

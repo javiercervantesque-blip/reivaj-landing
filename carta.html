@@ -102,6 +102,71 @@
         </div>
       </section>
 
+      <section class="tarjeta" id="expediente">
+        <h2>Para completar su expediente</h2>
+        <p class="sub">Unos datos más que el gimnasio necesita tener al día. Lo marcado como opcional puede dejarlo en blanco.</p>
+
+        <h3>¿Quién puede recogerlo?</h3>
+        <p class="field__ayuda">Solo las personas registradas en esta lista pueden recoger al alumno. Sin registro previo no se entrega a nadie, sin excepción. Inclúyase usted si también lo recoge.</p>
+        <div id="autorizados"></div>
+        <button type="button" class="btn-mas" id="masAutorizado">+ Agregar otra persona</button>
+        <p class="error" data-error-for="autorizados"></p>
+        <div class="field">
+          <span class="label">¿Existe resolución judicial sobre custodia, convivencia o restricción respecto del alumno? <span aria-hidden="true">*</span></span>
+          <div class="chips" role="radiogroup" aria-label="Resolución judicial">
+            <label class="chip"><input type="radio" name="custodia" value="no" required><span>No existe</span></label>
+            <label class="chip"><input type="radio" name="custodia" value="si"><span>Sí existe</span></label>
+          </div>
+          <p class="error" data-error-for="custodia"></p>
+        </div>
+        <div class="nota" id="custodiaNota" hidden>Le pedimos entregar copia de la resolución a la Dirección cuando acuda a recepción; es indispensable para poder cumplirla.</div>
+
+        <h3>Segundo tutor <span class="opt">(opcional)</span></h3>
+        <div class="field">
+          <label for="t2Nombre">Nombre completo</label>
+          <input id="t2Nombre" name="t2Nombre" autocomplete="off">
+          <p class="error" data-error-for="t2Nombre"></p>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="t2Parentesco">Parentesco</label>
+            <select id="t2Parentesco" name="t2Parentesco" data-parentescos></select>
+          </div>
+          <div class="field">
+            <label for="t2Telefono">Teléfono</label>
+            <input type="tel" id="t2Telefono" name="t2Telefono" inputmode="tel" autocomplete="off" placeholder="10 dígitos">
+            <p class="error" data-error-for="t2Telefono"></p>
+          </div>
+        </div>
+
+        <h3>CURP del alumno <span class="opt">(opcional)</span></h3>
+        <div class="field">
+          <label for="curp">CURP</label>
+          <input id="curp" name="curp" autocomplete="off" maxlength="18" autocapitalize="characters" spellcheck="false" placeholder="18 letras y números">
+          <p class="field__ayuda">La piden para registrarlo en competencias.</p>
+          <p class="error" data-error-for="curp"></p>
+        </div>
+
+        <h3>Uso de imagen</h3>
+        <p class="field__ayuda">Usted decide sobre cada uno. Negar un permiso no afecta el trato al alumno.</p>
+        <div id="permisosImagen"></div>
+        <p class="field__ayuda">Si su hija o hijo no desea aparecer en una foto o video, se respeta su decisión aunque usted lo haya autorizado.</p>
+        <p class="field__ayuda">Puede retirar cualquiera de estos permisos en cualquier momento, por escrito en recepción o por el WhatsApp oficial 33 3456 6544. A partir de ese momento dejamos de usar la imagen del alumno y retiramos lo ya publicado en un plazo máximo de cinco días hábiles.</p>
+        <p class="field__ayuda">En competencias y eventos oficiales, el organizador toma y publica sus propias fotografías, sobre las que REIVAJ no tiene control. Si no desea que su hija o hijo aparezca, le ayudamos a solicitarlo al organizador.</p>
+
+        <h3>Así trabajamos</h3>
+        <div class="permiso">
+          <p><b>Uso interno.</b> Tomamos video y fotografía del alumno en clase para analizar y corregir su técnica, y su fotografía para la credencial y el expediente. Ese material es de uso interno del gimnasio y no se publica sin su permiso.</p>
+          <p><b>Contacto físico técnico.</b> La gimnasia requiere contacto físico para la asistencia técnica, la corrección postural y la prevención de caídas. En REIVAJ ese contacto se hace siempre a la vista de terceros y nunca en privado; se limita a las zonas técnicamente necesarias —espalda, cintura, caderas, brazos y piernas—; se anuncia al alumno cuando la situación lo permite; nunca involucra zonas íntimas, y se detiene de inmediato si el alumno manifiesta incomodidad, comunicándolo al tutor.</p>
+          <p><b>Si algo le preocupa.</b> Cualquier situación de riesgo o de trato inadecuado hacia un alumno puede reportarla directamente a la Dirección, en persona o al WhatsApp oficial 33 3456 6544. Se atiende el mismo día y sin represalias para quien reporta.</p>
+        </div>
+
+        <h3>Avisos del gimnasio <span class="opt">(opcional)</span></h3>
+        <label class="consent"><input type="checkbox" name="promociones"><span>Recibir avisos de eventos, muestras, cursos de verano y promociones.</span></label>
+        <label class="consent"><input type="checkbox" name="encuestas"><span>Recibir encuestas de satisfacción y mejora del servicio.</span></label>
+        <label class="consent"><input type="checkbox" name="testimonios"><span>Que nos contacten para testimonios o reseñas sobre el gimnasio.</span></label>
+      </section>
+
       <section class="tarjeta tarjeta--oro">
         <div id="carta"></div>
         <label class="consent" style="margin-top:14px">
