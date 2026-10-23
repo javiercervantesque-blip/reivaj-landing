@@ -172,6 +172,8 @@
   }
   filaAutorizado({}, 'firmante');
   $('masAutorizado').addEventListener('click', function () { filaAutorizado(); guardarBorrador(); });
+  // Los datos del otro tutor solo se piden (y se ven) si dice que sí hay.
+  function verOtroTutor() { $('tutor2Campos').hidden = v('otroTutor') !== 'si'; }
 
   var cfg = window.CONFIG || {};
   var conectado = Boolean(cfg.buzon && cfg.llavePublica && window.Buzon && window.Buzon.disponible());
@@ -272,7 +274,7 @@
   // Lo del alumno (sus datos, su salud, el seguro y la firma) se llena de
   // nuevo; quien firma, su WhatsApp y las emergencias se quedan.
   function limpiarAlumno() {
-    ['alumno', 'nacimiento', 'curp', 'sangre', 'alergias', 'padecimientos', 'medicamentos', 'servicio', 'afiliacion', 'aseguradora'].forEach(function (n) { form.elements[n].value = ''; });
+    ['alumno', 'nacimiento', 'curp', 'escuela', 'mas', 'sangre', 'alergias', 'padecimientos', 'medicamentos', 'servicio', 'afiliacion', 'aseguradora'].forEach(function (n) { form.elements[n].value = ''; });
     ['consentimientoSalud', 'leida', 'firmaElectronica'].forEach(function (n) { form.elements[n].checked = false; });
     [].forEach.call(form.querySelectorAll('input[name="seguro"], input[name="custodia"], #permisosImagen input[type="radio"]'), function (r) { r.checked = false; });
     $('custodiaNota').hidden = true;
@@ -288,8 +290,8 @@
   $('familiaHijos').addEventListener('change', function (e) {
     var k = familia.filter(function (x) { return x.codigo === e.target.value; })[0];
     if (!k || k === actual || enviando) return;
-    var lleno = (firma.datos().trazos || 0) > 0 || ['sangre', 'alergias', 'padecimientos', 'medicamentos', 'servicio', 'curp'].some(function (n) { return R.valor(form, n); });
-    if (lleno && actual && !window.confirm('Se borra lo que llenó de ' + corto(actual) + ' (ficha médica, permisos y firma) para llenar la carta de ' + corto(k) + '. ¿Continuar?')) { pintarFamilia(); return; }
+    var lleno = (firma.datos().trazos || 0) > 0 || ['sangre', 'alergias', 'padecimientos', 'medicamentos', 'servicio', 'curp', 'escuela', 'mas'].some(function (n) { return R.valor(form, n); });
+    if (lleno && actual && !window.confirm('Se borra lo que llenó de ' + corto(actual) + ' (CURP, escuela, ficha médica, permisos y firma) para llenar la carta de ' + corto(k) + '. ¿Continuar?')) { pintarFamilia(); return; }
     limpiarAlumno();
     ponerAlumno(k);
     pintar();
@@ -314,12 +316,19 @@
   // («Sofía») la carta no entra a su expediente (se queda en Descartadas).
   var nombreYApellido = function (msg) { return function (x) { return String(x).trim().split(/\s+/).filter(function (w) { return R.conLetras(w, 2); }).length >= 2 || msg; }; };
   var elegido = function (x) { return Boolean(x) || 'Elija «Autorizo» o «No autorizo».'; };
+  // En el orden de la página: el primer error que se señala es el de más arriba.
   var REGLAS = {
     alumno: nombreYApellido('Escriba nombre y apellido del alumno.'),
     nacimiento: function (x) { var e = edadDe(x); return (e !== null && e >= 3 && e <= 25) || 'Revise la fecha de nacimiento.'; },
+    // Obligatoria desde el 23-oct-2026, con su dígito verificador y la misma fecha de nacimiento.
+    curp: function (x) { return R.curpRevisar(x, v('nacimiento')); },
     firmante: nombreYApellido('Escriba su nombre y apellido.'),
     parentesco: function (x) { return Boolean(x) || 'Elija el parentesco.'; },
     telefono: tel('Escriba un WhatsApp de 10 dígitos.'),
+    correo: function (x) { return !x || /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(x) || 'Revise el correo.'; },
+    domicilio: texto(5, 'Escriba calle y número.'),
+    colonia: texto(3, 'Escriba la colonia.'),
+    cp: function (x) { return !x || /^\d{5}$/.test(String(x).trim()) || 'El código postal lleva 5 dígitos.'; },
     e1Nombre: texto(3, 'Escriba el nombre.'),
     e1Parentesco: texto(3, 'Escriba el parentesco.'),
     e1Telefono: tel('Escriba un teléfono de 10 dígitos.'),
@@ -333,12 +342,16 @@
       return true;
     },
     custodia: function (x) { return Boolean(x) || 'Elija una opción.'; },
-    t2Nombre: function (x) { return !x ? (v('t2Telefono') ? 'Escriba también su nombre.' : true) : nombreYApellido('Escriba nombre y apellido.')(x); },
-    t2Telefono: function (x) { return !x || Boolean(R.telefonoValido(x)) || TEL_MAL; },
-    curp: function (x) {
-      if (!x) return true;
-      if (!/^[A-Z]{4}\d{6}[HMX][A-Z]{5}[A-Z0-9]\d$/.test(String(x).toUpperCase())) return 'La CURP tiene 18 letras y números. Revísela o déjela vacía.';
-      return R.curpCuadra(x, v('nacimiento')) || 'La CURP no coincide con la fecha de nacimiento. Revise las dos.';
+    // Desde el 23-oct-2026 la carta sustituye los datos de su ficha: se pide
+    // si hay o no otro tutor (un «no» lo quita de la ficha) y, si hay, completo.
+    otroTutor: function (x) { return Boolean(x) || 'Elija «Sí» o «No».'; },
+    t2Nombre: function (x) { return v('otroTutor') !== 'si' || nombreYApellido('Escriba nombre y apellido.')(x); },
+    t2Parentesco: function (x) { return v('otroTutor') !== 'si' || Boolean(x) || 'Elija el parentesco.'; },
+    t2Telefono: function (x) {
+      if (v('otroTutor') !== 'si') return true;
+      if (!R.telefonoValido(x)) return R.telefono10(x) ? TEL_MAL : 'Escriba un teléfono de 10 dígitos.';
+      // El suyo ya está arriba: aquí va el del otro padre, madre o tutor.
+      return R.telefono10(x) !== R.telefono10(v('telefono')) || 'Es el mismo WhatsApp que el suyo: escriba el del otro padre, madre o tutor.';
     },
     imagenRostro: elegido, imagenDifusion: elegido, imagenFamilia: elegido, resultados: elegido,
     seguro: function (x) { return Boolean(x) || 'Indique si contrata el seguro.'; },
@@ -352,9 +365,14 @@
   form.addEventListener('change', function (e) {
     // El nombre de la emergencia 2 también quita el aviso de su teléfono.
     var n = e.target.name === 'e2Nombre' ? 'e2Telefono' : e.target.name;
-    // El nombre del tutor 2 se pide si hay teléfono: al cambiar uno se revisa el otro.
-    if (n === 't2Telefono' && REGLAS.t2Nombre(v('t2Nombre')) === true) R.mostrarError(form, 't2Nombre', '');
     if (n === 'custodia') $('custodiaNota').hidden = v('custodia') !== 'si';
+    // Con «No» se esconden los datos del otro tutor (y sus avisos).
+    if (n === 'otroTutor') {
+      verOtroTutor();
+      ['t2Nombre', 't2Parentesco', 't2Telefono'].forEach(function (k) { if (REGLAS[k](v(k)) === true) R.mostrarError(form, k, ''); });
+    }
+    // La CURP se revisa contra la fecha: al corregir la fecha se quita su aviso.
+    if (n === 'nacimiento' && v('curp') && REGLAS.curp(v('curp')) === true) R.mostrarError(form, 'curp', '');
     if (n === 'parentesco') seguirAlFirmante();
     if (n === 'alumno') alCambiarNombre();
     var r = REGLAS[n];
@@ -410,14 +428,21 @@
     envioDe = deQuien;
     var r;
     var datos = {
-      alumno: { nombre: v('alumno').replace(/\s+/g, ' '), nacimiento: v('nacimiento'), curp: v('curp').toUpperCase().replace(/\s+/g, '') },
-      tutor: { nombre: v('firmante'), parentesco: v('parentesco'), telefono: R.telefono10(v('telefono')) },
+      // Formato 2 (23-oct-2026): la carta pide todo lo de la ficha y el
+      // programa lo toma como lo vigente (sustituye lo que tenía).
+      formato: 2,
+      alumno: {
+        nombre: v('alumno').replace(/\s+/g, ' '), nacimiento: v('nacimiento'), curp: R.curpLimpia(v('curp'), v('nacimiento')), escuela: v('escuela'),
+        domicilio: v('domicilio'), colonia: v('colonia'), cp: v('cp')
+      },
+      tutor: { nombre: v('firmante'), parentesco: v('parentesco'), telefono: R.telefono10(v('telefono')), correo: v('correo') },
       emergencias: ['e1', 'e2'].filter(function (n) { return v(n + 'Nombre'); }).map(function (n) {
         return { nombre: v(n + 'Nombre'), parentesco: v(n + 'Parentesco'), telefono: R.telefono10(v(n + 'Telefono')) };
       }),
-      salud: { sangre: v('sangre'), alergias: v('alergias'), padecimientos: v('padecimientos'), medicamentos: v('medicamentos'), servicio: v('servicio'), afiliacion: v('afiliacion') },
+      salud: { sangre: v('sangre'), alergias: v('alergias'), padecimientos: v('padecimientos'), medicamentos: v('medicamentos'), servicio: v('servicio'), afiliacion: v('afiliacion'), mas: v('mas') },
       consentimientoSalud: true,
-      tutor2: v('t2Nombre') ? { nombre: v('t2Nombre'), parentesco: v('t2Parentesco'), telefono: R.telefono10(v('t2Telefono')) } : null,
+      otroTutor: v('otroTutor'),
+      tutor2: v('otroTutor') === 'si' ? { nombre: v('t2Nombre'), parentesco: v('t2Parentesco'), telefono: R.telefono10(v('t2Telefono')) } : null,
       custodia: v('custodia'),
       autorizados: autorizados().map(function (a) { return { nombre: a.nombre, parentesco: a.parentesco, telefono: R.telefono10(a.telefono) }; }),
       // Lo de «Así trabajamos» (uso interno, contacto técnico) se informa, como en la inscripción.
@@ -540,7 +565,7 @@
     if (sigue) ponerAlumno(sigue); else pintarFamilia();
     pintar();
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    form.elements[sigue ? 'sangre' : 'alumno'].focus({ preventScroll: true });
+    form.elements[sigue ? 'curp' : 'alumno'].focus({ preventScroll: true });
     guardarBorrador();
   });
 
@@ -555,7 +580,7 @@
   function guardarEnUnRato() { clearTimeout(espera); espera = setTimeout(guardarBorrador, 400); }
   // Si la pestaña se va (recargar, cerrar) con algo recién escrito, se guarda ya.
   window.addEventListener('pagehide', function () { if (espera) guardarBorrador(); });
-  var DEL_ALUMNO = ['alumno', 'nacimiento', 'curp', 'sangre', 'alergias', 'padecimientos', 'medicamentos', 'servicio', 'afiliacion', 'aseguradora', 'seguro', 'custodia', 'consentimientoSalud', 'leida', 'firmaElectronica', 'imagenRostro', 'imagenDifusion', 'imagenFamilia', 'resultados'];
+  var DEL_ALUMNO = ['alumno', 'nacimiento', 'curp', 'escuela', 'mas', 'sangre', 'alergias', 'padecimientos', 'medicamentos', 'servicio', 'afiliacion', 'aseguradora', 'seguro', 'custodia', 'consentimientoSalud', 'leida', 'firmaElectronica', 'imagenRostro', 'imagenDifusion', 'imagenFamilia', 'resultados'];
   function guardarBorrador(soloFamilia) {
     clearTimeout(espera); espera = null;
     try {
@@ -610,6 +635,7 @@
     var sigue = familia.filter(function (k) { return !k.firmada; })[0];
     if (!actual && sigue && !o.campos.alumno) ponerAlumno(sigue);
     $('custodiaNota').hidden = v('custodia') !== 'si';
+    verOtroTutor();
     pintar();
     seguro.actualizar();
   }

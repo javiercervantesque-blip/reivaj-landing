@@ -73,6 +73,46 @@
     if (!c || !n || !/^[A-Z]{4}\d{6}/.test(c)) return true;
     return c.slice(4, 10) === n[1].slice(2) + n[2] + n[3];
   }
+  // La CURP como la escriben: mayúsculas, solo letras y números (fuera
+  // espacios, guiones y los invisibles que trae lo copiado de WhatsApp o de un
+  // PDF), y la «O» y el cero en su lugar: donde va número solo cabe el cero;
+  // donde va letra, la «O». La 17 puede ser las dos (y las dos dan el mismo
+  // dígito verificador): la decide la fecha de nacimiento (curpRevisar).
+  // Igual que en el programa (compartido/texto.js).
+  var CURP_VALORES = '0123456789ABCDEFGHIJKLMNÑOPQRSTUVWXYZ';
+  function curpDigito(c) {
+    var suma = 0;
+    for (var i = 0; i < 17; i++) suma += CURP_VALORES.indexOf(c.charAt(i)) * (18 - i);
+    return String((10 - (suma % 10)) % 10);
+  }
+  function curpLimpia(t, nacimiento) {
+    var c = String(t || '').toUpperCase().replace(/[^A-Z0-9Ñ]/g, '');
+    if (c.length !== 18) return c;
+    c = c.split('').map(function (x, i) {
+      return (i >= 4 && i <= 9) || i === 17 ? (x === 'O' ? '0' : x) : (i <= 15 && x === '0' ? 'O' : x);
+    }).join('');
+    // La 17: letra si nació desde 2000, número si antes.
+    var n = /^(\d{4})-\d{2}-\d{2}$/.exec(String(nacimiento || ''));
+    if (n) c = c.slice(0, 16) + (Number(n[1]) >= 2000 ? c.charAt(16).replace('0', 'O') : c.charAt(16).replace('O', '0')) + c.charAt(17);
+    return c;
+  }
+  // ¿La CURP está bien? Su forma, una fecha que existe, el siglo (número si
+  // nació antes de 2000, letra desde 2000), el dígito verificador (el último
+  // sale de los otros 17) y la misma fecha de nacimiento. Devuelve true o lo
+  // que hay que corregir. La regla es la del programa (curpValida).
+  function curpRevisar(t, nacimiento) {
+    var c = curpLimpia(t, nacimiento);
+    if (!c) return 'Escriba la CURP del alumno.';
+    if (!/^[A-Z]{4}\d{6}[HMX][A-Z]{5}[A-Z0-9]\d$/.test(c)) return 'La CURP tiene 18 letras y números. Revísela.';
+    // Una fecha que existe en el calendario (con el siglo que dice la CURP): sin 31 de febrero.
+    var anio = (/[A-Z]/.test(c.charAt(16)) ? 2000 : 1900) + Number(c.slice(4, 6)), mes = Number(c.slice(6, 8)), dia = Number(c.slice(8, 10));
+    var f = new Date(Date.UTC(anio, mes - 1, dia));
+    if (mes < 1 || mes > 12 || f.getUTCMonth() !== mes - 1 || f.getUTCDate() !== dia || curpDigito(c) !== c.charAt(17)) return 'Revise la CURP: alguna letra o número no está bien.';
+    var n = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(nacimiento || ''));
+    if (n && c.slice(4, 10) !== n[1].slice(2) + n[2] + n[3]) return 'La CURP no coincide con la fecha de nacimiento. Revise las dos.';
+    if (n && (Number(n[1]) >= 2000) !== /[A-Z]/.test(c.charAt(16))) return 'Revise la CURP: alguna letra o número no está bien.';
+    return true;
+  }
   // Una clave al azar para un envío: si el mismo envío llega dos veces (se
   // reintentó sin saber si había llegado, o se recargó la página), el
   // programa lo reconoce por ella.
@@ -171,11 +211,13 @@
     if (msg) { msg.textContent = mensaje || ''; msg.classList.toggle('is-visible', Boolean(mensaje)); }
     if (caja) caja.classList.toggle('has-error', Boolean(mensaje));
     // El error, ligado a su campo: el lector de pantalla lo dice al llegar ahí.
+    // La ayuda propia del campo (data-describe) se queda ligada siempre.
     if (msg && campo) {
       if (!msg.id) msg.id = 'error-' + (form.id || 'form') + '-' + nombre;
       (campo.tagName ? [campo] : Array.prototype.slice.call(campo)).forEach(function (c) {
-        if (mensaje) { c.setAttribute('aria-invalid', 'true'); c.setAttribute('aria-describedby', msg.id); }
-        else { c.removeAttribute('aria-invalid'); c.removeAttribute('aria-describedby'); }
+        var base = c.getAttribute('data-describe');
+        if (mensaje) { c.setAttribute('aria-invalid', 'true'); c.setAttribute('aria-describedby', base ? base + ' ' + msg.id : msg.id); }
+        else { c.removeAttribute('aria-invalid'); if (base) c.setAttribute('aria-describedby', base); else c.removeAttribute('aria-describedby'); }
       });
     }
   }
@@ -206,7 +248,7 @@
   global.Reivaj = {
     ahoraGdl: ahoraGdl, sumarDias: sumarDias, diaSemana: diaSemana, fechaLarga: fechaLarga, fechaChip: fechaChip,
     horaBonita: horaBonita, diasDePrueba: diasDePrueba, soloDigitos: soloDigitos, telefono10: telefono10, telefonoValido: telefonoValido, conLetras: conLetras,
-    curpCuadra: curpCuadra, claveAlAzar: claveAlAzar,
+    curpCuadra: curpCuadra, curpLimpia: curpLimpia, curpRevisar: curpRevisar, claveAlAzar: claveAlAzar,
     enlaceWhatsApp: enlaceWhatsApp, conNegritas: conNegritas, el: el, iniciarPagina: iniciarPagina,
     mostrarError: mostrarError, valor: valor, llevarA: llevarA, FUENTES: FUENTES
   };

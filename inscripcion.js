@@ -189,6 +189,9 @@
     var n = { t2Nombre: 't2Telefono', e2Nombre: 'e2Telefono' }[e.target.name] || e.target.name;
     var regla = reglaDe(n);
     if (regla && regla(v(n)) === true) R.mostrarError(form, n, '');
+    // La CURP se revisa contra la fecha: al corregir la fecha se quita su aviso.
+    var nac = /^nacimiento_(\d+)$/.exec(n);
+    if (nac && v('curp_' + nac[1]) && reglaDe('curp_' + nac[1])(v('curp_' + nac[1])) === true) R.mostrarError(form, 'curp_' + nac[1], '');
     if (/^nombres_/.test(n)) titulos();
     // Lo último que se escribe también se guarda, aunque no se salga del campo.
     guardarEnUnRato();
@@ -348,11 +351,8 @@
       apellidoPaterno: texto(2, 'Escriba el apellido paterno del alumno.'),
       nacimiento: function (x) { var e = edadDe(x); return (e !== null && e >= 4 && e <= 18) || (e !== null && e >= 0 && e < 4 ? 'Recibimos a niñas y niños a partir de los 4 años.' : 'Revise la fecha de nacimiento.'); },
       rama: eligio,
-      curp: function (x, k) {
-        if (!x) return true;
-        if (!/^[A-Z]{4}\d{6}[HMX][A-Z]{5}[A-Z0-9]\d$/.test(String(x).toUpperCase())) return 'La CURP tiene 18 letras y números. Revísela o déjela vacía.';
-        return R.curpCuadra(x, v('nacimiento_' + k)) || 'La CURP no coincide con la fecha de nacimiento. Revise las dos.';
-      },
+      // Obligatoria desde el 23-oct-2026, con su dígito verificador y la misma fecha de nacimiento.
+      curp: function (x, k) { return R.curpRevisar(x, v('nacimiento_' + k)); },
       horas: eligio,
       experiencia: eligio
     },
@@ -545,7 +545,7 @@
     return {
       alumno: {
         nombre: nombreCompleto(k), nombres: v('nombres_' + k), apellidoPaterno: v('apellidoPaterno_' + k), apellidoMaterno: v('apellidoMaterno_' + k),
-        nacimiento: v('nacimiento_' + k), rama: v('rama_' + k), curp: v('curp_' + k).toUpperCase(), escuela: v('escuela_' + k),
+        nacimiento: v('nacimiento_' + k), rama: v('rama_' + k), curp: R.curpLimpia(v('curp_' + k), v('nacimiento_' + k)), escuela: v('escuela_' + k),
         domicilio: v('domicilio'), colonia: v('colonia'), cp: v('cp'),
         experiencia: v('experiencia_' + k) === 'si' ? (v('experienciaDetalle_' + k) || 'sí') : 'no'
       },
@@ -611,6 +611,12 @@
     if (!conectado || enviando) return;
     // Enter o «Ir» del teclado antes de la última carta: funciona como «Siguiente».
     if (actual !== TOTAL || cartaVista < hijos.length - 1) { avanzar(); return; }
+    // Lo de los pasos de antes también: un borrador de una página anterior
+    // pudo pasarlos sin algo que hoy se pide (la CURP, desde el 23-oct-2026).
+    for (var p = 1; p < TOTAL; p++) {
+      var bien = camposDelPaso(p).every(function (k) { return reglaDe(k)(v(k)) === true; });
+      if (!bien) { mostrar(p); revisarPaso(p); return; }
+    }
     if (!revisarPaso(TOTAL)) return;
     // Todas las cartas firmadas (por si se quitó o agregó un alumno después).
     for (var j = 0; j < hijos.length; j++) {

@@ -29,7 +29,7 @@
     <header class="pagina__cab">
       <p class="eyebrow">Para familias inscritas</p>
       <h1>Carta de seguridad y cobertura médica</h1>
-      <p class="lead">Se firma una vez por ciclo y cada vez que el alumno sube de nivel. Complete sus datos, lea la carta y fírmela con el dedo. Al terminar, recibirá su copia.</p>
+      <p class="lead">Se firma una vez por ciclo y cada vez que el alumno sube de nivel. Complete sus datos, lea la carta y fírmela con el dedo. Con lo que escriba actualizamos el expediente del alumno. Al terminar, recibirá su copia.</p>
     </header>
 
     <div class="nota nota--mal" id="sinConexion" hidden>
@@ -58,21 +58,62 @@
           </div>
         </div>
         <p class="field__ayuda" id="ayudaAlumno" hidden>Lo llenamos con los datos que tiene el gimnasio. Si algo no está bien, corríjalo aquí.</p>
-        <div class="field-row--3">
+        <div class="field-row">
           <div class="field">
-            <label for="firmante">Su nombre completo <span aria-hidden="true">*</span></label>
-            <input id="firmante" name="firmante" required autocomplete="name">
-            <p class="error" data-error-for="firmante"></p>
+            <label for="curp">CURP del alumno <span aria-hidden="true">*</span></label>
+            <input id="curp" name="curp" required autocomplete="off" maxlength="22" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="18 letras y números" style="text-transform:uppercase">
+            <p class="field__ayuda">Si no la tiene a la mano, puede consultarla en <a href="https://www.gob.mx/curp/" target="_blank" rel="noopener">gob.mx/curp</a>. ¿No tiene CURP (por ejemplo, nació fuera de México)? <a data-whatsapp="Hola, quiero firmar la Carta de seguridad de REIVAJ Gimnasia y mi hijo no tiene CURP." href="https://wa.me/523334566544" target="_blank" rel="noopener">Escríbanos por WhatsApp</a>.</p>
+            <p class="error" data-error-for="curp"></p>
           </div>
           <div class="field">
-            <label for="parentesco">Parentesco <span aria-hidden="true">*</span></label>
-            <select id="parentesco" name="parentesco" required data-parentescos></select>
-            <p class="error" data-error-for="parentesco"></p>
+            <label for="escuela">Escuela, grado y turno <span class="opt">(opcional)</span></label>
+            <input id="escuela" name="escuela" autocomplete="off" placeholder="Ej. Primaria Juárez, 3º, matutino">
+          </div>
+        </div>
+        <div class="grupo">
+          <p class="grupo__titulo">Padre, madre o tutor que firma</p>
+          <p class="field__ayuda" id="ayudaPrincipal">Usted queda como contacto principal del alumno: a este WhatsApp le avisamos en caso de urgencia y le escribimos sobre pagos y avisos del gimnasio.</p>
+          <div class="field-row--3">
+            <div class="field">
+              <label for="firmante">Su nombre completo <span aria-hidden="true">*</span></label>
+              <input id="firmante" name="firmante" required autocomplete="name">
+              <p class="error" data-error-for="firmante"></p>
+            </div>
+            <div class="field">
+              <label for="parentesco">Parentesco <span aria-hidden="true">*</span></label>
+              <select id="parentesco" name="parentesco" required data-parentescos></select>
+              <p class="error" data-error-for="parentesco"></p>
+            </div>
+            <div class="field">
+              <label for="telefono">Su WhatsApp <span aria-hidden="true">*</span></label>
+              <input type="tel" id="telefono" name="telefono" inputmode="tel" required placeholder="10 dígitos" autocomplete="tel" aria-describedby="ayudaPrincipal" data-describe="ayudaPrincipal">
+              <p class="error" data-error-for="telefono"></p>
+            </div>
           </div>
           <div class="field">
-            <label for="telefono">Su WhatsApp <span aria-hidden="true">*</span></label>
-            <input type="tel" id="telefono" name="telefono" inputmode="tel" required placeholder="10 dígitos" autocomplete="tel">
-            <p class="error" data-error-for="telefono"></p>
+            <label for="correo">Su correo <span class="opt">(opcional)</span></label>
+            <input type="email" id="correo" name="correo" autocomplete="email">
+            <p class="error" data-error-for="correo"></p>
+          </div>
+        </div>
+        <div class="grupo">
+          <p class="grupo__titulo">Domicilio</p>
+          <div class="field">
+            <label for="domicilio">Calle y número <span aria-hidden="true">*</span></label>
+            <input id="domicilio" name="domicilio" required autocomplete="street-address">
+            <p class="error" data-error-for="domicilio"></p>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="colonia">Colonia <span aria-hidden="true">*</span></label>
+              <input id="colonia" name="colonia" required autocomplete="off">
+              <p class="error" data-error-for="colonia"></p>
+            </div>
+            <div class="field">
+              <label for="cp">Código postal <span class="opt">(opcional)</span></label>
+              <input id="cp" name="cp" inputmode="numeric" maxlength="5" autocomplete="postal-code">
+              <p class="error" data-error-for="cp"></p>
+            </div>
           </div>
         </div>
         <div class="grupo">
@@ -102,7 +143,7 @@
 
       <section class="tarjeta" id="expediente">
         <h2>Para completar su expediente</h2>
-        <p class="sub">Unos datos más que el gimnasio necesita tener al día. Lo marcado como opcional puede dejarlo en blanco.</p>
+        <p class="sub">Unos datos más que el gimnasio necesita tener al día. Lo que escriba sustituye los datos que tenemos; lo marcado como opcional puede dejarlo en blanco.</p>
 
         <h3>¿Quién puede recogerlo?</h3>
         <p class="field__ayuda">Solo las personas registradas en esta lista pueden recoger al alumno. Sin registro previo no se entrega a nadie, sin excepción. Inclúyase usted si también lo recoge.</p>
@@ -119,30 +160,40 @@
         </div>
         <div class="nota" id="custodiaNota" hidden>Le pedimos entregar copia de la resolución a la Dirección cuando acuda a recepción; es indispensable para poder cumplirla.</div>
 
-        <h3>Segundo tutor <span class="opt">(opcional)</span></h3>
+        <h3>Segundo tutor</h3>
         <div class="field">
-          <label for="t2Nombre">Nombre completo</label>
-          <input id="t2Nombre" name="t2Nombre" autocomplete="off">
-          <p class="error" data-error-for="t2Nombre"></p>
-        </div>
-        <div class="field-row">
-          <div class="field">
-            <label for="t2Parentesco">Parentesco</label>
-            <select id="t2Parentesco" name="t2Parentesco" data-parentescos></select>
+          <span class="label">¿Hay otro padre, madre o tutor a quien también podamos avisar? <span aria-hidden="true">*</span></span>
+          <div class="chips" role="radiogroup" aria-label="Otro padre, madre o tutor">
+            <label class="chip"><input type="radio" name="otroTutor" value="si" required><span>Sí</span></label>
+            <label class="chip"><input type="radio" name="otroTutor" value="no"><span>No</span></label>
           </div>
+          <p class="field__ayuda">Si contesta «No», quitamos de su expediente al segundo tutor que tengamos registrado.</p>
+          <p class="error" data-error-for="otroTutor"></p>
+        </div>
+        <div id="tutor2Campos" hidden>
           <div class="field">
-            <label for="t2Telefono">Teléfono</label>
-            <input type="tel" id="t2Telefono" name="t2Telefono" inputmode="tel" autocomplete="off" placeholder="10 dígitos">
-            <p class="error" data-error-for="t2Telefono"></p>
+            <label for="t2Nombre">Nombre completo <span aria-hidden="true">*</span></label>
+            <input id="t2Nombre" name="t2Nombre" autocomplete="off" aria-required="true">
+            <p class="error" data-error-for="t2Nombre"></p>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="t2Parentesco">Parentesco <span aria-hidden="true">*</span></label>
+              <select id="t2Parentesco" name="t2Parentesco" data-parentescos aria-required="true"></select>
+              <p class="error" data-error-for="t2Parentesco"></p>
+            </div>
+            <div class="field">
+              <label for="t2Telefono">Teléfono <span aria-hidden="true">*</span></label>
+              <input type="tel" id="t2Telefono" name="t2Telefono" inputmode="tel" autocomplete="off" placeholder="10 dígitos" aria-required="true">
+              <p class="error" data-error-for="t2Telefono"></p>
+            </div>
           </div>
         </div>
 
-        <h3>CURP del alumno <span class="opt">(opcional)</span></h3>
+        <h3>Para cuidarlo mejor <span class="opt">(opcional)</span></h3>
         <div class="field">
-          <label for="curp">CURP</label>
-          <input id="curp" name="curp" autocomplete="off" maxlength="18" autocapitalize="characters" spellcheck="false" placeholder="18 letras y números">
-          <p class="field__ayuda">La piden para registrarlo en competencias.</p>
-          <p class="error" data-error-for="curp"></p>
+          <label for="mas">¿Hay algo más que debamos saber del alumno?</label>
+          <textarea id="mas" name="mas" autocomplete="off" rows="3" maxlength="600" placeholder="Miedos, cómo reacciona al dolor o a la frustración, algo que ayude al entrenador a entenderlo."></textarea>
         </div>
 
         <h3>Uso de imagen</h3>

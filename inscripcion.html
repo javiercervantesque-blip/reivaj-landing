@@ -110,8 +110,9 @@
           </div>
           <div class="field-row">
             <div class="field">
-              <label for="curp">CURP <span class="opt">(si la tiene a la mano)</span></label>
-              <input id="curp" name="curp" maxlength="18" autocomplete="off" style="text-transform:uppercase">
+              <label for="curp">CURP <span aria-hidden="true">*</span></label>
+              <input id="curp" name="curp" required maxlength="22" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="18 letras y números" style="text-transform:uppercase">
+              <p class="field__ayuda">Si no la tiene a la mano, puede consultarla en <a href="https://www.gob.mx/curp/" target="_blank" rel="noopener">gob.mx/curp</a>. ¿No tiene CURP (por ejemplo, nació fuera de México)? <a href="https://wa.me/523334566544?text=Hola%2C%20quiero%20inscribir%20a%20mi%20hijo%20en%20REIVAJ%20Gimnasia%20y%20no%20tiene%20CURP." target="_blank" rel="noopener">Escríbanos por WhatsApp</a>.</p>
               <p class="error" data-error-for="curp"></p>
             </div>
             <div class="field">
