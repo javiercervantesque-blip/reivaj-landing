@@ -8,7 +8,7 @@
    ========================================================= */
 'use strict';
 
-var CAJA = 'reivaj-lista-5';
+var CAJA = 'reivaj-lista-6';
 var PAGINA = 'asistencia';
 var ARCHIVOS = ['asistencia', 'asistencia.css', 'config.js', 'buzon.js', 'panel.js', 'asistencia.js', 'asistencia.webmanifest', 'asistencia-app.webmanifest', 'assets/icono-192.png', 'assets/apple-touch-icon.png', 'fuentes.css', 'assets/fuentes/archivo-latin-700-italic.woff2', 'assets/fuentes/archivo-latin-800-italic.woff2', 'assets/fuentes/inter-latin-400-normal.woff2', 'assets/fuentes/inter-latin-500-normal.woff2', 'assets/fuentes/inter-latin-600-normal.woff2', 'assets/fuentes/inter-latin-700-normal.woff2'];
 var ESPERA = 4000;

@@ -25,7 +25,9 @@
   var K = { llave: 'reivaj_lista_llave', cerrada: 'reivaj_lista_cerrada', cerradaCuando: 'reivaj_lista_cerrada_cuando', pasadas: 'reivaj_lista_pasadas', cola: 'reivaj_lista_cola', instalar: 'reivaj_lista_instalar', vistas: 'reivaj_lista_vistas', horarios: 'reivaj_lista_horarios', borrador: 'reivaj_lista_borrador', quitados: 'reivaj_lista_quitados' };
   var BLOQUES = ['bloque-alumnos', 'bloque-extra', 'barra'];
   var PANELES = ['hoy', 'semana', 'alumnas', 'maestras'];
-  var estado = { llave: '', canal: '', datos: null, conPanel: false, panel: 'lista', hora: null, marcados: {}, extras: {}, notas: {}, agendadas: {}, noEnc: [], cargada: 0, sinRed: false, quitado: false };
+  // `verGrupo`: el grupo que el dueño escogió ver ('' = todos, '_nuevos' = los
+  // nuevos sin grupo). `preguntando`: la ventana de «¿Enviar…?» está abierta.
+  var estado = { llave: '', canal: '', datos: null, conPanel: false, panel: 'lista', hora: null, marcados: {}, extras: {}, notas: {}, agendadas: {}, noEnc: [], cargada: 0, sinRed: false, quitado: false, verGrupo: '', preguntando: false };
 
   function guardado(k, v) {
     try {
@@ -42,6 +44,21 @@
   }
   function mostrar(el, si) { el.classList[si ? 'remove' : 'add']('oculto'); }
   function mensaje(txt, tipo) { var m = $('mensaje'); m.textContent = txt || ''; m.className = 'aviso ' + (tipo || ''); mostrar(m, Boolean(txt)); }
+
+  // La página y este código tienen que ser de la misma versión. Con mala señal,
+  // justo después de una actualización, la copia guardada puede dar la página
+  // vieja con el código nuevo: se recarga una vez; si sigue igual, se dice.
+  if (!$('envio') || !$('barra-lista') || !$('horas-aviso')) {
+    var recargada = true;
+    try { recargada = sessionStorage.getItem('reivaj_lista_recarga') === '1'; sessionStorage.setItem('reivaj_lista_recarga', '1'); } catch (e) { recargada = true; }
+    if (!recargada) location.reload();
+    else mensaje('La lista se actualizó a medias por la señal. Ciérrala y vuelve a abrirla cuando tengas internet.', 'error');
+    return;
+  }
+  try { sessionStorage.removeItem('reivaj_lista_recarga'); } catch (e) { /* sin guardado */ }
+  // Si la página se recargó con la ventana de «¿Enviar…?» abierta, su paso
+  // sigue en el historial: se quita, o el siguiente «Atrás» no la cerraría.
+  try { if (history.state && history.state.envio) history.replaceState(null, ''); } catch (e) { /* sin historial */ }
 
   // ─── Fechas de Guadalajara ──────────────────────────────────────────
   function partesAhora() {
@@ -352,8 +369,8 @@
     if (estado.conPanel) window.PanelDueno.preparar(d, util);
     mostrar($('pestanas'), estado.conPanel);
     document.body.classList.toggle('con-pestanas', estado.conPanel);
-    if (!estado.conPanel) estado.panel = 'lista';
-    else if (!estado.yaAbrio) estado.panel = 'hoy';
+    // Se abre en Pasar lista (a eso se entra); el panel queda a un toque.
+    if (!estado.conPanel || !estado.yaAbrio) estado.panel = 'lista';
     estado.yaAbrio = true;
     irA(estado.panel, true, true);
     pintarHoras();
@@ -374,6 +391,10 @@
     });
     if (panel !== 'lista') {
       mostrar($('barra'), false);
+      // El aviso de la hora abierta («ya se mandó…», «ya llegó…») es de Pasar
+      // lista; al volver ahí se pone otra vez. Los demás (verde, rojo) se quedan.
+      var m = $('mensaje');
+      if (!m.classList.contains('ok') && !m.classList.contains('error') && !m.classList.contains('rechazo')) mensaje('');
       if (estado.conPanel) window.PanelDueno.pintar(panel);
     } else if (estado.datos) {
       // La hora que la app escogió sola se vuelve a escoger (ya pudo cambiar la
@@ -540,7 +561,7 @@
     $('dia-titulo').textContent = nombreDia(f);
     $('dia-fecha').textContent = fechaLarga(f);
     $('dia').classList.toggle('otro', f !== h);
-    mostrar($('volver-hoy'), f !== h);
+    mostrar($('otro-dia'), f !== h);
     $('dia-antes').disabled = !diaVecino(f, -1);
     $('dia-despues').disabled = !diaVecino(f, 1);
     $('fecha').max = h;
@@ -579,7 +600,7 @@
   }
   // Antes de dejar una hora con cambios sin mandar, se pregunta.
   function dejarHora() {
-    if (estado.enviando) return false;
+    if (estado.enviando || estado.preguntando) return false;
     if (!hayCambios()) return true;
     if (!confirm('Tienes cambios en la lista de las ' + estado.hora + ' que no has enviado.\n\nAceptar: te cambias y esos cambios se borran.\nCancelar: te quedas para enviarla.')) return false;
     guardado(K.borrador, null);
@@ -608,6 +629,7 @@
     var por = delDia(), cont = $('horas'), f = $('fecha').value;
     pintarDia();
     cont.innerHTML = '';
+    mostrar($('horas-aviso'), false);
     if (diaSemana(f) === 7) {
       cont.innerHTML = '<div class="aviso">Los domingos no hay clase.</div>';
       BLOQUES.forEach(function (id) { mostrar($(id), false); });
@@ -649,14 +671,16 @@
       };
       cont.appendChild(b);
     });
-    if (atras.length && estado.hora) {
-      var av = document.createElement('div');
-      av.className = 'atras';
-      av.textContent = atras.length === 1
+    // Debajo de las horas (fuera de su cuadrícula, para que no las encoja).
+    // Sin hora abierta (recién enviada, o ninguna toca ahora) la tarjeta no se queda muda.
+    var av = $('horas-aviso');
+    av.className = 'atras' + (atras.length ? '' : ' suave');
+    av.textContent = atras.length
+      ? (atras.length === 1
         ? 'Te falta enviar la de las ' + atras[0] + '. Tócala para pasarla.'
-        : 'Te falta enviar las de las ' + atras.slice(0, -1).join(', ') + ' y ' + atras[atras.length - 1] + '. Toca cada una para pasarla.';
-      cont.appendChild(av);
-    }
+        : 'Te falta enviar las de las ' + atras.slice(0, -1).join(', ') + ' y ' + atras[atras.length - 1] + '. Toca cada una para pasarla.')
+      : !estado.hora ? 'Toca una hora para pasar su lista.' : '';
+    mostrar(av, Boolean(av.textContent));
   }
   // Abre una hora. Al elegirla sola, el aviso que haya arriba se queda.
   function abrirHora(f, hr) {
@@ -719,15 +743,20 @@
   // ¿Está escribiendo o buscando algo en la lista? (eso no se le mueve) Un
   // renglón de clase de prueba vacío no cuenta: no se manda y se va al
   // cambiar de hora.
+  // Lo escrito en la búsqueda ya no cuenta: ahora se queda puesto para ver la
+  // lista filtrada y congelaría la hora (cambiar de hora la borra); cuenta
+  // mientras se escribe en ella. El campo de fecha tampoco: en Android se queda
+  // con el foco después de cerrar el calendario.
   function ocupada() {
-    if ($('buscar').value.trim() || [].some.call($('pruebas').querySelectorAll('input'), function (i) { return i.value.trim(); })) return true;
+    if ([].some.call($('pruebas').querySelectorAll('input'), function (i) { return i.value.trim(); })) return true;
     var a = document.activeElement;
-    return Boolean(a && /^(INPUT|TEXTAREA)$/.test(a.tagName || '') && $('vista-lista').contains && $('vista-lista').contains(a));
+    return Boolean(a && a.id !== 'fecha' && /^(INPUT|TEXTAREA)$/.test(a.tagName || '') && $('vista-lista').contains && $('vista-lista').contains(a));
   }
   // Al volver a la lista (de otra pestaña o de otra app): si la hora la
   // escogió la app y no se ha tocado nada, se cambia a la que toca ahora. Si
   // no hay otra, se queda la que estaba. Mientras se ve la lista, nunca se mueve.
   function reelegirHora() {
+    if (estado.preguntando) return;
     if (!estado.hora && estado.datos && !estado.enviando && $('fecha').value === hoy() && !ocupada()) { elegirHora(); return; }
     if (!estado.horaSola || estado.enviando || hayCambios() || ocupada() || $('fecha').value !== hoy()) return;
     var nueva = horaQueToca(hoy());
@@ -740,13 +769,15 @@
   function nuevoDia() {
     var h = hoy();
     if (!estado.datos || !estado.diaAbierto || estado.diaAbierto === h || estado.fechaVista !== estado.diaAbierto) return;
-    if (estado.enviando || hayCambios() || ocupada()) return;
+    if (estado.enviando || estado.preguntando || hayCambios() || ocupada()) return;
     estado.horaSola = false;
     cambiarFecha(h);
   }
   function limpiarHora() {
     estado.marcados = {}; estado.extras = {}; estado.notas = {}; estado.agendadas = {}; estado.noEnc = [];
     $('pruebas').innerHTML = ''; $('nota-dia').value = ''; $('buscar').value = '';
+    // Otra hora tiene otros grupos: se vuelve a ver a todos.
+    estado.verGrupo = '';
     estado.extrasBase = [];
     estado.noEncBase = [];
     estado.huellaBase = huellaHora();
@@ -854,9 +885,11 @@
     }
     return mc;
   }
+  // Si ya tiene la ✓ de aquí y la otra marca también dice «vino», no hay nada
+  // que decir (al corregir una hora propia, cada renglón lo repetía).
   function infoDueno(a, f) {
     var mc = marcaOtra(a, f);
-    if (!mc || !mc.por || (mc.e !== 'p' && mc.e !== 'f')) return '';
+    if (!mc || !mc.por || (mc.e !== 'p' && mc.e !== 'f') || (mc.e === 'p' && estado.marcados[a.i])) return '';
     return 'Ya la marcó ' + mc.por + ': ' + (mc.e === 'p' ? 'vino' : 'faltó');
   }
   // ¿Cuenta como que vino? Lo que palomeó aquí o (al dueño) lo que ya marcó otra persona.
@@ -879,7 +912,8 @@
   }
   // «● Arely · 3 de 5   [✓ Todos]». Si su lista ya llegó, lo dice y no hay
   // «Todos» (para no tapar sus faltas de un toque); se palomea una por una.
-  function cabezaGrupo(gid, suyas, f) {
+  // Buscando tampoco: se ve solo a quien coincide y el botón tocaría a todo el grupo.
+  function cabezaGrupo(gid, suyas, f, buscando) {
     var cab = document.createElement('div');
     cab.className = 'grupo-cab';
     var vinieron = suyas.filter(function (a) { return yaVino(a, f); }).length;
@@ -888,7 +922,7 @@
     cab.querySelector('.punto').style.background = window.PanelDueno.colorGrupo(gid);
     cab.querySelector('b').textContent = window.PanelDueno.nombreGrupo(gid);
     cab.querySelector('small').textContent = vinieron + ' de ' + suyas.length + (pasada ? ' · la pasó ' + pasada : '');
-    if (pasada || suyas.length < 2) return cab;
+    if (pasada || suyas.length < 2 || buscando) return cab;
     var todas = suyas.every(function (a) { return estado.marcados[a.i]; });
     var b = document.createElement('button');
     b.type = 'button';
@@ -899,29 +933,70 @@
     cab.appendChild(b);
     return cab;
   }
-  function pintarGruposHora(f) {
+  // Las pestañas de las maestras (como en el A1): «Todos 12/52 · ● Arely 3/8 ·
+  // ● Renata ✓ 9/9 · Nuevos 0/2». Sirven para pasar la hora grupo por grupo
+  // sin bajar por toda la lista; no la parten: se manda toda junta. El ✓ es
+  // que ya llegó la lista de ese grupo. Mientras se busca no salen: la
+  // búsqueda es en toda la hora.
+  function pintarChips(lista, f) {
     var cont = $('grupos-hora');
+    // Al repintar, la fila no se regresa al principio.
+    var corrida = cont.scrollLeft || 0;
     cont.innerHTML = '';
-    if (!estado.conPanel) return;
-    var e = window.PanelDueno.estadoHora(f, estado.hora);
-    // Solo si ya llegó la lista de algún grupo.
-    if (!e || e.total < 1 || !e.ids.some(function (gid) { return Boolean(e.grupos[gid].llego); })) return;
-    var div = document.createElement('div');
-    div.className = 'aviso grupos-hora';
-    div.appendChild(document.createTextNode('Cómo va cada grupo de esta hora:'));
-    var ul = document.createElement('ul');
-    e.ids.forEach(function (gid) {
-      var g = e.grupos[gid];
-      var li = document.createElement('li');
-      li.innerHTML = '<i class="punto"></i><span></span>';
-      li.querySelector('i').style.background = window.PanelDueno.colorGrupo(gid);
-      // Pasado = llegó su lista (como en el programa); marcas sueltas de otra maestra no cuentan.
-      var cuando = !g.llego ? '' : String(g.llego).length > 5 ? ' el ' + g.llego.slice(8, 10) + '/' + g.llego.slice(5, 7) + ' a las ' + horaDe(g.llego) : ' a las ' + g.llego;
-      li.querySelector('span').textContent = window.PanelDueno.nombreGrupo(gid) + ': ' + (g.llego ? 'la pasó ' + (g.por || 'alguien') + cuando : 'nadie la ha pasado');
-      ul.appendChild(li);
+    var nv = nuevos();
+    var gids = [];
+    if (estado.conPanel) lista.forEach(function (a) { var g = grupoDe(a, f); if (gids.indexOf(g) < 0) gids.push(g); });
+    // Lo escogido que ya no está (otra lista, otro día) vuelve a «Todos».
+    if (estado.verGrupo === '_nuevos' ? !nv.length : estado.verGrupo && gids.indexOf(estado.verGrupo) < 0) estado.verGrupo = '';
+    var buscando = Boolean($('buscar').value.trim());
+    var hay = estado.conPanel && !buscando && (gids.length > 1 || (gids.length > 0 && nv.length > 0));
+    mostrar(cont, hay);
+    // Sin pestañas (llegó una lista con un solo grupo) no habría cómo volver a «Todos».
+    if (!hay && !buscando) estado.verGrupo = '';
+    if (!hay) return;
+    var chip = function (id, nombre, suyas, cuenta, pasada) {
+      var b = document.createElement('button');
+      var activa = estado.verGrupo === id;
+      b.type = 'button';
+      b.className = 'chip-grupo' + (activa ? ' activa' : '') + (pasada ? ' pasada' : '');
+      b.setAttribute('aria-pressed', activa ? 'true' : 'false');
+      b.innerHTML = (id && id !== '_nuevos' ? '<i class="punto"></i>' : '') + '<span></span><small aria-hidden="true"></small>';
+      if (id && id !== '_nuevos') b.querySelector('.punto').style.background = window.PanelDueno.colorGrupo(id);
+      var v = suyas.filter(cuenta).length;
+      b.querySelector('span').textContent = nombre;
+      b.querySelector('small').textContent = (pasada ? '✓ ' : '') + v + '/' + suyas.length;
+      b.setAttribute('aria-label', nombre + ': ' + v + ' de ' + suyas.length + ' vinieron' + (pasada ? ', ya llegó su lista' : ''));
+      b.onclick = function () { estado.verGrupo = id; pintarAlumnos(); subirALista(); };
+      cont.appendChild(b);
+    };
+    var vino = function (a) { return yaVino(a, f); };
+    chip('', 'Todos', lista, vino, false);
+    gids.forEach(function (gid) {
+      chip(gid, window.PanelDueno.nombreGrupo(gid), lista.filter(function (a) { return grupoDe(a, f) === gid; }), vino, Boolean(grupoPasado(gid, f)));
     });
-    div.appendChild(ul);
-    cont.appendChild(div);
+    if (nv.length) chip('_nuevos', 'Nuevos', nv, function (a) { return Boolean(estado.extras[a.i]); }, false);
+    // La escogida, siempre a la vista.
+    cont.scrollLeft = corrida;
+    var act = cont.querySelector('.activa');
+    if (act && act.offsetWidth && (act.offsetLeft < corrida || act.offsetLeft + act.offsetWidth > corrida + cont.clientWidth)) cont.scrollLeft = act.offsetLeft - 12;
+  }
+  // Si se había bajado por la lista y lo que se ve cambió (otro grupo, una
+  // búsqueda), se sube para que empiece justo debajo de la barra.
+  // Se mide contra donde queda la barra ya pegada (al medir, el final de la
+  // tarjeta, ya más corta, la puede estar empujando hacia arriba).
+  function subirALista() {
+    var barra = $('barra-lista');
+    if (!barra.getBoundingClientRect || !window.scrollBy || !window.getComputedStyle) return;
+    var tope = parseFloat(window.getComputedStyle(barra).top) || 0;
+    var hueco = $('alumnos').getBoundingClientRect().top - (tope + barra.offsetHeight);
+    if (hueco < 0) window.scrollBy(0, hueco - 6);
+  }
+  // Al dueño, solo si hay alguna ✓ punteada (ya la marcó su maestra, o viene del A1).
+  function pintarAyuda(lista, f) {
+    var t = !estado.conPanel ? 'Toca el nombre de cada quien que vino. Quien se quede sin ✓ cuenta como falta.'
+      : lista.some(function (a) { return !estado.marcados[a.i] && yaVino(a, f); }) ? 'La ✓ punteada ya estaba marcada: se respeta.' : '';
+    $('ayuda').textContent = t;
+    mostrar($('ayuda'), Boolean(t));
   }
 
   // Un renglón que se palomea con el dedo (o con Espacio/Enter).
@@ -930,12 +1005,18 @@
     marca.setAttribute('role', 'checkbox');
     marca.setAttribute('aria-checked', marcado ? 'true' : 'false');
     marca.setAttribute('tabindex', '0');
-    // Mientras se envía, lo que se toque se perdería: no se palomea.
-    fila.onclick = function (ev) { if (ev.target.classList.contains('nota-btn') || estado.enviando) return; alTocar(); };
+    // Mientras se envía (o se pregunta si enviar), lo que se toque se perdería: no se palomea.
+    // Si se palomea buscando, el teclado se cierra (en iPhone se quedaría
+    // abierto y el siguiente nombre se pegaría al anterior).
+    fila.onclick = function (ev) {
+      if (ev.target.classList.contains('nota-btn') || estado.enviando || estado.preguntando) return;
+      if (document.activeElement === $('buscar') && $('buscar').blur) $('buscar').blur();
+      alTocar();
+    };
     marca.addEventListener('keydown', function (ev) {
       if (ev.key !== ' ' && ev.key !== 'Enter') return;
       ev.preventDefault();
-      if (!estado.enviando) alTocar();
+      if (!estado.enviando && !estado.preguntando) alTocar();
     });
   }
   // Repinta y deja el foco donde estaba (para quien usa teclado o lector).
@@ -954,41 +1035,43 @@
     var lista = deLaHora();
     var cont = $('alumnos');
     cont.innerHTML = '';
+    var filtro = sinAcentos($('buscar').value);
+    mostrar($('limpiar-buscar'), Boolean($('buscar').value));
     $('titulo-hora').textContent = estado.hora + ' · toca a quien vino';
-    $('ayuda').textContent = estado.conPanel
-      ? 'Toca a quien vino. Lo que ya marcó cada maestra se respeta; tus faltas solo cuentan en los grupos que nadie ha pasado.'
-      : 'Toca el nombre de cada quien que vino. Quien se quede sin ✓ cuenta como falta.';
-    pintarGruposHora(f);
-    if (!lista.length) cont.innerHTML = '<div class="aviso">' + (varonil() ? 'A esta hora no hay alumnos con clase este día. Si vino alguien, búscalo abajo.' : 'A esta hora no hay alumnas con clase este día. Si vino alguien, búscala abajo.') + '</div>';
+    pintarAyuda(lista, f);
+    if (!lista.length) cont.innerHTML = '<div class="aviso">' + (varonil() ? 'A esta hora no hay alumnos con clase este día. Si vino alguien, búscalo arriba.' : 'A esta hora no hay alumnas con clase este día. Si vino alguien, búscala arriba.') + '</div>';
     // Al dueño, por maestra (como su programa): cada grupo con su «todos».
-    var grupoActual = null;
     if (estado.conPanel) lista = porGrupo(lista, f);
-    lista.forEach(function (a) {
+    pintarChips(lista, f);
+    // Lo que se ve: buscando, quien coincide en toda la hora; si no, el grupo escogido.
+    var ver = filtro ? '' : estado.verGrupo;
+    var vis = lista.filter(function (a) { return filtro ? coincide(a.n, filtro) : !ver || grupoDe(a, f) === ver; });
+    var grupoActual = null;
+    vis.forEach(function (a) {
       if (estado.conPanel && grupoDe(a, f) !== grupoActual) {
         grupoActual = grupoDe(a, f);
-        cont.appendChild(cabezaGrupo(grupoActual, lista.filter(function (x) { return grupoDe(x, f) === grupoActual; }), f));
+        cont.appendChild(cabezaGrupo(grupoActual, lista.filter(function (x) { return grupoDe(x, f) === grupoActual; }), f, Boolean(filtro)));
       }
-      var dias = a.s.filter(function (s) { return s.split('-')[1] === estado.hora; }).map(function (s) { return DIAS[+s.split('-')[0] - 1]; }).join('');
       var info = infoDueno(a, f);
       // Al dueño: la que ya marcó «vino» otra persona sale con su ✓ (punteada), no vacía como una falta.
       var deOtra = !estado.marcados[a.i] && estado.conPanel && yaVino(a, f);
       var fila = document.createElement('div');
       fila.className = 'alumno' + (estado.marcados[a.i] ? ' vino' : deOtra ? ' de-otra' : '');
       fila.setAttribute('data-id', a.i);
-      fila.innerHTML = '<div class="marca"><div class="casilla" aria-hidden="true">' + (estado.marcados[a.i] || deOtra ? '✓' : '') + '</div><div class="nombre"><span></span>' + (info ? '<small class="suya"></small>' : '') + '</div><span class="dias"></span></div><button class="nota-btn" type="button" title="Nota" aria-label="Nota">✎</button>';
+      fila.innerHTML = '<div class="marca"><div class="casilla" aria-hidden="true">' + (estado.marcados[a.i] || deOtra ? '✓' : '') + '</div><div class="nombre"><span></span>' + (info ? '<small class="suya"></small>' : '') + '</div></div><button class="nota-btn" type="button" title="Nota" aria-label="Nota">✎</button>';
       fila.querySelector('.nombre span').textContent = a.n;
       fila.querySelector('.nota-btn').setAttribute('aria-label', 'Nota para ' + a.n);
       if (info) fila.querySelector('.nombre small').textContent = info;
-      fila.querySelector('.dias').textContent = dias;
       filaQueSeMarca(fila, estado.marcados[a.i], function () { estado.marcados[a.i] = !estado.marcados[a.i]; repintarEn(a.i); });
       fila.querySelector('.nota-btn').onclick = function () { editarNota(a); };
       cont.appendChild(fila);
       ponerNota(cont, a);
     });
-    pintarNuevos(cont);
-    pintarOtrosAhora();
-    pintarFuera();
-    pintarNoEncontrados();
+    var nv = nuevos().filter(function (a) { return filtro ? coincide(a.n, filtro) : !ver || ver === '_nuevos'; });
+    pintarNuevos(cont, nv);
+    // Los agregados a mano se ven con «Todos» (no son de ningún grupo) y al buscarlos.
+    var agregados = pintarFuera(filtro, ver) + pintarNoEncontrados(filtro, ver);
+    pintarOtrosAhora(vis.length + nv.length + agregados > 0);
     pintarAgendadas();
     pintarCuenta(lista, f);
     guardarBorrador();
@@ -1017,8 +1100,8 @@
     // «Vinieron todos» palomea a todos los de la hora; si ya están todos, los desmarca.
     var todos = lista.length > 0 && lista.every(function (a) { return estado.marcados[a.i]; });
     $('todos').textContent = todos ? 'Desmarcar a todos' : '✓ Vinieron todos';
-    // El dueño lo tiene por grupo.
-    mostrar($('todos'), lista.length > 1 && !estado.conPanel);
+    // El dueño lo tiene por grupo. Buscando no: palomearía también a quien no se ve.
+    mostrar($('todos'), lista.length > 1 && !estado.conPanel && !$('buscar').value.trim());
   }
   // Marcar de un toque; quitar las palomitas de varios se pregunta (no hay deshacer).
   function marcarTodos(lista, si) {
@@ -1034,17 +1117,23 @@
   // Los nuevos que todavía no tienen grupo salen al final de cada hora, para
   // cualquier maestra de su rama: la que lo palomee es con quien tomó clase.
   function nuevos() { return activas().filter(function (a) { return a.nv; }).sort(porNombre); }
-  function pintarNuevos(cont) {
-    var lista = nuevos();
+  function pintarNuevos(cont, lista) {
     if (!lista.length) return;
     // A la maestra de femenil, de ellas; al dueño (las dos ramas), «nuevos».
     var fem = esMaestra() && !varonil();
     separador(cont, fem ? 'Nuevas · todavía sin grupo' : 'Nuevos · todavía sin grupo');
+    // A la maestra se le dice una vez (no en cada renglón) que es solo si vino con ella.
+    if (esMaestra()) {
+      var p = document.createElement('p');
+      p.className = 'ayuda nuevos-ayuda';
+      p.textContent = fem ? 'Paloméala solo si vino contigo.' : 'Paloméalo solo si vino contigo.';
+      cont.appendChild(p);
+    }
     lista.forEach(function (a) {
       var fila = document.createElement('div');
       fila.className = 'alumno nuevo' + (estado.extras[a.i] ? ' vino' : '');
       fila.setAttribute('data-id', a.i);
-      fila.innerHTML = '<div class="marca"><div class="casilla" aria-hidden="true">' + (estado.extras[a.i] ? '✓' : '') + '</div><div class="nombre"><span></span><small class="suya">' + (fem ? 'Nueva: si vino contigo, paloméala' : 'Nuevo: si vino contigo, palómealo') + '</small></div></div><button class="nota-btn" type="button" title="Nota" aria-label="Nota">✎</button>';
+      fila.innerHTML = '<div class="marca"><div class="casilla" aria-hidden="true">' + (estado.extras[a.i] ? '✓' : '') + '</div><div class="nombre"><span></span></div></div><button class="nota-btn" type="button" title="Nota" aria-label="Nota">✎</button>';
       fila.querySelector('.nombre span').textContent = a.n;
       fila.querySelector('.nota-btn').setAttribute('aria-label', 'Nota para ' + a.n);
       filaQueSeMarca(fila, estado.extras[a.i], function () { estado.extras[a.i] = !estado.extras[a.i]; repintarEn(a.i); });
@@ -1054,37 +1143,28 @@
     });
   }
 
-  // «¿Vino alguien que no está en la lista?»: al escribir salen los de otro
-  // horario, con su horario al lado; «+ Vino» los pasa a «Fuera de su horario».
-  // Si escribe a alguien que ya está arriba, se le dice (y se palomea desde ahí).
-  function pintarOtrosAhora() {
+  // La búsqueda de arriba filtra la lista (ahí se palomea a quien es de esta
+  // hora); aquí, debajo, salen los de otro horario, con su horario al lado:
+  // «+ Vino» los pasa a «Fuera de su horario». `hubo`: alguien de la lista
+  // coincide. Sin búsqueda, un botón para subir a buscar.
+  function pintarOtrosAhora(hubo) {
     var enHora = {};
     deLaHora().forEach(function (a) { enHora[a.i] = true; });
-    pintarOtros(enHora, sinAcentos($('buscar').value));
+    pintarOtros(enHora, sinAcentos($('buscar').value), hubo);
   }
-  function pintarOtros(enHora, filtro) {
+  function pintarOtros(enHora, filtro, hubo) {
     var cont = $('otros');
     cont.innerHTML = '';
+    if (!filtro) {
+      var ir = document.createElement('button');
+      ir.type = 'button';
+      ir.className = 'sec ancho ir-buscar';
+      ir.textContent = '¿Vino alguien que no está en la lista? ' + (varonil() ? 'Búscalo' : 'Búscala');
+      ir.onclick = irABuscar;
+      cont.appendChild(ir);
+      return;
+    }
     if (filtro.length < 2) return;
-    // Los que ya se ven en la lista (de la hora, nuevos o ya agregados fuera de su horario).
-    var arriba = activas().filter(function (a) { return (enHora[a.i] || a.nv || estado.extras[a.i]) && coincide(a.n, filtro); }).sort(porNombre);
-    arriba.slice(0, 4).forEach(function (a) {
-      var vino = a.nv || !enHora[a.i] ? estado.extras[a.i] : estado.marcados[a.i];
-      var fila = document.createElement('div');
-      fila.className = 'otro';
-      fila.innerHTML = '<div class="nombre"><span></span><small></small></div><button type="button" class="agregar"></button>';
-      fila.querySelector('span').textContent = a.n;
-      fila.querySelector('small').textContent = !enHora[a.i] && !a.nv ? (varonil() ? 'Ya lo agregaste (fuera de su horario)' : 'Ya la agregaste (fuera de su horario)') : 'Ya está en la lista de arriba';
-      var b = fila.querySelector('.agregar');
-      b.textContent = vino ? '✓ Ya tiene' : '✓ Vino';
-      b.disabled = Boolean(vino);
-      b.onclick = function () {
-        if (a.nv) estado.extras[a.i] = true; else estado.marcados[a.i] = true;
-        $('buscar').value = '';
-        pintarAlumnos();
-      };
-      cont.appendChild(fila);
-    });
     var hallados = activas().filter(function (a) {
       return !enHora[a.i] && !a.nv && !estado.extras[a.i] && coincide(a.n, filtro);
     }).sort(porNombre);
@@ -1099,6 +1179,8 @@
         fila.querySelector('.agregar').onclick = function () {
           estado.extras[a.i] = true;
           $('buscar').value = '';
+          // Los agregados se ven con «Todos»: si había un grupo escogido, se vuelve ahí.
+          estado.verGrupo = '';
           pintarAlumnos();
         };
         cont.appendChild(fila);
@@ -1106,13 +1188,20 @@
       if (hallados.length > 8) cont.insertAdjacentHTML('beforeend', '<div class="nadie">Hay ' + (hallados.length - 8) + ' más: escribe más del nombre.</div>');
     }
     // La maestra siempre puede anotar a quien no está, aunque el nombre se parezca al de una suya.
-    if (esMaestra()) { ponerAnotar(cont, Boolean(arriba.length || hallados.length)); return; }
-    if (!hallados.length && !arriba.length) {
+    if (esMaestra()) { ponerAnotar(cont, Boolean(hubo || hallados.length)); return; }
+    if (!hallados.length && !hubo) {
       var nadie = document.createElement('div');
       nadie.className = 'nadie';
-      nadie.textContent = 'No hay nadie más con ese nombre. Si vino a probar, anótala abajo en clase de prueba.';
+      nadie.textContent = 'No hay nadie con ese nombre. Si vino a probar, anótala abajo en clase de prueba.';
       cont.appendChild(nadie);
     }
+  }
+  // Sube a la barra y abre el teclado en la búsqueda.
+  function irABuscar() {
+    var b = $('buscar');
+    // Si la barra ya está a la vista (pegada arriba), la lista no se mueve.
+    if (b.scrollIntoView) b.scrollIntoView({ block: 'nearest' });
+    try { b.focus({ preventScroll: true }); } catch (e) { b.focus(); }
   }
   function ponerAnotar(cont, hubo) {
     var escrito = $('buscar').value.trim();
@@ -1144,12 +1233,12 @@
     cont.appendChild(nadie);
   }
 
-  // Los que vinieron sin que les tocara esta hora.
-  function pintarFuera() {
+  // Los que vinieron sin que les tocara esta hora. Contesta cuántos se ven.
+  function pintarFuera(filtro, ver) {
     var cont = $('fuera');
     cont.innerHTML = '';
-    var fuera = idsDe(estado.extras).map(alumnoPorId).filter(function (a) { return a && !a.nv; }).sort(porNombre);
-    if (!fuera.length) return;
+    var fuera = idsDe(estado.extras).map(alumnoPorId).filter(function (a) { return a && !a.nv && (filtro ? coincide(a.n, filtro) : !ver); }).sort(porNombre);
+    if (!fuera.length) return 0;
     separador(cont, 'Fuera de su horario · ' + fuera.length);
     fuera.forEach(function (a) {
       var fila = document.createElement('div');
@@ -1162,6 +1251,7 @@
       cont.appendChild(fila);
       ponerNota(cont, a);
     });
+    return fuera.length;
   }
 
   // Maestras: quien vino y no está en su lista se anota con su nombre; el
@@ -1173,12 +1263,15 @@
     if (estado.noEnc.some(function (x) { return sinAcentos(x) === sinAcentos(nombre); })) return;
     estado.noEnc.push(nombre);
   }
-  function pintarNoEncontrados() {
+  // Como los de fuera de su horario: con «Todos» y al buscarlos. Contesta cuántos se ven.
+  function pintarNoEncontrados(filtro, ver) {
     var cont = $('noenc-lista');
     cont.innerHTML = '';
-    if (!estado.noEnc.length) return;
-    separador(cont, 'No están en tu lista · ' + estado.noEnc.length);
+    var se = estado.noEnc.filter(function (n) { return filtro ? coincide(n, filtro) : !ver; });
+    if (!se.length) return 0;
+    separador(cont, 'No están en tu lista · ' + se.length);
     estado.noEnc.forEach(function (nombre, i) {
+      if (se.indexOf(nombre) < 0) return;
       var fila = document.createElement('div');
       fila.className = 'alumno vino fuera';
       fila.innerHTML = '<div class="casilla">✓</div><div class="nombre"><span></span><small>El gimnasio ' + (varonil() ? 'lo' : 'la') + ' busca por su nombre</small></div><button class="quitar" type="button" title="Quitar" aria-label="Quitar">✕</button>';
@@ -1186,6 +1279,7 @@
       fila.querySelector('.quitar').onclick = function () { estado.noEnc.splice(i, 1); pintarAlumnos(); };
       cont.appendChild(fila);
     });
+    return se.length;
   }
 
   // Clases de prueba agendadas para ese día (a la maestra, las de su
@@ -1368,69 +1462,178 @@
   // Lo que se pregunta antes de mandar: cuántos vinieron y quiénes se quedan
   // sin ✓, con el día dicho (para no mandar en otra fecha sin querer).
   // `pruebas`: las clases de prueba que van (agendadas y anotadas a mano).
-  function antesDeEnviar(f, cuantos, pruebas) {
-    var cuando = 'las ' + estado.hora + (f === hoy() ? ' de hoy' : ' del ' + fechaLarga(f));
-    // Quienes quedan sin ✓. Al dueño no se le cuentan las que ya marcó otra
-    // persona (su maestra u otra lista): esas se quedan como están.
-    var sin = deLaHora().filter(function (a) { var mc = marcaOtra(a, f); return !estado.marcados[a.i] && !(mc && (mc.e === 'p' || mc.e === 'f')); }).map(function (a) { return a.n; });
-    var nombres = sin.slice(0, 10).join(', ') + (sin.length > 10 ? ' y ' + (sin.length - 10) + ' más' : '');
-    var avisos = [];
-    if (f === hoy() && horaAhora() < estado.hora) avisos.push('Ojo: la clase de las ' + estado.hora + ' todavía no empieza.');
-    // Lo escrito en la búsqueda y no agregado, si ninguna que coincide ya cuenta.
+  function resumenEnvio(f, cuantos, pruebas) {
+    var r = { hora: estado.hora, dia: f === hoy() ? 'Hoy, ' + fechaLarga(f) : 'Del ' + fechaLarga(f), otroDia: f !== hoy(), avisos: [], avisoGrupos: '', va: '', nota: '', vinieron: cuantos, faltan: [], pruebas: pruebas.map(function (p) { return p.nombre; }) };
+    // Quienes faltaron: los que se quedan sin ✓ de nadie. Al dueño también
+    // cuentan las faltas que ya marcó su maestra (la hora completa debe cuadrar:
+    // vinieron + faltaron = todos). `sinNadie`: las que nadie ha marcado, que
+    // quedan con falta por su lista.
+    r.faltan = deLaHora().filter(function (a) { return !yaVino(a, f); });
+    var sinNadie = deLaHora().filter(function (a) { var mc = marcaOtra(a, f); return !estado.marcados[a.i] && !(mc && (mc.e === 'p' || mc.e === 'f')); });
+    if (f === hoy() && horaAhora() < estado.hora) r.avisos.push('Ojo: la clase de las ' + estado.hora + ' todavía no empieza.');
+    // Lo buscado que no está en la lista de esta hora (ni con ✓ ni con falta)
+    // y no se agregó: quien vino de otro horario se quedó sin anotar.
     var escrito = $('buscar').value.trim();
     var filtro = sinAcentos(escrito);
-    var yaCuenta = activas().some(function (a) { return coincide(a.n, filtro) && (estado.marcados[a.i] || estado.extras[a.i]); }) ||
+    var enLista = deLaHora().concat(nuevos()).some(function (a) { return coincide(a.n, filtro); });
+    var yaCuenta = enLista || activas().some(function (a) { return coincide(a.n, filtro) && (estado.marcados[a.i] || estado.extras[a.i]); }) ||
       estado.noEnc.some(function (n) { return coincide(n, filtro); });
-    if (filtro.length >= 2 && !yaCuenta) avisos.push('Escribiste «' + escrito + '» en «¿Vino alguien que no está en la lista?» y no ' + (varonil() ? 'lo' : 'la') + ' agregaste: no va en la lista.');
+    if (filtro.length >= 2 && !yaCuenta) r.avisos.push('Buscaste «' + escrito + '»: no está en la lista de esta hora y no ' + (varonil() ? 'lo' : 'la') + ' agregaste, así que no va.');
     // Al dueño, lo mismo que dice el contador de abajo: lo suyo más lo que ya
     // estaba marcado (por las maestras, por él en otro aparato o del A1).
     var deOtras = estado.conPanel ? deLaHora().filter(function (a) { return !estado.marcados[a.i] && yaVino(a, f); }).length : 0;
-    var t;
+    r.vinieron = cuantos + deOtras;
     if (!cuantos) {
-      t = 'No palomeaste a nadie.';
-      if (estado.conPanel) {
-        if (deOtras) t += deOtras === 1 ? ' Ya vino 1 que estaba marcada.' : ' Ya vinieron ' + deOtras + ' que estaban marcadas.';
-        t += sin.length ? (sin.length === 1 ? ' Queda con falta 1 que nadie ha marcado: ' : ' Quedan con falta ' + sin.length + ' que nadie ha marcado: ') + nombres + '.' : ' Lo que ya estaba marcado se queda igual.';
-      } else {
-        t += sin.length ? ' Todos quedan con falta.' : '';
-      }
-    } else {
-      t = estado.conPanel && deOtras
-        ? 'Palomeaste ' + cuantos + ' (más ' + deOtras + (deOtras === 1 ? ' que ya estaba marcada).' : ' que ya estaban marcadas).')
-        : (cuantos === 1 ? 'Vino 1.' : 'Vinieron ' + cuantos + '.');
-      if (sin.length) t += '\n' + (estado.conPanel ? (sin.length === 1 ? 'Queda con falta' : 'Quedan con falta') : (sin.length === 1 ? 'Faltó' : 'Faltaron')) + ' ' + sin.length + ': ' + nombres + '.';
-      else t += ' No faltó nadie.';
+      r.nota = 'No palomeaste a nadie.' + (!estado.conPanel ? (r.faltan.length ? (varonil() ? ' Todos quedan con falta.' : ' Todas quedan con falta.') : '')
+        : (deOtras ? (deOtras === 1 ? ' Ya vino 1 que estaba marcada.' : ' Ya vinieron ' + deOtras + ' que estaban marcadas.') : '') +
+          (sinNadie.length ? '' : ' Lo que ya estaba marcado se queda igual.'));
+    } else if (deOtras) {
+      r.nota = 'Palomeaste ' + cuantos + ' (más ' + deOtras + (deOtras === 1 ? ' que ya estaba marcada).' : ' que ya estaban marcadas).');
     }
     // Al dueño que cubre una hora con varias maestras: el grupo de una que no
     // ha mandado y en el que él no palomeó a nadie se dice por su nombre (como
     // en la computadora). Sin maestra ('_sin') no: ese solo lo cubre él.
+    // Varios grupos así van en un solo aviso, debajo de los nombres.
     if (estado.conPanel && cuantos) {
-      var porG = {};
+      var porG = {}, gruposSin = [], quedanTodas = 0;
       deLaHora().forEach(function (a) { var gid = grupoDe(a, f); (porG[gid] = porG[gid] || []).push(a); });
-      var gids = Object.keys(porG);
+      var gids = window.PanelDueno.ordenar(Object.keys(porG));
       if (gids.length > 1) gids.forEach(function (gid) {
         if (gid === '_sin' || grupoPasado(gid, f) || porG[gid].some(function (a) { return yaVino(a, f); })) return;
         var quedan = porG[gid].filter(function (a) { var mc = marcaOtra(a, f); return !(mc && (mc.e === 'p' || mc.e === 'f')); }).length;
         if (!quedan) return;
-        var nom = window.PanelDueno.nombreGrupo(gid);
-        avisos.push('Del grupo de ' + nom + ' no palomeaste a nadie y su lista todavía no llega: ' + (quedan === 1 ? 'la 1 queda' : 'las ' + quedan + ' quedan') +
-          ' con falta a tu nombre. Si ' + nom + ' manda la suya después, se corrige con la de ella.');
+        gruposSin.push(window.PanelDueno.nombreGrupo(gid));
+        quedanTodas += quedan;
       });
+      var las = quedanTodas === 1 ? 'la 1 queda' : 'las ' + quedanTodas + ' quedan';
+      if (gruposSin.length === 1) {
+        r.avisoGrupos = 'Del grupo de ' + gruposSin[0] + ' no palomeaste a nadie y su lista todavía no llega: ' + las +
+          ' con falta a tu nombre. Si ' + gruposSin[0] + ' manda su lista después, se corrige con esa.';
+      } else if (gruposSin.length > 1) {
+        r.avisoGrupos = 'De los grupos de ' + gruposSin.slice(0, -1).join(', ') + ' y ' + gruposSin[gruposSin.length - 1] +
+          ' no palomeaste a nadie y sus listas todavía no llegan: ' + las + ' con falta a tu nombre. Si mandan su lista después, se corrige con la de cada grupo.';
+      }
     }
-    // Las clases de prueba que van (las agendadas que se tocaron y las
-    // anotadas a mano): una puesta por error llega al programa como «Asistió»
-    // y ya no se quita desde aquí.
-    if (pruebas && pruebas.length) t += '\nClase de prueba: ' + pruebas.map(function (p) { return p.nombre; }).join(', ') + '.';
     // Abierto «para verlo» (este celular guarda otro link): lo que se mande
     // cuenta como la lista de este link. El aviso verde se pudo haber borrado
     // al tocar una hora: se repite aquí.
     var otro = guardado(K.llave);
-    var va = esMaestra() && otro && otro !== estado.llave ? 'Va como ' + deQuien(estado.datos) + '.\n\n' : '';
-    return va + (avisos.length ? avisos.join('\n') + '\n\n' : '') + t + '\n\n¿Enviar la lista de ' + cuando + '?';
+    if (esMaestra() && otro && otro !== estado.llave) r.va = 'Va como ' + deQuien(estado.datos) + '.';
+    return r;
   }
+  function nodo(tag, clase, texto) {
+    var e = document.createElement(tag);
+    if (clase) e.className = clase;
+    if (texto !== undefined) e.textContent = texto;
+    return e;
+  }
+  // La ventana de «¿Enviar…?» (en vez de la del navegador, que se lee mal en
+  // el celular): números grandes, quién falta (al dueño, por maestra), los
+  // avisos y dos botones. Contesta true si se toca «Enviar».
+  var cerrarEnvio = null;
+  // Lo de atrás no se toca (ni con teclado) mientras la ventana está abierta.
+  function fondoQuieto(si) {
+    [document.querySelector('.cabeza'), document.querySelector('main'), $('barra'), $('pestanas')].forEach(function (e) {
+      if (!e) return;
+      if (si) e.setAttribute('inert', ''); else e.removeAttribute('inert');
+    });
+  }
+  function preguntarEnvio(r) {
+    if (cerrarEnvio) cerrarEnvio(false);
+    var caja = $('envio');
+    caja.innerHTML = '';
+    var cab = nodo('div', 'hoja-cab');
+    var tit = nodo('div', 'hoja-tit');
+    var h = nodo('h2', null, '¿Enviar la lista de las ' + r.hora + '?');
+    h.setAttribute('id', 'envio-titulo');
+    h.setAttribute('tabindex', '-1');
+    tit.appendChild(h);
+    tit.appendChild(nodo('small', r.otroDia ? 'otro-dia-txt' : '', r.dia));
+    cab.appendChild(tit);
+    caja.appendChild(cab);
+    if (r.va) caja.appendChild(nodo('div', 'aviso ok', r.va));
+    r.avisos.forEach(function (t) { caja.appendChild(nodo('div', 'aviso', t)); });
+    var n = r.faltan.length;
+    var cuenta = nodo('div', 'envio-cuenta');
+    var v = nodo('p', 'v');
+    v.appendChild(nodo('b', null, String(r.vinieron)));
+    v.appendChild(document.createTextNode(r.vinieron === 1 ? ' vino' : ' vinieron'));
+    var fl = nodo('p', 'f' + (n ? '' : ' cero'));
+    fl.appendChild(nodo('b', null, String(n)));
+    fl.appendChild(document.createTextNode(n === 1 ? ' faltó' : ' faltaron'));
+    cuenta.appendChild(v);
+    cuenta.appendChild(fl);
+    caja.appendChild(cuenta);
+    if (r.nota) caja.appendChild(nodo('p', 'envio-nota', r.nota));
+    var fal = nodo('div', 'envio-faltan');
+    if (!n) fal.appendChild(nodo('p', 'envio-nadie', 'No faltó nadie.'));
+    else if (estado.conPanel) {
+      // Por maestra, en el mismo orden que la lista.
+      var f = $('fecha').value, porG = {}, orden = [];
+      porGrupo(r.faltan, f).forEach(function (a) { var g = grupoDe(a, f); if (!porG[g]) { porG[g] = []; orden.push(g); } porG[g].push(a.n); });
+      orden.forEach(function (g) {
+        var p = nodo('p');
+        var pu = nodo('i', 'punto');
+        pu.style.background = window.PanelDueno.colorGrupo(g);
+        p.appendChild(pu);
+        p.appendChild(nodo('b', null, window.PanelDueno.nombreGrupo(g) + ': '));
+        p.appendChild(document.createTextNode(porG[g].join(', ')));
+        fal.appendChild(p);
+      });
+    } else fal.appendChild(nodo('p', null, r.faltan.map(function (a) { return a.n; }).join(', ')));
+    caja.appendChild(fal);
+    if (r.avisoGrupos) caja.appendChild(nodo('div', 'aviso', r.avisoGrupos));
+    // Las clases de prueba que van: una puesta por error llega al programa
+    // como «Asistió» y ya no se quita desde aquí.
+    if (r.pruebas.length) caja.appendChild(nodo('p', 'envio-pruebas', 'Clase de prueba: ' + r.pruebas.join(', ') + '.'));
+    var pie = nodo('div', 'hoja-botones');
+    var no = nodo('button', 'sec', 'Seguir pasando');
+    var si = nodo('button', 'principal', 'Enviar');
+    no.type = 'button'; si.type = 'button';
+    no.setAttribute('data-r', 'no'); si.setAttribute('data-r', 'si');
+    pie.appendChild(no);
+    pie.appendChild(si);
+    caja.appendChild(pie);
+    mostrar($('envio-fondo'), true);
+    mostrar(caja, true);
+    document.body.classList.add('con-hoja');
+    fondoQuieto(true);
+    if (caja.scrollTop !== undefined) caja.scrollTop = 0;
+    // «Enviar» de la ventana queda donde estaba el de abajo: un segundo toque
+    // impaciente mandaría sin leer. Se puede tocar medio segundo después.
+    si.disabled = true;
+    setTimeout(function () { si.disabled = false; }, 500);
+    // El lector de pantalla empieza por el título (no por «Enviar»).
+    try { h.focus({ preventScroll: true }); } catch (e) { /* sin foco */ }
+    // «Atrás» de Android cierra la ventana (como «Seguir pasando»), no la lista.
+    var conAtras = false;
+    try { history.pushState({ envio: true }, ''); conAtras = true; } catch (e) { conAtras = false; }
+    return new Promise(function (listo) {
+      cerrarEnvio = function (respuesta, porAtras) {
+        cerrarEnvio = null;
+        mostrar($('envio-fondo'), false);
+        mostrar(caja, false);
+        caja.innerHTML = '';
+        document.body.classList.remove('con-hoja');
+        fondoQuieto(false);
+        // Cerrada con un botón: se quita el paso que se puso en el historial.
+        if (conAtras && !porAtras) { try { if (history.state && history.state.envio) history.back(); } catch (e) { /* sin historial */ } }
+        try { $('enviar').focus({ preventScroll: true }); } catch (e) { /* sin foco */ }
+        listo(respuesta);
+      };
+      no.onclick = function () { if (cerrarEnvio) cerrarEnvio(false); };
+      si.onclick = function () { if (cerrarEnvio && !si.disabled) cerrarEnvio(true); };
+    });
+  }
+  $('envio-fondo').addEventListener('click', function () { if (cerrarEnvio) cerrarEnvio(false); });
+  // Solo si de verdad se salió del paso de la ventana (uno atrasado, de la
+  // ventana anterior, no cierra la que se acaba de abrir).
+  window.addEventListener('popstate', function (ev) { if (cerrarEnvio && !(ev.state && ev.state.envio)) cerrarEnvio(false, true); });
+  document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && cerrarEnvio) cerrarEnvio(false); });
   async function enviar() {
     var f = $('fecha').value;
-    if (!f || !estado.hora) return;
+    var hr = estado.hora;
+    if (!f || !hr || estado.enviando || estado.preguntando) return;
     var extras = idsDe(estado.extras);
     var propios = idsDe(estado.marcados).filter(function (k) { return !estado.extras[k]; });
     // Los de fuera de su horario también van en «presentes»: así los cuenta
@@ -1440,14 +1643,6 @@
     var pruebas = Object.keys(estado.agendadas).filter(function (n) { return estado.agendadas[n]; }).map(function (n) { return { nombre: n, reco: '' }; })
       .concat([].slice.call($('pruebas').children).map(function (d) { var i = d.querySelectorAll('input'); return { nombre: i[0].value.trim(), reco: i[1].value.trim() }; }).filter(function (p) { return p.nombre; }));
     var noEncontrados = estado.noEnc.slice();
-    if (estado.enviando || !confirm(antesDeEnviar(f, presentes.length + noEncontrados.length, pruebas))) return;
-    // Mientras sale, no se cambia de hora ni de día (lo nuevo se borraría al terminar).
-    estado.enviando = true;
-    $('vista-lista').classList.add('enviando');
-    var boton = $('enviar');
-    boton.disabled = true;
-    boton.textContent = 'Enviando…';
-    var hr = estado.hora;
     // Al dueño: las que ya salen «vino» (las marcó él en otro aparato, o son
     // del A1 de todo el día) también van, o el programa les pondría falta. Solo
     // en los grupos que no pasó su maestra: ahí manda la lista de ella.
@@ -1467,8 +1662,25 @@
     var datos = {
       fecha: f, hora: hr, presentes: presentes.concat(yaMarcadas), extras: extras, quitados: quitados, quitadosNombres: quitadosNombres,
       vistas: deLaHora().map(function (a) { return a.i; }),
-      notas: notas, notaDia: $('nota-dia').value.trim(), pruebas: pruebas, noEncontrados: noEncontrados, enviado: enviadoAhora(), v: 3
+      notas: notas, notaDia: $('nota-dia').value.trim(), pruebas: pruebas, noEncontrados: noEncontrados, v: 3
     };
+    // Todo se toma antes de preguntar: lo que pase mientras la ventana está
+    // abierta (llega la lista nueva, pasa el minuto) no cambia lo que se manda.
+    estado.preguntando = true;
+    var si = false;
+    try {
+      si = await preguntarEnvio(resumenEnvio(f, presentes.length + noEncontrados.length, pruebas));
+    } finally {
+      estado.preguntando = false;
+    }
+    if (!si || estado.enviando || estado.hora !== hr || $('fecha').value !== f) return;
+    // Mientras sale, no se cambia de hora ni de día (lo nuevo se borraría al terminar).
+    estado.enviando = true;
+    $('vista-lista').classList.add('enviando');
+    var boton = $('enviar');
+    boton.disabled = true;
+    boton.textContent = 'Enviando…';
+    datos.enviado = enviadoAhora();
     var texto = JSON.stringify(datos);
     var env, r;
     try {
@@ -1631,7 +1843,20 @@
   $('dia-antes').onclick = function () { moverDia(-1); };
   $('dia-despues').onclick = function () { moverDia(1); };
   $('volver-hoy').onclick = function () { cambiarFecha(hoy()); };
-  $('buscar').addEventListener('input', pintarOtrosAhora);
+  // En el celular, tocar la fecha abre su calendario; con ratón hay que pedirlo.
+  $('fecha').addEventListener('click', function () {
+    var f = this;
+    if (window.matchMedia && window.matchMedia('(pointer: fine)').matches && f.showPicker) { try { f.showPicker(); } catch (e) { /* ya abierto */ } }
+  });
+  // Buscar filtra la lista mientras se escribe. Al volver a tocarla, lo escrito
+  // queda seleccionado: el siguiente nombre lo reemplaza. Enter cierra el teclado.
+  $('buscar').addEventListener('input', function () { pintarAlumnos(); subirALista(); });
+  $('buscar').addEventListener('focus', function () {
+    var b = this;
+    setTimeout(function () { try { if (document.activeElement === b) b.setSelectionRange(0, b.value.length); } catch (e) { /* sin selección */ } }, 0);
+  });
+  $('buscar').addEventListener('keydown', function (ev) { if (ev.key === 'Enter' && this.blur) { ev.preventDefault(); this.blur(); } });
+  $('limpiar-buscar').onclick = function () { $('buscar').value = ''; pintarAlumnos(); subirALista(); };
   $('todos').onclick = todosVinieron;
   $('mas-prueba').onclick = agregarPrueba;
   $('nota-dia').addEventListener('input', guardarBorrador);
