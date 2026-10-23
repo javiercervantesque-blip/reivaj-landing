@@ -16,10 +16,12 @@
   // El link que manda el gimnasio desde el expediente trae un código del
   // alumno después del «#» (/carta#c=…): con él, el programa sabe de quién es
   // la carta sin adivinar por el nombre. Desde la 1.3.21 del programa trae
-  // también (f=…) el nombre y la fecha de nacimiento que tiene el gimnasio de
-  // cada hijo de ese WhatsApp, cada uno con su código: la carta llega ya
-  // llena (la familia solo corrige si algo está mal) y, con hermanos, se
-  // escoge de quién es y al terminar sigue la del otro. Lo que va después del
+  // también (f=…) el nombre que tiene el gimnasio de cada hijo de ese
+  // WhatsApp, cada uno con su código: la carta llega con el nombre y, con
+  // hermanos, se escoge de quién es y al terminar sigue la del otro. La fecha
+  // de nacimiento la escribe la familia con sus datos reales (23-oct-2026, lo
+  // pidió Javier: la del gimnasio pudo venir cruzada); la que traían los links
+  // de antes no se pone. Lo que va después del
   // «#» no llega al servidor de la página; el código va solo dentro del sobre
   // cerrado, y todo se quita de la barra en cuanto se lee.
   var codigo = '';
@@ -28,10 +30,11 @@
   var actual = null; // el hijo de la familia cuya carta se está llenando
   function deLaFamilia(lista) {
     return (Array.isArray(lista) ? lista : []).slice(0, 6).map(function (k) {
-      return { codigo: String(k && k.codigo || ''), nombre: String(k && k.nombre || '').replace(/\s+/g, ' ').trim().slice(0, 120), nacimiento: /^\d{4}-\d{2}-\d{2}$/.test(k && k.nacimiento || '') ? k.nacimiento : '', firmada: Boolean(k && k.firmada) };
+      return { codigo: String(k && k.codigo || ''), nombre: String(k && k.nombre || '').replace(/\s+/g, ' ').trim().slice(0, 120), firmada: Boolean(k && k.firmada) };
     }).filter(function (k) { return CODIGO.test(k.codigo) && k.nombre; });
   }
-  // f = base64url de un renglón por hijo: código, nombre y nacimiento separados por tabulador.
+  // f = base64url de un renglón por hijo: código, nombre y nacimiento (vacío
+  // desde el 23-oct-2026; si viene, no se usa) separados por tabulador.
   function leerFamilia(t) {
     try {
       var b = atob(String(t).replace(/-/g, '+').replace(/_/g, '/'));
@@ -39,7 +42,7 @@
       for (var i = 0; i < b.length; i++) bytes[i] = b.charCodeAt(i);
       return deLaFamilia(new TextDecoder().decode(bytes).split('\n').map(function (l) {
         var p = l.split('\t');
-        return { codigo: p[0], nombre: p[1], nacimiento: p[2] };
+        return { codigo: p[0], nombre: p[1] };
       }));
     } catch (e) { return []; }
   }
@@ -232,7 +235,7 @@
     actual = k;
     codigo = k.codigo;
     form.elements.alumno.value = k.nombre;
-    form.elements.nacimiento.value = k.nacimiento;
+    form.elements.nacimiento.value = '';
     $('ayudaAlumno').hidden = false;
     pintarFamilia();
   }
@@ -259,14 +262,12 @@
     return cuadran.length === 1 ? cuadran[0] : null;
   }
   // Escribieron encima el nombre de otro hijo del link: la carta pasa a ser
-  // de ese, con su código y su fecha (si la fecha era la del anterior).
+  // de ese, con su código (la fecha es la que escribieron ellos).
   function alCambiarNombre() {
     if (!familia.length) return;
     var k = hijoDelNombre(v('alumno'));
     if (!k || k === actual) return;
-    var antes = actual, nac = form.elements.nacimiento;
     actual = k; codigo = k.codigo;
-    if (!nac.value || (antes && nac.value === antes.nacimiento)) nac.value = k.nacimiento;
     $('ayudaAlumno').hidden = false;
     pintarFamilia();
     pintar();
@@ -555,7 +556,7 @@
   $('guardarCopia').addEventListener('click', function () { window.print(); });
   // La del hermano: quien firma, su WhatsApp y las emergencias se quedan; lo
   // del alumno, su salud, el seguro y la firma se llenan de nuevo.
-  // Con el link de la familia, sigue el hijo que falta, ya lleno.
+  // Con el link de la familia, sigue el hijo que falta, con su nombre.
   $('otraCarta').addEventListener('click', function () {
     $('listo').hidden = true;
     form.hidden = false;
@@ -565,7 +566,7 @@
     if (sigue) ponerAlumno(sigue); else pintarFamilia();
     pintar();
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    form.elements[sigue ? 'curp' : 'alumno'].focus({ preventScroll: true });
+    form.elements[sigue ? 'nacimiento' : 'alumno'].focus({ preventScroll: true });
     guardarBorrador();
   });
 
