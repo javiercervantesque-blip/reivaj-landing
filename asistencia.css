@@ -149,6 +149,9 @@ button.agregar { border: 1.5px solid var(--ok); background: #fff; color: var(--o
 .nota-alumno { margin: -2px 0 8px 46px; }
 .quitar { border: 0; background: none; font-size: 18px; color: var(--mal); padding: 6px 8px; min-width: 40px; min-height: 40px; flex: none; }
 .nuevos-ayuda { margin: 0 0 4px; font-size: 13.5px; }
+/* «No salen 3 que faltaron a las 16:00 (van con falta). Verlas» */
+.ayuda.faltaron { display: flex; align-items: center; justify-content: space-between; gap: 6px 10px; flex-wrap: wrap; margin: 10px 0 2px; padding: 6px 4px 6px 12px; background: var(--gris-suave); border-radius: 10px; font-size: 13.5px; color: var(--texto); }
+.ayuda.faltaron span { flex: 1 1 180px; }
 
 /* La barra de buscar y de grupos: se queda arriba mientras se baja por la lista */
 .barra-lista { position: sticky; top: env(safe-area-inset-top); z-index: 4; background: #fff; margin: 0 calc(-1 * var(--pt)); padding: 8px var(--pt); border-bottom: 1px solid var(--linea); }

@@ -172,7 +172,7 @@
     if (e) {
       var hayGrupos = e.grupos && Object.keys(e.grupos).length;
       var hayFuera = e.fuera && (e.fuera.x || []).length;
-      return hayGrupos || hayFuera ? { grupos: e.grupos || {}, lista: e.lista || null, fuera: e.fuera || null } : null;
+      return hayGrupos || hayFuera ? { grupos: e.grupos || {}, lista: e.lista || null, fuera: e.fuera || null, mano: Boolean(e.mano) } : null;
     }
     if (H.hasta && f < H.hasta) return null;
     if (H.desde && f < H.desde) return null;
@@ -226,7 +226,8 @@
     else if (conLista) tipo = 'parcial';
     else if (cuenta.p + cuenta.f + cuenta.x > 0 && cuando === 'paso') tipo = 'completa';
     else tipo = cuando === 'tarde' ? 'tarde' : cuando === 'curso' ? 'curso' : 'sin';
-    return { tipo: tipo, ids: ids, sueltos: sueltos, fuera: fuera, hechos: cubre ? ids.length : hechos.length, total: ids.length, grupos: x.grupos, lista: x.lista, cuenta: cuenta, cuando: cuando, pct: pct(cuenta.p, cuenta.f) };
+    // `mano`: esa hora también se guardó en la computadora (ver deLaAnterior en asistencia.js).
+    return { tipo: tipo, ids: ids, sueltos: sueltos, fuera: fuera, hechos: cubre ? ids.length : hechos.length, total: ids.length, grupos: x.grupos, lista: x.lista, mano: Boolean(x.mano), cuenta: cuenta, cuando: cuando, pct: pct(cuenta.p, cuenta.f) };
   }
   function textoEstado(e) {
     if (e.tipo === 'completa') return '✓ completa';
