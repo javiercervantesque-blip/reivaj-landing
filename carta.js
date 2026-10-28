@@ -30,11 +30,13 @@
   var actual = null; // el hijo de la familia cuya carta se está llenando
   function deLaFamilia(lista) {
     return (Array.isArray(lista) ? lista : []).slice(0, 6).map(function (k) {
-      return { codigo: String(k && k.codigo || ''), nombre: String(k && k.nombre || '').replace(/\s+/g, ' ').trim().slice(0, 120), firmada: Boolean(k && k.firmada) };
+      return { codigo: String(k && k.codigo || ''), nombre: String(k && k.nombre || '').replace(/\s+/g, ' ').trim().slice(0, 120), firmada: Boolean(k && k.firmada), sinCurp: Boolean(k && k.sinCurp) };
     }).filter(function (k) { return CODIGO.test(k.codigo) && k.nombre; });
   }
   // f = base64url de un renglón por hijo: código, nombre y nacimiento (vacío
-  // desde el 23-oct-2026; si viene, no se usa) separados por tabulador.
+  // desde el 23-oct-2026; si viene, no se usa) separados por tabulador. Desde
+  // el 27-oct-2026, quien no tiene CURP (nació fuera de México) trae una
+  // columna más, «sin-curp»: su carta no la pide (lo pidió Javier).
   function leerFamilia(t) {
     try {
       var b = atob(String(t).replace(/-/g, '+').replace(/_/g, '/'));
@@ -42,7 +44,7 @@
       for (var i = 0; i < b.length; i++) bytes[i] = b.charCodeAt(i);
       return deLaFamilia(new TextDecoder().decode(bytes).split('\n').map(function (l) {
         var p = l.split('\t');
-        return { codigo: p[0], nombre: p[1] };
+        return { codigo: p[0], nombre: p[1], sinCurp: p[3] === 'sin-curp' };
       }));
     } catch (e) { return []; }
   }
@@ -231,6 +233,27 @@
   firma.alCambiar = function () { if (firma.valida()) R.mostrarError(form, 'firma', ''); };
 
   // ─── De quién es la carta (link con los datos del gimnasio) ─────────
+  // La carta de quien no tiene CURP (su renglón del link la marca): el campo
+  // queda, pero no se pide; si ya la tramitaron, se escribe y se revisa igual.
+  // Si escriben el nombre de otro hijo del link, la CURP se pide. Si corrigen
+  // el nombre (también el primero: «Isabela» → «Isabella»), no: un niño sin
+  // CURP no se queda sin poder firmar. Esa carta va sin código y alguien la
+  // revisa en el programa, que avisa si es de alguien sin la marca.
+  var sinCurp = function () {
+    if (!actual || !actual.sinCurp) return false;
+    var x = v('alumno');
+    if (mismaPersona(actual.nombre, x) || primera(actual.nombre) === primera(x)) return true;
+    return !familia.some(function (k) { return k !== actual && (mismaPersona(k.nombre, x) || primera(k.nombre) === primera(x)); });
+  };
+  function verCurp() {
+    var no = sinCurp();
+    form.elements.curp.required = !no;
+    $('curpMarca').hidden = no;
+    $('curpOpcional').hidden = !no;
+    $('curpAyudaSin').hidden = !no;
+    $('curpAyuda').hidden = no;
+    if (no && !v('curp')) R.mostrarError(form, 'curp', '');
+  }
   function ponerAlumno(k) {
     actual = k;
     codigo = k.codigo;
@@ -238,6 +261,7 @@
     form.elements.nacimiento.value = '';
     $('ayudaAlumno').hidden = false;
     pintarFamilia();
+    verCurp();
   }
   function pintarFamilia() {
     var caja = $('familiaHijos');
@@ -270,6 +294,7 @@
     actual = k; codigo = k.codigo;
     $('ayudaAlumno').hidden = false;
     pintarFamilia();
+    verCurp();
     pintar();
   }
   // Lo del alumno (sus datos, su salud, el seguro y la firma) se llena de
@@ -287,6 +312,7 @@
     firma.borrar();
     actual = null; codigo = '';
     $('ayudaAlumno').hidden = true;
+    verCurp();
   }
   $('familiaHijos').addEventListener('change', function (e) {
     var k = familia.filter(function (x) { return x.codigo === e.target.value; })[0];
@@ -321,8 +347,9 @@
   var REGLAS = {
     alumno: nombreYApellido('Escriba nombre y apellido del alumno.'),
     nacimiento: function (x) { var e = edadDe(x); return (e !== null && e >= 3 && e <= 25) || 'Revise la fecha de nacimiento.'; },
-    // Obligatoria desde el 23-oct-2026, con su dígito verificador y la misma fecha de nacimiento.
-    curp: function (x) { return R.curpRevisar(x, v('nacimiento')); },
+    // Obligatoria desde el 23-oct-2026, con su dígito verificador y la misma
+    // fecha de nacimiento; en la carta sin CURP, solo si la escriben.
+    curp: function (x) { return (sinCurp() && !String(x).trim()) || R.curpRevisar(x, v('nacimiento')); },
     firmante: nombreYApellido('Escriba su nombre y apellido.'),
     parentesco: function (x) { return Boolean(x) || 'Elija el parentesco.'; },
     telefono: tel('Escriba un WhatsApp de 10 dígitos.'),
@@ -375,7 +402,7 @@
     // La CURP se revisa contra la fecha: al corregir la fecha se quita su aviso.
     if (n === 'nacimiento' && v('curp') && REGLAS.curp(v('curp')) === true) R.mostrarError(form, 'curp', '');
     if (n === 'parentesco') seguirAlFirmante();
-    if (n === 'alumno') alCambiarNombre();
+    if (n === 'alumno') { alCambiarNombre(); verCurp(); }
     var r = REGLAS[n];
     if (r && r(v(n)) === true) R.mostrarError(form, n, '');
     guardarEnUnRato();
@@ -399,6 +426,10 @@
   form.addEventListener('submit', async function (e) {
     e.preventDefault();
     if (!conectado || enviando) return;
+    // Si escribieron el nombre de otro hijo del link, la carta (y si pide la
+    // CURP) es la de ese, antes de revisar lo que falta.
+    alCambiarNombre();
+    verCurp();
     pintar();
     var primero = null;
     Object.keys(REGLAS).forEach(function (k) {
@@ -463,6 +494,8 @@
     // El código del link del expediente (si se entró con él). Un programa
     // anterior lo ignora.
     if (codigoEnvio) datos.codigo = codigoEnvio;
+    // La carta sin CURP: que el programa sepa que no la dejaron en blanco por descuido.
+    if (sinCurp() && !datos.alumno.curp) datos.alumno.sinCurp = true;
     bloquear(true);
     boton.disabled = true;
     boton.textContent = 'Enviando…';
@@ -620,6 +653,7 @@
     actual = familia.filter(function (k) { return k.codigo === codigo; })[0] || null;
     $('ayudaAlumno').hidden = !actual;
     pintarFamilia();
+    verCurp();
     Object.keys(o.campos || {}).forEach(function (k) {
       var c = form.elements[k];
       if (!c) return;
@@ -637,6 +671,8 @@
     if (!actual && sigue && !o.campos.alumno) ponerAlumno(sigue);
     $('custodiaNota').hidden = v('custodia') !== 'si';
     verOtroTutor();
+    // Con el nombre que tenían escrito (si es el de otro hijo, la CURP se pide).
+    verCurp();
     pintar();
     seguro.actualizar();
   }

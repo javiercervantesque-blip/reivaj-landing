@@ -60,9 +60,10 @@
         <p class="field__ayuda" id="ayudaAlumno" hidden>Pusimos el nombre para saber de quién es la carta. La fecha de nacimiento y lo demás escríbalos usted con los datos actuales: con eso actualizamos su expediente.</p>
         <div class="field-row">
           <div class="field">
-            <label for="curp">CURP del alumno <span aria-hidden="true">*</span></label>
+            <label for="curp">CURP del alumno <span aria-hidden="true" id="curpMarca">*</span><span class="opt" id="curpOpcional" hidden>(no se la pedimos)</span></label>
             <input id="curp" name="curp" required autocomplete="off" maxlength="22" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="18 letras y números" style="text-transform:uppercase">
-            <p class="field__ayuda">Si no la tiene a la mano, puede consultarla en <a href="https://www.gob.mx/curp/" target="_blank" rel="noopener">gob.mx/curp</a>. ¿No tiene CURP (por ejemplo, nació fuera de México)? <a data-whatsapp="Hola, quiero firmar la Carta de seguridad de REIVAJ Gimnasia y mi hijo no tiene CURP." href="https://wa.me/523334566544" target="_blank" rel="noopener">Escríbanos por WhatsApp</a>.</p>
+            <p class="field__ayuda" id="curpAyudaSin" hidden>Esta carta es para alumnos que no tienen CURP (por ejemplo, porque nacieron fuera de México): puede dejar este campo en blanco. Si ya la tramitó, escríbala.</p>
+            <p class="field__ayuda" id="curpAyuda">Si no la tiene a la mano, puede consultarla en <a href="https://www.gob.mx/curp/" target="_blank" rel="noopener">gob.mx/curp</a>. ¿No tiene CURP (por ejemplo, nació fuera de México)? <a data-whatsapp="Hola, quiero firmar la Carta de seguridad de REIVAJ Gimnasia y mi hijo no tiene CURP." href="https://wa.me/523334566544" target="_blank" rel="noopener">Escríbanos por WhatsApp</a>.</p>
             <p class="error" data-error-for="curp"></p>
           </div>
           <div class="field">
