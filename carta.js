@@ -57,6 +57,43 @@
     codigo = m ? m[1] : familia.length ? familia[0].codigo : '';
   })();
   var delLink = Boolean(codigo);
+  // Las cartas del link que ya se mandaron desde este teléfono (2-nov-2026,
+  // lo pidió Javier): al volver a tocar el link en WhatsApp se abre otra
+  // pestaña, sin el borrador, y volvía a salir el hijo que ya se mandó. Se
+  // guarda solo una huella del código de cada carta (ni el código ni el
+  // nombre), por 120 días. El programa cambia el código en cuanto guarda la
+  // carta, así que un link que se mande después (otro ciclo, o «Link nuevo»)
+  // la vuelve a pedir.
+  var ENVIADAS = 'reivaj_cartas_enviadas';
+  var VIDA_ENVIADA = 120 * 24 * 60 * 60 * 1000;
+  function huellaCodigo(c) {
+    var h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+    for (var i = 0; i < c.length; i++) { var ch = c.charCodeAt(i); h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677); }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+  }
+  function enviadas() {
+    try {
+      var l = JSON.parse(localStorage.getItem(ENVIADAS) || '[]');
+      return Array.isArray(l) ? l.filter(function (x) { return x && typeof x.h === 'string' && Math.abs(Date.now() - (Number(x.t) || 0)) < VIDA_ENVIADA; }) : [];
+    } catch (e) { return []; }
+  }
+  function yaEnviada(c) {
+    if (!c) return false;
+    var h = huellaCodigo(c);
+    return enviadas().some(function (x) { return x.h === h; });
+  }
+  function recordarEnviada(c) {
+    if (!c) return;
+    try {
+      var h = huellaCodigo(c);
+      var l = enviadas().filter(function (x) { return x.h !== h; });
+      l.push({ h: h, t: Date.now() });
+      localStorage.setItem(ENVIADAS, JSON.stringify(l.slice(-40)));
+    } catch (e) { /* sin almacenamiento: no pasa nada */ }
+  }
+  familia.forEach(function (k) { if (yaEnviada(k.codigo)) k.firmada = true; });
   // Otro link abierto en esta misma pestaña: el navegador solo cambia el «#».
   window.addEventListener('hashchange', function () { if (/(?:^#|&)[cf]=/.test(String(location.hash || ''))) location.reload(); });
 
@@ -257,18 +294,21 @@
   function ponerAlumno(k) {
     actual = k;
     codigo = k.codigo;
+    otra = false;
     form.elements.alumno.value = k.nombre;
     form.elements.nacimiento.value = '';
     $('ayudaAlumno').hidden = false;
     pintarFamilia();
     verCurp();
   }
+  // Solo salen los hijos que faltan: el que ya se mandó no se vuelve a ofrecer.
   function pintarFamilia() {
     var caja = $('familiaHijos');
-    $('familia').hidden = familia.length < 2;
+    var ver = familia.filter(function (k) { return !k.firmada || k === actual; });
+    $('familia').hidden = ver.length < 2;
     caja.innerHTML = '';
-    if (familia.length < 2) return;
-    familia.forEach(function (k) {
+    if (ver.length < 2) return;
+    ver.forEach(function (k) {
       var r = R.el('input', { type: 'radio', name: 'deQuien', value: k.codigo });
       r.checked = k === actual;
       r.disabled = k.firmada;
@@ -326,7 +366,9 @@
     if (marcado) marcado.focus();
     guardarBorrador();
   });
-  if (familia.length) { ponerAlumno(familia.filter(function (k) { return k.codigo === codigo; })[0] || familia[0]); pintar(); }
+  var pendientes = familia.filter(function (k) { return !k.firmada; });
+  if (pendientes.length) { ponerAlumno(pendientes.filter(function (k) { return k.codigo === codigo; })[0] || pendientes[0]); pintar(); }
+  else if (familia.length) codigo = ''; // todas ya se mandaron: ninguna carta lleva su código
 
   if (conectado && location.hash) { try { history.replaceState(history.state, '', location.pathname + location.search); } catch (e) { /* sin historial: no pasa nada */ } }
   if (!conectado) {
@@ -451,7 +493,17 @@
     // El código va solo si el nombre es el de ese hijo (o corrigieron una
     // letra de su apellido: el programa lo revisa con su fecha). Con un link
     // viejo (sin los hijos) va como antes.
-    var deEste = actual && (mismaPersona(actual.nombre, v('alumno')) || primera(actual.nombre) === primera(v('alumno'))) ? actual : null;
+    // Si es el nombre de otro hijo del link (también uno ya mandado: «María
+    // José» escrito sobre la carta de «María Fernanda»), no lleva el código de
+    // este ni lo da por mandado: va sin código y el programa la revisa.
+    // El nombre exacto de otro hijo siempre cuenta; uno que cabe en los dos
+    // («María Pérez» con «María Fernanda Pérez» y «María Pérez López») se
+    // queda con el de esta carta, como lo liga el programa.
+    var escrito = v('alumno');
+    var esDe = function (k) { return normal(k.nombre) === normal(escrito); };
+    var cabeEnEste = actual && mismaPersona(actual.nombre, escrito);
+    var deOtro = !(actual && esDe(actual)) && familia.some(function (k) { return k !== actual && (esDe(k) || (!cabeEnEste && mismaPersona(k.nombre, escrito))); });
+    var deEste = actual && !deOtro && (mismaPersona(actual.nombre, escrito) || primera(actual.nombre) === primera(escrito)) ? actual : null;
     var codigoEnvio = familia.length ? (deEste ? deEste.codigo : '') : codigo;
     // Lo que se manda y la copia se arman aquí, antes de esperar nada.
     var copia = datosCarta(), hp = v('sitio');
@@ -529,8 +581,10 @@
     // El código del link es del alumno de esta carta: la de un hermano va con
     // el suyo (si venía en el link) o sin código. Del link, esta ya quedó
     // (si el nombre sigue siendo el suyo: con otro, el programa decide).
-    if (deEste) deEste.firmada = true;
-    codigo = ''; actual = null;
+    // Y este teléfono ya no la vuelve a ofrecer (con un link viejo, sin los
+    // hijos, no se sabe de quién era: no se recuerda).
+    if (deEste) { deEste.firmada = true; recordarEnviada(deEste.codigo); }
+    codigo = ''; actual = null; otra = false;
     copias.push({ datos: copia, nombre: copia.alumno, extra: {
       seguro: r.datos.carta.seguro, aseguradora: r.datos.carta.aseguradora, ficha: ficha, firma: r.datos.carta.firma, firmante: r.datos.carta.firmante,
       parentesco: r.datos.carta.parentesco, huella: r.datos.carta.huella, folio: r.id || '',
@@ -541,7 +595,11 @@
     $('listo').hidden = false;
     // Si falta otro hijo del link, se guarda lo de la familia: si el celular
     // recarga la pestaña, sigue con él (sin los datos del que ya se mandó).
-    if (familia.some(function (k) { return !k.firmada; })) guardarBorrador(true); else borrarBorrador();
+    // Si ya no falta ninguno, solo quiénes eran: una recarga muestra el aviso
+    // de «ya enviadas» y no una carta vacía.
+    if (familia.some(function (k) { return !k.firmada; })) guardarBorrador(true);
+    else if (familia.length) guardarBorrador('aviso');
+    else borrarBorrador();
     // El foco estaba en el botón que se acaba de ocultar: pasa al aviso.
     $('listo').setAttribute('tabindex', '-1');
     $('listo').focus({ preventScroll: true });
@@ -590,18 +648,42 @@
   // La del hermano: quien firma, su WhatsApp y las emergencias se quedan; lo
   // del alumno, su salud, el seguro y la firma se llenan de nuevo.
   // Con el link de la familia, sigue el hijo que falta, con su nombre.
-  $('otraCarta').addEventListener('click', function () {
+  function otraCarta() {
     $('listo').hidden = true;
+    $('yaEnviada').hidden = true;
     form.hidden = false;
     firma.medir();
     limpiarAlumno();
     var sigue = familia.filter(function (k) { return !k.firmada; })[0];
     if (sigue) ponerAlumno(sigue); else pintarFamilia();
+    otra = !sigue;
     pintar();
     window.scrollTo({ top: 0, behavior: 'smooth' });
     form.elements[sigue ? 'nacimiento' : 'alumno'].focus({ preventScroll: true });
     guardarBorrador();
-  });
+  }
+  $('otraCarta').addEventListener('click', otraCarta);
+  $('yaOtra').addEventListener('click', otraCarta);
+
+  // Se volvió a abrir el link (o se recargó el aviso) y todas sus cartas ya
+  // se mandaron desde este teléfono: en vez de la carta vacía, el aviso (y por
+  // si hace falta, «Firmar la carta de otro hijo o hija», sin código, como
+  // siempre). Si estaban llenando la de otro hijo, sigue su carta.
+  var verAviso = false;
+  var otra = false; // están llenando la carta de otro hijo (no del link)
+  function todasEnviadas() { return familia.length > 0 && familia.every(function (k) { return k.firmada; }) && !otra && !v('alumno') && (delLink || verAviso); }
+  function mostrarYaEnviada() {
+    var nombres = familia.map(function (k) { return k.nombre; }), varios = nombres.length > 1;
+    $('yaTitulo').textContent = varios ? 'Cartas ya enviadas' : 'Carta ya enviada';
+    $('yaTexto').textContent = varios
+      ? 'Ya recibimos las cartas de ' + nombres.slice(0, -1).join(', ') + ' y ' + nombres[nombres.length - 1] + '. No hace falta llenarlas otra vez.'
+      : 'Ya recibimos la carta de ' + nombres[0] + '. No hace falta llenarla otra vez.';
+    codigo = ''; actual = null; otra = false;
+    form.hidden = true;
+    $('yaEnviada').hidden = false;
+    // Lo que quedara del borrador (otra carta a medias) ya no vuelve.
+    guardarBorrador('aviso');
+  }
 
   // ─── Borrador en esta pestaña (sin firma) ───────────────────────────
   // Como en la inscripción: si se recarga o el celular cierra la pestaña
@@ -618,13 +700,15 @@
   function guardarBorrador(soloFamilia) {
     clearTimeout(espera); espera = null;
     try {
+      // Ya se mandaron todas las del link: solo quiénes eran, para el aviso.
+      if (soloFamilia === 'aviso') { sessionStorage.setItem(CLAVE, JSON.stringify({ t: Date.now(), aviso: true, campos: {}, codigo: '', familia: familia })); return; }
       var auto = contAut.querySelector('[data-auto="firmante"]');
       var filas = [].map.call(contAut.children, function (f) {
         var o = {};
         f.querySelectorAll('[data-a]').forEach(function (i) { o[i.getAttribute('data-a')] = i.value; });
         return o;
       });
-      var o = { t: Date.now(), campos: {}, envio: envio, envioDe: soloFamilia === true ? '' : envioDe, codigo: soloFamilia === true ? '' : codigo, familia: familia, filas: filas, autoFirmante: Boolean(auto && contAut.firstChild === auto && valoresFila(auto) === auto.dataset.puesto) };
+      var o = { t: Date.now(), campos: {}, envio: envio, envioDe: soloFamilia === true ? '' : envioDe, codigo: soloFamilia === true ? '' : codigo, otra: soloFamilia !== true && otra, familia: familia, filas: filas, autoFirmante: Boolean(auto && contAut.firstChild === auto && valoresFila(auto) === auto.dataset.puesto) };
       [].forEach.call(form.elements, function (x) {
         if (!x.name || x.name === 'sitio' || x.name === 'deQuien') return;
         if (soloFamilia === true && DEL_ALUMNO.indexOf(x.name) >= 0) return;
@@ -643,14 +727,36 @@
     // (o sin fecha) se tira, para que otro que abra la pestaña no lo vea.
     if (o && !(Math.abs(Date.now() - (Number(o.t) || 0)) < DIA)) { borrarBorrador(); o = null; }
     if (!o) return;
-    // Se abrió otro link en esta pestaña: lo que había era de otra carta.
+    if (!o.campos || typeof o.campos !== 'object') o.campos = {};
+    // Se abrió otro link en esta pestaña: lo que había era de otra carta. Si
+    // es el de la misma familia (volvieron a tocar su link después de mandar
+    // una), quien firma, su WhatsApp y las emergencias se quedan.
     var suyo = CODIGO.test(String(o.codigo || '')) ? o.codigo : '';
-    if (delLink && suyo !== codigo && !familia.some(function (k) { return k.codigo === suyo; })) { borrarBorrador(); return; }
+    var delMismoLink = Boolean(suyo) && (suyo === codigo || familia.some(function (k) { return k.codigo === suyo; }));
+    if (delLink && !delMismoLink) {
+      var mismaFamilia = deLaFamilia(o.familia).some(function (x) { return familia.some(function (k) { return k.codigo === x.codigo; }); });
+      if (!mismaFamilia) { borrarBorrador(); return; }
+      // La carta a medias era de un hijo que este link ya no trae (ya la
+      // guardó el gimnasio): esa no vuelve, sí lo de la familia.
+      if (suyo) { DEL_ALUMNO.forEach(function (n) { delete o.campos[n]; }); suyo = ''; }
+    }
+    verAviso = o.aviso === true;
+    otra = o.otra === true;
     if (!familia.length) familia = deLaFamilia(o.familia);
     else deLaFamilia(o.familia).forEach(function (x) { familia.forEach(function (k) { if (k.codigo === x.codigo && x.firmada) k.firmada = true; }); });
+    familia.forEach(function (k) { if (yaEnviada(k.codigo)) k.firmada = true; });
     if (/^[0-9a-f]{32}$/.test(String(o.envio || ''))) { envio = o.envio; envioDe = String(o.envioDe || ''); }
     if (suyo) codigo = suyo;
     actual = familia.filter(function (k) { return k.codigo === codigo; })[0] || null;
+    // La que estaban llenando ya se mandó (desde otra pestaña): no vuelve
+    // con sus datos; sigue el hijo que falte o, si ya no falta ninguno, el aviso.
+    if (actual && actual.firmada) {
+      // Si la puso el link (no el borrador), solo se quita su nombre.
+      if (actual.codigo === suyo) DEL_ALUMNO.forEach(function (n) { delete o.campos[n]; });
+      else form.elements.alumno.value = '';
+      actual = null; codigo = '';
+      verAviso = true;
+    }
     $('ayudaAlumno').hidden = !actual;
     pintarFamilia();
     verCurp();
@@ -678,7 +784,11 @@
   }
   // Abierta con el link: se guarda de una vez, para que una recarga no pierda
   // el código ni a los hermanos (el «#» ya no está en la barra).
-  if (conectado) { recuperar(); if (delLink) guardarBorrador(); }
+  if (conectado) {
+    recuperar();
+    if (todasEnviadas()) mostrarYaEnviada();
+    else if (delLink || verAviso) guardarBorrador();
+  }
 
   // El botón viene apagado en el HTML: así, si alguien da Enter antes de que
   // cargue este script, el navegador no manda el formulario por su cuenta.
