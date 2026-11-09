@@ -861,12 +861,24 @@
     return filtro.split(/\s+/).every(function (p) { return n.indexOf(p) >= 0; });
   }
   // El horario que tiene capturado, para ver de un vistazo que no es de esta hora: «LX 16:00 · J 17:00».
+  // Las horas seguidas con los mismos días van juntas: «LMXJV 16:00 a 20:00» (de 4 a 8).
   function suHorario(a) {
     var por = {};
     (a.s || []).forEach(function (s) { var p = s.split('-'); (por[p[1]] = por[p[1]] || []).push(+p[0]); });
     var horas = Object.keys(por).sort();
     if (!horas.length) return 'sin horario capturado';
-    return horas.map(function (hr) { return por[hr].sort().map(function (d) { return DIAS[d - 1]; }).join('') + ' ' + hr; }).join(' · ');
+    var partes = [];
+    horas.forEach(function (hr) {
+      var dias = por[hr].sort().map(function (d) { return DIAS[d - 1]; }).join('');
+      var ult = partes[partes.length - 1];
+      if (ult && ult.dias === dias && minDe(hr) === minDe(ult.ultima) + 60) { ult.ultima = hr; ult.n++; }
+      else partes.push({ dias: dias, ini: hr, ultima: hr, n: 1 });
+    });
+    return partes.map(function (p) {
+      if (p.n === 1) return p.dias + ' ' + p.ini;
+      var fin = minDe(p.ultima) + 60;
+      return p.dias + ' ' + p.ini + ' a ' + ('0' + Math.floor(fin / 60)).slice(-2) + ':' + ('0' + (fin % 60)).slice(-2);
+    }).join(' · ');
   }
   function alumnoPorId(id) { return activas().filter(function (a) { return a.i === id; })[0]; }
   function idsDe(o) { return Object.keys(o).filter(function (k) { return o[k]; }); }

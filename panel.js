@@ -28,8 +28,12 @@
   var u = null, d = null, H = null;
   var ix = { maestras: {}, orden: [], porId: {}, porAlumna: [] };
   // `aviso`: lo que se acaba de mandar desde la ficha abierta; `hoja`: la
-  // ventana de «Poner en el grupo de…», si está abierta (por id de alumna).
-  var vista = { dia: null, semana: null, alumna: null, abiertos: {}, aviso: null, hoja: null };
+  // ventana de «Agregar o cambiar horas», si está abierta (por id de alumna);
+  // `eleccion`: la maestra que tocó en la ficha y todavía no guarda;
+  // `verHoras`: fichas con su horario abierto hora por hora; `soloSin`: la
+  // lista de alumnas enseña solo a las que no tienen maestra; `errorMaestra`:
+  // si «Guardar» ni siquiera pudo guardar en el celular.
+  var vista = { dia: null, semana: null, alumna: null, abiertos: {}, aviso: null, hoja: null, eleccion: null, verHoras: {}, soloSin: false, errorMaestra: null };
   var $ = function (id) { return document.getElementById(id); };
 
   // ─── Piezas ─────────────────────────────────────────────────────────
@@ -535,13 +539,37 @@
     r.pct = pct(r.p, r.f);
     return r;
   }
-  function maestrasDe(a) {
-    var ids = {};
-    (a.s || []).forEach(function (c) { ids[(a.m && a.m[c]) || '_sin'] = true; });
-    return ordenar(Object.keys(ids)).map(nombreGrupo).join(', ');
+  // En la lista: su maestra y su horario en corto, con lo que ya mandó este
+  // celular encima. «Sin maestra · Lun a vie 16:00 a 20:00».
+  function detalleCorto(a, pend) {
+    var r = resumenHorario(horarioConCambios(a, pend).ahora);
+    if (!r.total) return 'sin horario capturado';
+    return [r.maestras.map(nombreGrupo).join(', ')].concat(r.lineas.map(function (l) { return l.dias + ' ' + l.horas; })).join(' · ');
+  }
+  // ¿Le queda alguna hora sin maestra (contando lo que ya mandó este celular)?
+  // Con una maestra que ya se desactivó, también le falta.
+  function conHoraSinMaestra(a, pend) {
+    if (a.b) return false;
+    var ahora = horarioConCambios(a, pend).ahora;
+    return Object.keys(ahora).some(function (c) { var m = ix.maestras[ahora[c]]; return ahora[c] === '_sin' || (m && !m.activa); });
+  }
+  // La que sigue (por nombre) que todavía tiene horas sin maestra.
+  function siguienteSinMaestra(k, pend) {
+    var orden = activasIdx().sort(function (x, y) { return alumna(x).n.localeCompare(alumna(y).n, 'es'); });
+    var i = orden.indexOf(k);
+    for (var j = 1; j < orden.length; j++) {
+      var x = orden[(i + j + orden.length) % orden.length];
+      if (x !== k && conHoraSinMaestra(alumna(x), pend)) return x;
+    }
+    return null;
   }
   // `vista.alumna` guarda su id (no su lugar en la lista, que cambia al actualizar).
-  function elegirAlumna(k) { vista.alumna = d.alumnos[k] ? d.alumnos[k].i : null; }
+  // La maestra tocada y no guardada no pasa a otra alumna.
+  function elegirAlumna(k) {
+    vista.alumna = d.alumnos[k] ? d.alumnos[k].i : null;
+    if (vista.eleccion && vista.eleccion.id !== vista.alumna && !vista.eleccion.mandando) vista.eleccion = null;
+    if (vista.errorMaestra && vista.errorMaestra.id !== vista.alumna) vista.errorMaestra = null;
+  }
   function abrirAlumna(k) {
     elegirAlumna(k);
     u.irA('alumnas');
@@ -558,20 +586,37 @@
     }
     vista.alumna = null;
     vista.aviso = null;
+    if (vista.eleccion && !vista.eleccion.mandando) vista.eleccion = null;
     mostrar($('buscar-alumna').parentNode, true);
+    var pend = u.horarioPendiente();
     var filtro = u.sinAcentos($('buscar-alumna').value);
-    var todas = d.alumnos.map(function (a, k) { return k; }).filter(function (k) {
+    // «Sin maestra»: las activas con alguna hora sin maestra, para ir una por una.
+    var sinM = activasIdx().filter(function (k) { return conHoraSinMaestra(alumna(k), pend); });
+    if (!sinM.length) vista.soloSin = false;
+    if (sinM.length) {
+      var f = el('div', 'opciones filtro');
+      f.setAttribute('role', 'group');
+      f.setAttribute('aria-label', 'Qué alumnas ver');
+      f.appendChild(opcion('Todas', !vista.soloSin, function () { vista.soloSin = false; pintarAlumnas(); }));
+      f.appendChild(opcion('Sin maestra · ' + sinM.length, vista.soloSin, function () { vista.soloSin = true; pintarAlumnas(); }));
+      lista.appendChild(f);
+    }
+    var todas = (vista.soloSin ? sinM : d.alumnos.map(function (a, k) { return k; })).filter(function (k) {
       var a = d.alumnos[k];
       if (a.b && filtro.length < 2) return false;
       return u.coincide(a.n, filtro);
     }).sort(function (a, b) { return alumna(a).n.localeCompare(alumna(b).n, 'es'); });
     var t = el('section', 'tarjeta');
     if (!todas.length) {
-      t.appendChild(el('div', 'vacio', 'Nadie se llama así.'));
+      t.appendChild(el('div', 'vacio', vista.soloSin && filtro ? 'Ninguna sin maestra se llama así.' : 'Nadie se llama así.'));
+      // Buscando entre las que no tienen maestra a una que ya tiene: que se pueda ver.
+      if (vista.soloSin && filtro && d.alumnos.some(function (a) { return (!a.b || filtro.length >= 2) && u.coincide(a.n, filtro); })) {
+        t.appendChild(boton('sec ancho buscar-todas', 'Buscar en todas', function () { vista.soloSin = false; pintarAlumnas(); }));
+      }
       lista.appendChild(t);
       return;
     }
-    if (!filtro) t.appendChild(el('h2', null, activasIdx().length + ' alumnas activas'));
+    if (!filtro) t.appendChild(el('h2', null, vista.soloSin ? sinM.length + (sinM.length === 1 ? ' alumna sin maestra' : ' alumnas sin maestra') : activasIdx().length + ' alumnas activas'));
     todas.slice(0, 80).forEach(function (k) {
       var a = alumna(k), r = resumenAlumna(k);
       var b = boton('resultado', null, function () { elegirAlumna(k); pintarAlumnas(); window.scrollTo(0, 0); });
@@ -579,7 +624,7 @@
       var nom = el('span', 'r-nombre', a.n);
       if (a.b) nom.appendChild(el('span', 'baja', 'baja'));
       txt.appendChild(nom);
-      txt.appendChild(el('span', 'r-det', a.b ? 'Ya no está activa' : [maestrasDe(a), u.suHorario(a)].filter(Boolean).join(' · ')));
+      txt.appendChild(el('span', 'r-det', a.b ? 'Ya no está activa' : detalleCorto(a, pend)));
       b.appendChild(txt);
       b.appendChild(el('span', 'r-pct' + (r.pct === null ? '' : r.pct >= 80 ? ' bien' : r.pct < 60 ? ' mal' : ''), textoPct(r.pct)));
       t.appendChild(b);
@@ -609,7 +654,11 @@
     t.appendChild(ult);
     cont.appendChild(t);
 
-    if (!a.b) cont.appendChild(tarjetaHorario(k));
+    if (!a.b) {
+      var tm = tarjetaMaestra(k);
+      if (tm) cont.appendChild(tm);
+      cont.appendChild(tarjetaHorario(k));
+    }
 
     var cal = el('section', 'tarjeta');
     cal.appendChild(el('h2', null, 'Las últimas semanas'));
@@ -668,11 +717,69 @@
     return tabla;
   }
 
-  // ─── Su horario: ponerla en un grupo o quitarle una hora ────────────
+  // ─── Su maestra y su horario ────────────────────────────────────────
+  // La maestra es un dato de la alumna: se escoge una y se guarda para todas
+  // sus horas. El horario se ve en corto («Lun a vie · 16:00 a 20:00»); hora
+  // por hora (para quitar una) solo si se pide.
   function mayus(t) { return t.charAt(0).toUpperCase() + t.slice(1); }
   function cuandoTxt(dia, h) { return DIAS_L[dia - 1] + ' ' + h; }
   function conQuien(gid) { return gid && gid !== '_sin' ? 'con ' + nombreGrupo(gid) : 'sin maestra'; }
   function porDiaHora(x, y) { return (x.dia - y.dia) || (x.h < y.h ? -1 : x.h > y.h ? 1 : 0); }
+  // Casillas «3-16:00» en orden de día y hora.
+  function porCasilla(x, y) { var a = x.split('-'), b = y.split('-'); return (+a[0] - +b[0]) || (a[1] < b[1] ? -1 : a[1] > b[1] ? 1 : 0); }
+  function juntarY(l) { return l.length < 2 ? l.join('') : l.slice(0, -1).join(', ') + ' y ' + l[l.length - 1]; }
+  function hm(min) { var h = Math.floor(min / 60), m = min % 60; return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m; }
+  // «Lun a vie», «Lun, mié y vie», «Mar y jue».
+  function diasTxt(dias) {
+    var l = dias.slice().sort(function (x, y) { return x - y; }), partes = [], i = 0;
+    while (i < l.length) {
+      var j = i;
+      while (j + 1 < l.length && l[j + 1] === l[j] + 1) j++;
+      if (j - i >= 2) partes.push(DIAS_C[l[i] - 1] + ' a ' + DIAS_C[l[j] - 1]);
+      else for (var x = i; x <= j; x++) partes.push(DIAS_C[l[x] - 1]);
+      i = j + 1;
+    }
+    return mayus(juntarY(partes));
+  }
+  // Las horas seguidas van juntas, de la primera a la que termina la última:
+  // 16, 17, 18 y 19 → «16:00 a 20:00»; 16 y 18 → «16:00 a 17:00 y 18:00 a 19:00».
+  function horasTxt(horas) {
+    var l = horas.slice().sort(), partes = [], i = 0;
+    while (i < l.length) {
+      var j = i;
+      while (j + 1 < l.length && minDe(l[j + 1]) === minDe(l[j]) + 60) j++;
+      partes.push(l[i] + ' a ' + hm(minDe(l[j]) + 60));
+      i = j + 1;
+    }
+    return juntarY(partes);
+  }
+  // Su horario en pocas líneas: los días con las mismas horas (y la misma
+  // maestra) van juntos. `maestras`: las que tiene ('_sin' = horas sin
+  // maestra), con cuántas horas cada una (`cuenta`).
+  function resumenHorario(ahora) {
+    var porGid = {}, cuenta = {};
+    Object.keys(ahora).forEach(function (c) {
+      var p = c.split('-'), g = ahora[c] || '_sin';
+      cuenta[g] = (cuenta[g] || 0) + 1;
+      porGid[g] = porGid[g] || {};
+      (porGid[g][p[0]] = porGid[g][p[0]] || []).push(p[1]);
+    });
+    var lineas = [];
+    Object.keys(porGid).forEach(function (g) {
+      var juntos = {};
+      Object.keys(porGid[g]).forEach(function (dia) {
+        var hs = porGid[g][dia].sort(), clave = hs.join(',');
+        (juntos[clave] = juntos[clave] || { horas: hs, dias: [] }).dias.push(+dia);
+      });
+      Object.keys(juntos).forEach(function (clave) {
+        var x = juntos[clave];
+        lineas.push({ gid: g, d0: Math.min.apply(null, x.dias), h0: x.horas[0], dias: diasTxt(x.dias), horas: horasTxt(x.horas) });
+      });
+    });
+    lineas.sort(function (x, y) { return (x.d0 - y.d0) || (x.h0 < y.h0 ? -1 : x.h0 > y.h0 ? 1 : 0); });
+    return { lineas: lineas, maestras: ordenar(Object.keys(cuenta)), cuenta: cuenta, total: Object.keys(ahora).length };
+  }
+  function susHoras(n) { return n === 1 ? 'su hora' : 'sus ' + n + ' horas'; }
 
   // Los días que se ofrecen: los de clase y los que ya usa alguna alumna (sin domingo).
   function diasDeClase() {
@@ -691,13 +798,16 @@
 
   // Su horario como quedará: el que trae la lista con los cambios que mandó
   // este celular encima, en orden. Casilla («3-16:00») → maestra ('_sin' si no tiene).
-  function horarioConCambios(a) {
+  // `pend`: lo pendiente ya leído (para no leerlo una vez por alumna).
+  function horarioConCambios(a, pend) {
     var base = {}, ahora = {}, estadoDe = {};
     (a.s || []).forEach(function (c) { base[c] = (a.m && a.m[c]) || '_sin'; ahora[c] = base[c]; });
-    u.horarioPendiente().forEach(function (env) {
+    (pend || u.horarioPendiente()).forEach(function (env) {
       env.cambios.forEach(function (x) {
         if (x.alumnoId !== a.i) return;
         var c = x.dia + '-' + x.hora;
+        // «Su maestra» solo cambia horas que tiene: si ya no la tiene, el programa no la crea.
+        if (x.soloMaestra && !(c in ahora)) return;
         if (x.quitar) delete ahora[c]; else ahora[c] = x.entrenadoraId || '_sin';
         // Si algo de esa casilla sigue en este celular, sale «cuando haya señal»;
         // si está saliendo, «enviando».
@@ -719,45 +829,190 @@
     return { filas: filas.sort(porDiaHora), ahora: ahora };
   }
 
-  function tarjetaHorario(k) {
-    var a = alumna(k);
-    var puede = u.puedeHorario();
-    var hs = el('section', 'tarjeta');
-    hs.appendChild(el('h2', null, 'Su horario'));
-    var v = horarioConCambios(a);
-    // Lo que el programa no pudo aplicar, hasta que el dueño dice «Entendido».
+  // Cómo va lo pendiente de unas filas: manda la más atrasada.
+  function peorEstado(filas) {
+    var est = 'enviado';
+    filas.forEach(function (f) { if (f.pend && PESO[f.estado] > PESO[est]) est = f.estado; });
+    return est;
+  }
+  // Lo que se acaba de mandar desde esta ficha, mientras siga pendiente. Si
+  // ya salió del celular (volvió la señal), dice «enviado» aunque al mandarlo
+  // no hubiera. Sale en la tarjeta de donde se mandó (`tipo`).
+  function avisoEnviado(cont, a, v, tipo) {
+    var pend = v.filas.filter(function (f) { return f.pend; });
+    if (!vista.aviso || vista.aviso.id !== a.i || !pend.length || (vista.aviso.tipo === 'maestra') !== (tipo === 'maestra')) return false;
+    var est = peorEstado(pend);
+    var como = est === 'cola' ? vista.aviso.como || 'Se mandará cuando haya señal.' : ESTADO_TXT[est] + (est === 'enviado' ? '.' : '');
+    cont.appendChild(el('div', 'aviso' + (est === 'enviado' ? ' ok' : ''), vista.aviso.que + ' ' + como));
+    return true;
+  }
+
+  // Lo que el programa no pudo aplicar, hasta que el dueño dice «Entendido».
+  // Sale en la primera tarjeta de la ficha (la de su maestra, si tiene horas).
+  function rechazosDe(cont, a) {
     u.horarioRechazos().filter(function (x) { return x.cambios.some(function (c) { return c.alumnoId === a.i; }); }).forEach(function (x) {
       var av = el('div', 'aviso error');
       av.appendChild(el('div', null, 'No se pudo: ' + x.no.join(' · ')));
       av.appendChild(boton('sec', 'Entendido', function () { u.olvidarRechazo(x.h); pintarAlumnas(); }));
-      hs.appendChild(av);
+      cont.appendChild(av);
     });
-    // Lo que se acaba de mandar, mientras siga pendiente. Si ya salió del
-    // celular (volvió la señal), dice «enviado» aunque al mandarlo no hubiera.
-    if (vista.aviso && vista.aviso.id === a.i && v.filas.some(function (f) { return f.pend; })) {
-      var est = 'enviado';
-      v.filas.forEach(function (f) { if (f.pend && PESO[f.estado] > PESO[est]) est = f.estado; });
-      var como = est === 'cola' ? vista.aviso.como || 'Se mandará cuando haya señal.' : ESTADO_TXT[est] + (est === 'enviado' ? '.' : '');
-      hs.appendChild(el('div', 'aviso' + (est === 'enviado' ? ' ok' : ''), vista.aviso.que + ' ' + como));
+  }
+
+  // Su maestra: tocar una y «Guardar» la deja con ella en todas sus horas.
+  function tarjetaMaestra(k) {
+    var a = alumna(k), pend = u.horarioPendiente();
+    var v = horarioConCambios(a, pend), casillas = Object.keys(v.ahora), n = casillas.length;
+    if (!n) return null;
+    var r = resumenHorario(v.ahora);
+    var t = el('section', 'tarjeta maestra-t');
+    t.appendChild(el('h2', null, 'Su maestra'));
+    // La que tiene ahora (con lo ya mandado); si tiene varias, cuántas horas con cada una.
+    var ya = el('p', 'maestra-ahora');
+    r.maestras.forEach(function (g) {
+      var s = el('span');
+      s.appendChild(punto(g));
+      s.appendChild(el('b', null, nombreGrupo(g)));
+      if (r.maestras.length > 1) s.appendChild(el('small', null, (r.cuenta[g] === 1 ? '1 hora' : r.cuenta[g] + ' horas')));
+      ya.appendChild(s);
+    });
+    t.appendChild(ya);
+    rechazosDe(t, a);
+    if (vista.errorMaestra && vista.errorMaestra.id === a.i) t.appendChild(el('div', 'aviso error', vista.errorMaestra.texto));
+    avisoEnviado(t, a, v, 'maestra');
+    if (!u.puedeHorario()) return t;
+    var maestras = maestrasActivas();
+    if (!maestras.length) { t.appendChild(el('p', 'vacio', 'Todavía no hay maestras activas en el programa.')); return t; }
+    var s = vista.eleccion && vista.eleccion.id === a.i ? vista.eleccion : null;
+    var actual = r.maestras.length === 1 && r.maestras[0] !== '_sin' ? r.maestras[0] : null;
+    var marcada = s ? s.m : actual;
+    var om = el('div', 'opciones');
+    om.setAttribute('role', 'group');
+    om.setAttribute('aria-label', '¿Con qué maestra?');
+    maestras.forEach(function (m) {
+      om.appendChild(opcion(m.nombre, marcada === m.id, function () {
+        if (s && s.mandando) return;
+        vista.eleccion = { id: a.i, m: m.id, mandando: false };
+        vista.errorMaestra = null;
+        pintarAlumnas();
+      }, m.id));
+    });
+    t.appendChild(om);
+    var cambian = s ? casillas.filter(function (c) { return v.ahora[c] !== s.m; }).length : 0;
+    var nota = s && cambian ? 'Se guarda con ' + nombreGrupo(s.m) + ' en ' + susHoras(n) + (cambian < n ? ' (cambian ' + cambian + ')' : '') + '.'
+      : (s || actual) && marcada === actual ? 'Ya está con ' + nombreGrupo(actual) + ' en ' + susHoras(n) + '.'
+        : 'Toca su maestra y luego «Guardar».';
+    t.appendChild(el('p', 'maestra-nota', nota));
+    var g = boton('principal poner', s && s.mandando ? 'Guardando…' : 'Guardar', function () { guardarMaestra(k); });
+    g.disabled = !s || s.mandando || !cambian;
+    t.appendChild(g);
+    // Para ir una por una: la que sigue sin maestra.
+    var sig = siguienteSinMaestra(k, pend);
+    if (sig !== null) {
+      t.appendChild(boton('sec ancho siguiente', 'Siguiente sin maestra: ' + alumna(sig).n + ' ›', function () {
+        if (vista.eleccion && !vista.eleccion.mandando) vista.eleccion = null;
+        elegirAlumna(sig);
+        pintarAlumnas();
+        window.scrollTo(0, 0);
+      }));
     }
-    if (!v.filas.length) hs.appendChild(el('div', 'vacio', 'No tiene horario capturado.'));
-    v.filas.forEach(function (f) {
-      var fila = el('div', 'horario-fila' + (f.pend ? ' pendiente' : '') + (f.pend === 'quita' ? ' se-va' : ''));
-      fila.appendChild(el('b', null, mayus(cuandoTxt(f.dia, f.h))));
-      fila.appendChild(punto(f.gid));
-      fila.appendChild(el('span', 'hf-quien', nombreGrupo(f.gid)));
-      if (!f.pend && puede) {
-        var q = boton('quitar-hora', 'Quitar', function () { quitarHora(k, f, q); });
-        q.setAttribute('aria-label', 'Quitar el ' + cuandoTxt(f.dia, f.h));
-        fila.appendChild(q);
-      }
-      if (f.pend) {
-        var que = f.pend === 'quita' ? 'Se quita' : f.pend === 'nueva' ? 'Nueva' : 'Antes ' + conQuien(f.antes);
-        fila.appendChild(el('small', 'hf-estado' + (f.estado === 'cola' ? ' sin-senal' : ''), que + ' · ' + ESTADO_TXT[f.estado]));
-      }
-      hs.appendChild(fila);
+    return t;
+  }
+  // Manda la maestra elegida para cada hora que tenga otra (o ninguna).
+  function guardarMaestra(k) {
+    var a = alumna(k), s = vista.eleccion;
+    if (!s || s.id !== a.i || s.mandando) return;
+    var v = horarioConCambios(a), casillas = Object.keys(v.ahora);
+    // `soloMaestra`: si en la computadora ya le quitaron esa hora (y este
+    // celular trae la lista de antes), el programa no se la vuelve a poner.
+    var cambios = casillas.filter(function (c) { return v.ahora[c] !== s.m; }).sort(porCasilla).map(function (c) {
+      var p = c.split('-');
+      return { alumnoId: a.i, dia: +p[0], hora: p[1], entrenadoraId: s.m, quitar: false, soloMaestra: true };
     });
-    if (puede) hs.appendChild(boton('principal poner', 'Poner en el grupo de…', function () { abrirHoja(a.i); }));
+    if (!cambios.length) return;
+    s.mandando = true;
+    vista.errorMaestra = null;
+    pintarAlumnas();
+    var que = 'Con ' + nombreGrupo(s.m) + ' en ' + susHoras(casillas.length) + '.';
+    var listo = function () { if (vista.eleccion === s) vista.eleccion = null; };
+    // El programa toma hasta 60 cambios por envío: si fueran más, salen en partes, en orden.
+    var p = Promise.resolve();
+    for (var i = 0; i < cambios.length; i += 50) {
+      (function (parte, primera) {
+        p = p.then(function () { return enviarCambios(a, parte, que, primera ? listo : null, 'maestra'); });
+      })(cambios.slice(i, i + 50), i === 0);
+    }
+    // Si ni siquiera se pudo guardar en este celular, se dice (y se puede volver a intentar).
+    p.catch(function () {
+      if (vista.eleccion === s) s.mandando = false;
+      vista.errorMaestra = { id: a.i, texto: 'No se pudo guardar en este celular. Vuelve a tocar «Guardar»; si sigue igual, cierra la app y ábrela otra vez.' };
+      if (vista.alumna === a.i) pintarAlumnas();
+    });
+  }
+
+  function tarjetaHorario(k) {
+    var a = alumna(k);
+    var puede = u.puedeHorario();
+    var hs = el('section', 'tarjeta horario-t');
+    var v = horarioConCambios(a);
+    var n = Object.keys(v.ahora).length;
+    var cab = el('div', 'horario-cab');
+    cab.appendChild(el('h2', null, 'Su horario'));
+    if (n) cab.appendChild(el('small', null, n + (n === 1 ? ' hora' : ' horas') + ' a la semana'));
+    hs.appendChild(cab);
+    // Sin horas no hay «Su maestra»: lo que no se pudo sale aquí.
+    if (!n) rechazosDe(hs, a);
+    var conAviso = avisoEnviado(hs, a, v, 'horario') || (vista.aviso && vista.aviso.id === a.i && vista.aviso.tipo === 'maestra');
+    if (!n) hs.appendChild(el('div', 'vacio', 'No tiene horario capturado.'));
+    // En corto: una línea por grupo de días con las mismas horas.
+    var r = resumenHorario(v.ahora), varias = r.maestras.length > 1;
+    r.lineas.forEach(function (l) {
+      var li = el('div', 'hr-linea');
+      li.appendChild(el('b', null, l.dias));
+      li.appendChild(el('span', 'hr-horas', l.horas));
+      if (varias) {
+        var q = el('span', 'hr-quien');
+        q.appendChild(punto(l.gid));
+        q.appendChild(el('span', null, nombreGrupo(l.gid)));
+        li.appendChild(q);
+      }
+      hs.appendChild(li);
+    });
+    // Lo que todavía no llega al programa, en una línea (el detalle, hora por hora).
+    var pendientes = v.filas.filter(function (f) { return f.pend; });
+    if (pendientes.length && !conAviso) {
+      var est = peorEstado(pendientes);
+      hs.appendChild(el('p', 'hr-pend' + (est === 'cola' ? ' sin-senal' : ''), (pendientes.length === 1 ? '1 cambio' : pendientes.length + ' cambios') + ' por llegar al programa · ' + ESTADO_TXT[est]));
+    }
+    // Hora por hora (para quitar una), solo si se pide.
+    var abiertas = Boolean(vista.verHoras[a.i]);
+    if (abiertas) {
+      var caja = el('div', 'hora-por-hora');
+      v.filas.forEach(function (f) {
+        var fila = el('div', 'horario-fila' + (f.pend ? ' pendiente' : '') + (f.pend === 'quita' ? ' se-va' : ''));
+        fila.appendChild(el('b', null, mayus(cuandoTxt(f.dia, f.h))));
+        fila.appendChild(punto(f.gid));
+        fila.appendChild(el('span', 'hf-quien', nombreGrupo(f.gid)));
+        if (!f.pend && puede) {
+          var q = boton('quitar-hora', 'Quitar', function () { quitarHora(k, f, q); });
+          q.setAttribute('aria-label', 'Quitar el ' + cuandoTxt(f.dia, f.h));
+          fila.appendChild(q);
+        }
+        if (f.pend) {
+          var que = f.pend === 'quita' ? 'Se quita' : f.pend === 'nueva' ? 'Nueva' : 'Antes ' + conQuien(f.antes);
+          fila.appendChild(el('small', 'hf-estado' + (f.estado === 'cola' ? ' sin-senal' : ''), que + ' · ' + ESTADO_TXT[f.estado]));
+        }
+        caja.appendChild(fila);
+      });
+      hs.appendChild(caja);
+    }
+    var botones = el('div', 'horario-botones');
+    if (v.filas.length) {
+      var ver = boton('sec', abiertas ? 'Ocultar horas' : 'Ver hora por hora', function () { vista.verHoras[a.i] = !abiertas; pintarAlumnas(); });
+      ver.setAttribute('aria-expanded', abiertas ? 'true' : 'false');
+      botones.appendChild(ver);
+    }
+    if (puede) botones.appendChild(boton(n ? 'sec' : 'principal', 'Agregar horas…', function () { abrirHoja(a.i); }));
+    if (botones.children.length) hs.appendChild(botones);
     return hs;
   }
 
@@ -776,9 +1031,10 @@
 
   // Manda los cambios. En cuanto quedan guardados en el celular, la ficha ya
   // los enseña («Enviando…», sin esperar a la red) y `alGuardar` avisa; al
-  // terminar, dice qué pasó con el envío.
-  function enviarCambios(a, cambios, que, alGuardar) {
-    var aviso = { id: a.i, que: que, como: null };
+  // terminar, dice qué pasó con el envío. `tipo`: 'maestra' si se mandó
+  // desde «Su maestra» (el aviso sale ahí); si no, en «Su horario».
+  function enviarCambios(a, cambios, que, alGuardar, tipo) {
+    var aviso = { id: a.i, que: que, como: null, tipo: tipo || 'horario' };
     return u.mandarHorario(cambios, function () {
       vista.aviso = aviso;
       if (alGuardar) alGuardar();
@@ -796,10 +1052,10 @@
   // La ventana: maestra, día(s) y hora; abajo, qué va a pasar con cada día.
   function abrirHoja(id) {
     vista.hoja = { id: id, m: null, dias: {}, h: null, mandando: false };
-    // Si solo tiene una maestra, ya viene elegida.
+    // Si solo tiene una maestra (contando lo ya mandado), ya viene elegida.
     var a = d.alumnos[ix.porId[id]];
-    var suyas = {};
-    (a.s || []).forEach(function (c) { var g = a.m && a.m[c]; if (g && ix.maestras[g] && ix.maestras[g].activa) suyas[g] = true; });
+    var ahora = horarioConCambios(a).ahora, suyas = {};
+    Object.keys(ahora).forEach(function (c) { var g = ahora[c]; if (g && ix.maestras[g] && ix.maestras[g].activa) suyas[g] = true; });
     if (Object.keys(suyas).length === 1) vista.hoja.m = Object.keys(suyas)[0];
     mostrar($('hoja-fondo'), true);
     mostrar($('hoja'), true);
@@ -826,7 +1082,7 @@
       else r.lineas.push({ t: 'Ya tenía ' + cuando + ' ' + conQuien(antes) + ': pasa con ' + con + '.', c: 'cambia' });
       // Poner no es cambiar de hora: la otra hora de ese día se queda, y se dice.
       if (antes === undefined) Object.keys(ahora).filter(function (k) { return +k.split('-')[0] === dia && k !== c; }).sort().forEach(function (k) {
-        r.lineas.push({ t: 'Sigue también su ' + cuandoTxt(dia, k.split('-')[1]) + ' ' + conQuien(ahora[k]) + ': si es cambio de hora, quítale esa con «Quitar» en su ficha.', c: 'igual' });
+        r.lineas.push({ t: 'Sigue también su ' + cuandoTxt(dia, k.split('-')[1]) + ' ' + conQuien(ahora[k]) + ': si es cambio de hora, quítale esa en su ficha («Ver hora por hora» → «Quitar»).', c: 'igual' });
       });
     });
     return r;
@@ -846,7 +1102,7 @@
     caja.innerHTML = '';
     var cab = el('div', 'hoja-cab');
     var tit = el('div', 'hoja-tit');
-    var h = el('h2', null, 'Poner en el grupo de…');
+    var h = el('h2', null, 'Agregar horas');
     h.setAttribute('id', 'hoja-titulo');
     tit.appendChild(h);
     tit.appendChild(el('small', null, a.n));
@@ -885,7 +1141,7 @@
     }
     var pie = el('div', 'hoja-botones');
     pie.appendChild(boton('sec', 'Cancelar', cerrarHoja));
-    var poner = boton('principal', s.mandando ? 'Enviando…' : 'Poner en el grupo', function () {
+    var poner = boton('principal', s.mandando ? 'Enviando…' : 'Guardar', function () {
       if (s.mandando || !plan.cambios.length) return;
       s.mandando = true;
       pintarHoja();

@@ -297,7 +297,29 @@ body.con-pestanas .fijo { bottom: calc(var(--alto-pestanas) + env(safe-area-inse
 .quitar-hora { border: 1px solid var(--linea); background: #fff; color: var(--mal); border-radius: 9px; padding: 6px 12px; font-size: 13.5px; font-weight: 700; min-height: 38px; flex: none; }
 .tarjeta .poner { width: 100%; margin-top: 12px; flex: none; }
 
-/* Ventana de «Poner en el grupo de…» (sube desde abajo) */
+/* Su maestra: una para todas sus horas */
+.maestra-ahora { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0 0 12px; font-size: 17px; }
+.maestra-ahora > span { display: inline-flex; align-items: center; gap: 7px; }
+.maestra-ahora .punto { width: 12px; height: 12px; }
+.maestra-ahora small { color: var(--suave); font-size: 13.5px; font-weight: 600; }
+.maestra-t .aviso { margin: 0 0 12px; }
+.maestra-nota { color: var(--suave); font-size: 14.5px; margin: 12px 0 0; }
+.tarjeta .siguiente { margin-top: 8px; white-space: normal; text-align: center; line-height: 1.3; }
+/* Su horario en corto */
+.horario-cab { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.horario-cab small { color: var(--suave); font-size: 13px; font-weight: 600; }
+.hr-linea { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; padding: 4px 0; font-size: 17px; }
+.hr-linea .hr-quien { display: inline-flex; align-items: center; gap: 6px; color: var(--suave); font-size: 14.5px; }
+.hr-pend { font-size: 13px; font-weight: 600; color: var(--dorado-osc); margin: 8px 0 0; }
+.hr-pend.sin-senal { color: var(--medio); }
+.hora-por-hora { margin-top: 8px; border-top: 1px solid var(--linea); }
+.horario-botones { display: flex; gap: 8px; margin-top: 12px; }
+.horario-botones button { flex: 1; min-width: 0; }
+/* Lista de alumnas: todas o solo las que no tienen maestra */
+.opciones.filtro { margin-bottom: 12px; }
+.opciones.filtro .opcion { min-height: 46px; font-size: 15px; }
+
+/* Ventana de «Agregar horas» (sube desde abajo) */
 body.con-hoja { overflow: hidden; }
 .hoja-fondo { position: fixed; inset: 0; background: rgba(16,30,60,.45); z-index: 20; touch-action: none; }
 /* dvh: el alto que de verdad se ve (en Safari, con su barra a la vista) */
