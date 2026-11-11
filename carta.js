@@ -241,15 +241,25 @@
     if (hoy[1] < n[1] || (hoy[1] === n[1] && hoy[2] < n[2])) e--;
     return e;
   }
+  // «1 año», «3 años»; antes del año cumplido, en meses (igual que en la inscripción).
+  function edadTexto(f) {
+    var e = edadDe(f);
+    if (e === null || e < 0) return '';
+    if (e > 0) return e + (e === 1 ? ' año' : ' años');
+    var hoy = R.ahoraGdl().fecha.split('-').map(Number), n = f.split('-').map(Number);
+    var m = (hoy[0] - n[0]) * 12 + hoy[1] - n[1] - (hoy[2] < n[2] ? 1 : 0);
+    return m + (m === 1 ? ' mes' : ' meses');
+  }
+  // El calendario del celular no deja escoger un día que todavía no llega.
+  form.elements.nacimiento.max = R.ahoraGdl().fecha;
   function contacto(n) {
     var t = R.telefono10(v(n + 'Telefono'));
     return v(n + 'Nombre') ? v(n + 'Nombre') + (v(n + 'Parentesco') ? ' (' + v(n + 'Parentesco') + ')' : '') + (t ? ' · ' + t : '') : '';
   }
   function datosCarta() {
-    var e = edadDe(v('nacimiento'));
     var f = R.ahoraGdl().fecha;
     return {
-      alumno: v('alumno'), edad: e !== null ? e + ' años' : '', fecha: R.fechaLarga(f) + ' de ' + f.slice(0, 4),
+      alumno: v('alumno'), edad: edadTexto(v('nacimiento')), fecha: R.fechaLarga(f) + ' de ' + f.slice(0, 4),
       tutor: v('firmante'), emergencia1: contacto('e1'), emergencia2: contacto('e2'), sangre: v('sangre')
     };
   }
@@ -388,7 +398,9 @@
   // En el orden de la página: el primer error que se señala es el de más arriba.
   var REGLAS = {
     alumno: nombreYApellido('Escriba nombre y apellido del alumno.'),
-    nacimiento: function (x) { var e = edadDe(x); return (e !== null && e >= 3 && e <= 25) || 'Revise la fecha de nacimiento.'; },
+    // Sin edad mínima (11-nov-2026): la inscripción ya recibe niñas de menos
+    // de 3 años, y su carta tiene que poder llenarse después.
+    nacimiento: function (x) { var e = edadDe(x); return (e !== null && e >= 0 && e <= 25) || (e !== null && e < 0 ? 'Revise la fecha de nacimiento: no puede ser después de hoy.' : 'Revise la fecha de nacimiento.'); },
     // Obligatoria desde el 23-oct-2026, con su dígito verificador y la misma
     // fecha de nacimiento; en la carta sin CURP, solo si la escriben.
     curp: function (x) { return (sinCurp() && !String(x).trim()) || R.curpRevisar(x, v('nacimiento')); },

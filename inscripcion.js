@@ -98,6 +98,8 @@
     // vuelve la misma, así un reenvío tras recargar no llega dos veces.
     var h = { k: String(k), envio: /^[0-9a-f]{32}$/.test(String(envio || '')) ? envio : R.claveAlAzar() };
     h.alumno = deLaPlantilla('tplAlumno', k);
+    // El calendario del celular no deja escoger un día que todavía no llega.
+    h.alumno.querySelector('input[type="date"]').max = R.ahoraGdl().fecha;
     h.salud = deLaPlantilla('tplSalud', k);
     h.permisos = bloquePermisos(k);
     h.carta = deLaPlantilla('tplCarta', k);
@@ -155,6 +157,8 @@
       tp.hidden = !varios;
       var c = tp.querySelector('.btn-copiar');
       if (c) c.textContent = 'Usar los mismos permisos que ' + (nombreDe(hijos[0]) || 'el alumno 1');
+      // Si se quitó al primero, el que quedó arriba no se copia a sí mismo.
+      if (c) c.hidden = i === 0;
     });
     $('masAlumno').hidden = hijos.length + previos.length >= MAX_HIJOS;
     document.querySelectorAll('[data-uno]').forEach(function (x) { x.textContent = x.getAttribute(varios ? 'data-varios' : 'data-uno'); });
@@ -176,7 +180,7 @@
   function mostrarDetalles(h) {
     h.alumno.querySelector('[data-experiencia]').hidden = v('experiencia_' + h.k) !== 'si';
     var e = edadDe(v('nacimiento_' + h.k));
-    h.alumno.querySelector('[data-edad]').textContent = e !== null && e >= 0 && e < 100 ? 'Tiene ' + e + ' años.' : '';
+    h.alumno.querySelector('[data-edad]').textContent = e !== null && e >= 0 && e < 100 ? 'Tiene ' + edadTexto(v('nacimiento_' + h.k)) + '.' : '';
   }
   form.addEventListener('change', function (e) {
     var n = e.target.name, h = hijoDe(n);
@@ -203,6 +207,16 @@
     var e = hoy[0] - n[0];
     if (hoy[1] < n[1] || (hoy[1] === n[1] && hoy[2] < n[2])) e--;
     return e;
+  }
+  // «1 año», «3 años»; antes del año cumplido, en meses. Desde el 11-nov-2026
+  // la inscripción no tiene edad mínima: ya salen niñas de 1, 2 o 3 años.
+  function edadTexto(f) {
+    var e = edadDe(f);
+    if (e === null || e < 0) return '';
+    if (e > 0) return e + (e === 1 ? ' año' : ' años');
+    var hoy = R.ahoraGdl().fecha.split('-').map(Number), n = f.split('-').map(Number);
+    var m = (hoy[0] - n[0]) * 12 + hoy[1] - n[1] - (hoy[2] < n[2] ? 1 : 0);
+    return m + (m === 1 ? ' mes' : ' meses');
   }
 
   // ─── Quién lo puede recoger ─────────────────────────────────────────
@@ -349,7 +363,9 @@
         return !antes.some(function (h) { return completo(h.k) === completo(k); }) || 'Este alumno ya está registrado arriba.';
       },
       apellidoPaterno: texto(2, 'Escriba el apellido paterno del alumno.'),
-      nacimiento: function (x) { var e = edadDe(x); return (e !== null && e >= 4 && e <= 18) || (e !== null && e >= 0 && e < 4 ? 'Recibimos a niñas y niños a partir de los 4 años.' : 'Revise la fecha de nacimiento.'); },
+      // Sin edad mínima (11-nov-2026, lo pidió Javier): solo se detiene una
+      // fecha que no puede ser (después de hoy) o de más de 18 años.
+      nacimiento: function (x) { var e = edadDe(x); return (e !== null && e >= 0 && e <= 18) || (e !== null && e < 0 ? 'Revise la fecha de nacimiento: no puede ser después de hoy.' : 'Revise la fecha de nacimiento.'); },
       rama: eligio,
       // Obligatoria desde el 23-oct-2026, con su dígito verificador y la misma fecha de nacimiento.
       curp: function (x, k) { return R.curpRevisar(x, v('nacimiento_' + k)); },
@@ -500,9 +516,8 @@
   }
   function hoyLargo() { var f = R.ahoraGdl().fecha; return R.fechaLarga(f) + ' de ' + f.slice(0, 4); }
   function datosCarta(k) {
-    var e = edadDe(v('nacimiento_' + k));
     return {
-      alumno: nombreCompleto(k), edad: e !== null ? e + ' años' : '', fecha: hoyLargo(),
+      alumno: nombreCompleto(k), edad: edadTexto(v('nacimiento_' + k)), fecha: hoyLargo(),
       tutor: v('firmante_' + k) || v('t1Nombre'), emergencia1: contacto('e1'), emergencia2: contacto('e2'), sangre: v('sangre_' + k)
     };
   }
