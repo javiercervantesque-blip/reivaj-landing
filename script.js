@@ -154,7 +154,7 @@
         ]),
         R.el('div', { clase: 'field' }, [
           R.el('label', { for: 'edad' + s, texto: 'Edad' }),
-          R.el('input', { type: 'number', id: 'edad' + s, name: 'edad' + s, min: '4', max: '18', inputmode: 'numeric', enterkeyhint: 'done', required: true, placeholder: 'Años' }),
+          R.el('input', { type: 'number', id: 'edad' + s, name: 'edad' + s, min: '1', max: '18', inputmode: 'numeric', enterkeyhint: 'done', required: true, placeholder: 'Años' }),
           R.el('p', { clase: 'error', 'data-error-for': 'edad' + s })
         ])
       ]),
@@ -221,7 +221,8 @@
     edad: function (v) {
       var n = Number(v);
       if (String(v).trim() && Number.isFinite(n) && !Number.isInteger(n)) return 'Escriba la edad en años cumplidos, sin decimales.';
-      return (n >= 4 && n <= 18) || (n > 0 && n < 4 ? 'Recibimos a niñas y niños a partir de los 4 años.' : 'Escriba la edad (de 4 a 18 años).');
+      // Sin edad mínima (12-nov-2026): solo se detiene lo que no es una edad.
+      return (n >= 1 && n <= 18) || 'Escriba la edad en años cumplidos (hasta 18).';
     },
     rama: function (v) { return Boolean(v) || 'Indique si es niña o niño.'; },
     dia: function (v) { return Boolean(v) || sinFechas || (diaQuitado ? 'Ese día ya no está disponible. Elija otro.' : 'Elija el día de la clase.'); },
@@ -287,13 +288,14 @@
     else if (!extra && orden[i + 1]) form.elements[orden[i + 1]].focus(); else e.target.blur();
   });
 
+  function anios(e) { return e + (Number(e) === 1 ? ' año' : ' años'); }
   // Uno o varios alumnos (hermanos o primos): el día es el mismo; con
   // varios, la hora va junto a cada uno (niñas y niños pueden ir a distinta).
   function textoWhatsApp(lista, nota) {
     var d = lista[0], varios = lista.length > 1;
     return 'Hola, me gustaría agendar ' + (varios ? 'clases de prueba' : 'una clase de prueba') + ' en REIVAJ Gimnasia.\n\n' +
       lista.map(function (x) {
-        return (x.sexo === 'm' ? 'Alumno: ' : 'Alumna: ') + x.alumno + ' (' + x.edad + ' años)' + (varios ? ', ' + R.horaBonita(x.hora) : '');
+        return (x.sexo === 'm' ? 'Alumno: ' : 'Alumna: ') + x.alumno + ' (' + anios(x.edad) + ')' + (varios ? ', ' + R.horaBonita(x.hora) : '');
       }).join('\n') + '\n' +
       (d.dia ? 'Día: ' + R.fechaLarga(d.dia) : 'Día: el próximo que tengan disponible') + (varios ? '' : ', ' + R.horaBonita(d.hora)) + '\n' +
       'Mi nombre es ' + d.tutor + (nota ? '\nNota: ' + nota : '');
@@ -339,7 +341,7 @@
     // hermanos, sus comentarios empiezan con quién viene (el programa los
     // recorta a 600: lo de la familia va primero para que no se pierda).
     var lista = alumnos().map(function (a, i, todos) {
-      var otros = todos.filter(function (o) { return o !== a; }).map(function (o) { return o.alumno + ' (' + o.edad + ' años)'; });
+      var otros = todos.filter(function (o) { return o !== a; }).map(function (o) { return o.alumno + ' (' + anios(o.edad) + ')'; });
       return Object.assign({}, comun, {
         alumno: a.alumno, edad: a.edad, sexo: a.sexo, hora: a.hora,
         comentarios: [otros.length ? 'Viene junto con ' + otros.join(' y ') + '.' : '', nota].filter(Boolean).join('\n')
